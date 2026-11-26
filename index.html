@@ -305,7 +305,7 @@
             <h2 class="text-base font-bold text-slate-900">Управління групою та доступом</h2>
             <span id="manageRoleBadge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700">Гість</span>
           </div>
-          <p id="manageOwnerInfo" class="text-xs text-slate-500">Активний акаунт: не ввійшли • Група: ТЛ-26008 (TL-26008)</p>
+          <p id="manageOwnerInfo" class="text-xs text-slate-500">Активний акаунт: Гість • Група: ТЛ-26008 (TL-26008)</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
@@ -314,8 +314,8 @@
         </div>
       </div>
 
-      <!-- ОКРЕМА ПЛАШКА: СТВОРИТИ АКАУНТ ДЛЯ ПОТРІБНОЇ ЛЮДИНИ -->
-      <div id="createUserAccountCard" class="bg-white p-5 rounded-2xl border-2 border-indigo-200 shadow-sm space-y-4">
+      <!-- ОКРЕМА ПЛАШКА: СТВОРИТИ АКАУНТ ДЛЯ ПОТРІБНОЇ ЛЮДИНИ (ТІЛЬКИ НА ПРИСТРОЇ ГОЛОВНОГО АДМІНА) -->
+      <div id="createUserAccountCard" class="hidden bg-white p-5 rounded-2xl border-2 border-indigo-200 shadow-sm space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
           <div>
             <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -324,7 +324,7 @@
             </h2>
             <p class="text-xs text-slate-500 mt-0.5">Створіть акаунт для потрібної людини, оберіть роль і передайте логін та пароль.</p>
           </div>
-          <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">Управління акаунтами</span>
+          <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">Панель адміністратора</span>
         </div>
 
         <form onsubmit="handleAdminCreateAccount(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
@@ -340,7 +340,6 @@
               <option value="Замстарости">Для замстарости</option>
               <option value="Помічник старости">Для помічника старости</option>
               <option value="Студент">Для студента</option>
-              <option value="Головний адміністратор">Для адміністратора</option>
             </select>
           </div>
 
@@ -406,7 +405,6 @@
               <option value="Помічник старости">Помічник старости</option>
               <option value="Замстарости">Замстарости</option>
               <option value="Староста">Староста</option>
-              <option value="Головний адміністратор">Головний адміністратор</option>
             </select>
             <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition flex items-center justify-center gap-1 shrink-0">
               <i data-lucide="plus" class="w-4 h-4"></i>
@@ -543,11 +541,11 @@
       <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-3">
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Логін</label>
-          <input type="text" id="loginUsername" required placeholder="Введіть логін створеного акаунта" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input type="text" id="loginUsername" required autocomplete="off" placeholder="Введіть ваш логін" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Пароль</label>
-          <input type="password" id="loginPassword" required placeholder="Введіть пароль" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input type="password" id="loginPassword" required autocomplete="new-password" placeholder="Введіть пароль" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
           Увійти
@@ -594,9 +592,12 @@
 
     const SYNC_ENDPOINT = 'https://saint-dla-starist-default-rtdb.europe-west1.firebasedatabase.app';
 
-    const MASTER_ADMIN_ACCOUNT = {
-      username: 'ivan',
-      password: 'admin',
+    const OWNER_USERNAME = 'ivan';
+    const DEVICE_OWNER_KEY = 'starosta_device_owner';
+    const DEVICE_SESSION_KEY = 'starosta_device_session';
+
+    const OWNER_PROFILE = {
+      username: OWNER_USERNAME,
       fullName: 'Іван Килинич',
       role: 'Головний адміністратор',
       groupName: 'ТЛ-26008',
@@ -604,7 +605,6 @@
     };
 
     let currentAccount = null;
-    let isLoggedOutExplicitly = false;
     let syncCode = 'TL-26008';
     let lastCreatedCredentialsText = '';
 
@@ -612,7 +612,7 @@
       groupName: 'ТЛ-26008',
       ownerName: 'Іван Килинич',
       students: [
-        { id: 'st_1', name: 'Іван Килинич', username: 'ivan', role: 'Головний адміністратор' },
+        { id: 'st_1', name: 'Іван Килинич', username: OWNER_USERNAME, role: 'Головний адміністратор' },
         { id: 'st_2', name: 'Бондаренко Олександр', role: 'Староста' },
         { id: 'st_3', name: 'Коваленко Софія', role: 'Замстарости' },
         { id: 'st_4', name: 'Мельник Артем', role: 'Помічник старости' },
@@ -624,9 +624,7 @@
         'Основи логістики',
         'Інформаційні технології'
       ],
-      managedAccounts: [
-        { ...MASTER_ADMIN_ACCOUNT }
-      ],
+      managedAccounts: [],
       attendance: {},
       savedHomeworks: [],
       updatedAt: 0
@@ -635,6 +633,10 @@
     let attachedFilesMeta = [];
     let activeCellContext = null;
 
+    function isThisDeviceOwner() {
+      return localStorage.getItem(DEVICE_OWNER_KEY) === OWNER_USERNAME;
+    }
+
     function getActiveRole() {
       if (!currentAccount) return 'Гість';
       return currentAccount.role || 'Студент';
@@ -642,7 +644,9 @@
 
     function isMainAdmin() {
       return Boolean(currentAccount) &&
-        (currentAccount.role === 'Головний адміністратор' || currentAccount.username === MASTER_ADMIN_ACCOUNT.username);
+        isThisDeviceOwner() &&
+        currentAccount.username === OWNER_USERNAME &&
+        currentAccount.role === 'Головний адміністратор';
     }
 
     function canEditJournal() {
@@ -672,20 +676,38 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      isLoggedOutExplicitly = localStorage.getItem('starosta_logged_out') === '1';
-      const savedAcc = localStorage.getItem('starosta_active_account');
-
-      if (!isLoggedOutExplicitly && savedAcc) {
-        try {
-          const parsedAcc = JSON.parse(savedAcc);
-          if (parsedAcc && parsedAcc.username) {
-            currentAccount = parsedAcc;
-            if (currentAccount.groupCode) syncCode = currentAccount.groupCode;
-          }
-        } catch (e) {}
+      if (!localStorage.getItem(DEVICE_OWNER_KEY)) {
+        const hasAnyLocalData = Boolean(localStorage.getItem('starosta_data_TL-26008'));
+        const urlHasOwnerFlag = new URLSearchParams(window.location.search).get('owner') === OWNER_USERNAME;
+        if (hasAnyLocalData || urlHasOwnerFlag) {
+          localStorage.setItem(DEVICE_OWNER_KEY, OWNER_USERNAME);
+        }
       }
 
       loadFromLocal();
+
+      const savedSessionRaw = sessionStorage.getItem(DEVICE_SESSION_KEY);
+      if (savedSessionRaw) {
+        try {
+          const parsedSession = JSON.parse(savedSessionRaw);
+          if (parsedSession && parsedSession.username) {
+            if (parsedSession.username === OWNER_USERNAME && !isThisDeviceOwner()) {
+              sessionStorage.removeItem(DEVICE_SESSION_KEY);
+              currentAccount = null;
+            } else {
+              currentAccount = parsedSession;
+              if (currentAccount.groupCode) syncCode = currentAccount.groupCode;
+            }
+          }
+        } catch (e) {}
+      } else if (isThisDeviceOwner()) {
+        currentAccount = {
+          ...OWNER_PROFILE,
+          groupName: appState.groupName || OWNER_PROFILE.groupName,
+          groupCode: syncCode
+        };
+        sessionStorage.setItem(DEVICE_SESSION_KEY, JSON.stringify(currentAccount));
+      }
 
       const now = new Date();
       const yyyy = now.getFullYear();
@@ -734,6 +756,16 @@
       return `${SYNC_ENDPOINT}/accounts/${cleanUser}.json`;
     }
 
+    function sanitizeStateForSync(rawState) {
+      const safeAccounts = Array.isArray(rawState.managedAccounts)
+        ? rawState.managedAccounts.filter(a => a && a.username && a.username.toLowerCase() !== OWNER_USERNAME)
+        : [];
+      return {
+        ...rawState,
+        managedAccounts: safeAccounts
+      };
+    }
+
     function loadFromLocal() {
       const raw = localStorage.getItem(`starosta_data_${syncCode}`);
       if (raw) {
@@ -742,9 +774,12 @@
           appState = { ...appState, ...parsed };
         } catch (e) {}
       }
-      if (!Array.isArray(appState.managedAccounts) || !appState.managedAccounts.length) {
-        appState.managedAccounts = [{ ...MASTER_ADMIN_ACCOUNT }];
+      if (!Array.isArray(appState.managedAccounts)) {
+        appState.managedAccounts = [];
       }
+      appState.managedAccounts = appState.managedAccounts.filter(
+        a => a && a.username && a.username.toLowerCase() !== OWNER_USERNAME
+      );
     }
 
     function setSyncBadge(mode, text) {
@@ -764,10 +799,11 @@
       setSyncBadge('sync', 'Синхронізація...');
 
       try {
+        const payload = sanitizeStateForSync(appState);
         const res = await fetch(getGroupSyncUrl(syncCode), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(appState)
+          body: JSON.stringify(payload)
         });
         if (res.ok) {
           setSyncBadge('ok', 'Синхронізовано');
@@ -793,6 +829,10 @@
           const cloudUpdated = cloudData.updatedAt || 0;
 
           if (forceApply || cloudUpdated >= localUpdated) {
+            const cloudAccounts = Array.isArray(cloudData.managedAccounts)
+              ? cloudData.managedAccounts.filter(a => a && a.username && a.username.toLowerCase() !== OWNER_USERNAME)
+              : [];
+
             appState = {
               groupName: cloudData.groupName || 'ТЛ-26008',
               ownerName: cloudData.ownerName || 'Іван Килинич',
@@ -802,17 +842,15 @@
               subjects: Array.isArray(cloudData.subjects) && cloudData.subjects.length
                 ? cloudData.subjects
                 : ['Загальний предмет'],
-              managedAccounts: Array.isArray(cloudData.managedAccounts) && cloudData.managedAccounts.length
-                ? cloudData.managedAccounts
-                : [{ ...MASTER_ADMIN_ACCOUNT }],
+              managedAccounts: cloudAccounts,
               attendance: cloudData.attendance && typeof cloudData.attendance === 'object' ? cloudData.attendance : {},
               savedHomeworks: Array.isArray(cloudData.savedHomeworks) ? cloudData.savedHomeworks : [],
               updatedAt: cloudUpdated
             };
             localStorage.setItem(`starosta_data_${syncCode}`, JSON.stringify(appState));
 
-            if (currentAccount) {
-              const matched = (appState.managedAccounts || []).find(
+            if (currentAccount && currentAccount.username !== OWNER_USERNAME) {
+              const matched = appState.managedAccounts.find(
                 a => a.username.toLowerCase() === currentAccount.username.toLowerCase()
               );
               if (matched) {
@@ -823,7 +861,7 @@
                   groupName: appState.groupName,
                   groupCode: syncCode
                 };
-                localStorage.setItem('starosta_active_account', JSON.stringify(currentAccount));
+                sessionStorage.setItem(DEVICE_SESSION_KEY, JSON.stringify(currentAccount));
               }
             }
 
@@ -848,6 +886,8 @@
     }
 
     function openAuthModal() {
+      document.getElementById('loginUsername').value = '';
+      document.getElementById('loginPassword').value = '';
       document.getElementById('authModal').classList.remove('hidden');
       document.getElementById('loginUsername').focus();
       lucide.createIcons();
@@ -863,6 +903,23 @@
       const username = document.getElementById('loginUsername').value.trim().toLowerCase();
       const password = document.getElementById('loginPassword').value;
 
+      if (username === OWNER_USERNAME) {
+        if (!isThisDeviceOwner()) {
+          alert('Цей акаунт доступний лише на пристрої головного адміністратора.');
+          return;
+        }
+        currentAccount = {
+          ...OWNER_PROFILE,
+          groupName: appState.groupName || OWNER_PROFILE.groupName,
+          groupCode: syncCode
+        };
+        sessionStorage.setItem(DEVICE_SESSION_KEY, JSON.stringify(currentAccount));
+        document.getElementById('loginForm').reset();
+        closeAuthModal();
+        refreshAllUI();
+        return;
+      }
+
       await pullFromFirebase(false);
 
       const managedMatch = (appState.managedAccounts || []).find(
@@ -871,28 +928,13 @@
 
       if (managedMatch) {
         currentAccount = {
-          ...managedMatch,
+          username: managedMatch.username,
+          fullName: managedMatch.fullName,
+          role: managedMatch.role,
           groupName: appState.groupName || managedMatch.groupName || 'ТЛ-26008',
           groupCode: syncCode
         };
-        isLoggedOutExplicitly = false;
-        localStorage.removeItem('starosta_logged_out');
-        localStorage.setItem('starosta_active_account', JSON.stringify(currentAccount));
-        document.getElementById('loginForm').reset();
-        closeAuthModal();
-        refreshAllUI();
-        return;
-      }
-
-      if (username === MASTER_ADMIN_ACCOUNT.username && password === MASTER_ADMIN_ACCOUNT.password) {
-        currentAccount = {
-          ...MASTER_ADMIN_ACCOUNT,
-          groupName: appState.groupName || 'ТЛ-26008',
-          groupCode: syncCode
-        };
-        isLoggedOutExplicitly = false;
-        localStorage.removeItem('starosta_logged_out');
-        localStorage.setItem('starosta_active_account', JSON.stringify(currentAccount));
+        sessionStorage.setItem(DEVICE_SESSION_KEY, JSON.stringify(currentAccount));
         document.getElementById('loginForm').reset();
         closeAuthModal();
         refreshAllUI();
@@ -906,13 +948,13 @@
           const cloudAcc = await res.json();
           if (cloudAcc && cloudAcc.password === password) {
             currentAccount = {
-              ...cloudAcc,
+              username: cloudAcc.username,
+              fullName: cloudAcc.fullName,
+              role: cloudAcc.role,
               groupName: appState.groupName || cloudAcc.groupName || 'ТЛ-26008',
               groupCode: syncCode
             };
-            isLoggedOutExplicitly = false;
-            localStorage.removeItem('starosta_logged_out');
-            localStorage.setItem('starosta_active_account', JSON.stringify(currentAccount));
+            sessionStorage.setItem(DEVICE_SESSION_KEY, JSON.stringify(currentAccount));
             document.getElementById('loginForm').reset();
             setSyncBadge('ok', 'Синхронізовано');
             closeAuthModal();
@@ -928,9 +970,7 @@
 
     function logoutAccount() {
       currentAccount = null;
-      isLoggedOutExplicitly = true;
-      localStorage.setItem('starosta_logged_out', '1');
-      localStorage.removeItem('starosta_active_account');
+      sessionStorage.removeItem(DEVICE_SESSION_KEY);
       closeProfileModal();
       refreshAllUI();
     }
@@ -971,11 +1011,11 @@
       document.getElementById('profileModal').classList.add('hidden');
     }
 
-    // ==================== СТВОРЕННЯ АКАУНТА ====================
+    // ==================== СТВОРЕННЯ АКАУНТА ДЛЯ ІНШИХ ЛЮДЕЙ ====================
     async function handleAdminCreateAccount(e) {
       e.preventDefault();
-      if (!canManageRolesAndDelete()) {
-        alert('Створювати акаунти може лише Головний адміністратор, Староста або Замстарости.');
+      if (!isMainAdmin()) {
+        alert('Створювати акаунти може лише головний адміністратор зі свого пристрою.');
         return;
       }
 
@@ -985,6 +1025,10 @@
       const password = document.getElementById('newAccPassword').value;
 
       if (!fullName || !username || !password) return;
+      if (username === OWNER_USERNAME) {
+        alert('Цей логін зарезервовано за головним адміністратором.');
+        return;
+      }
 
       const newAcc = {
         username,
@@ -996,7 +1040,7 @@
       };
 
       if (!Array.isArray(appState.managedAccounts)) {
-        appState.managedAccounts = [{ ...MASTER_ADMIN_ACCOUNT }];
+        appState.managedAccounts = [];
       }
 
       const existingIdx = appState.managedAccounts.findIndex(a => a.username.toLowerCase() === username);
@@ -1054,44 +1098,39 @@
       alert('Дані акаунта скопійовано! Можна передати користувачу.');
     }
 
-    function deleteManagedAccount(username) {
-      if (!canManageRolesAndDelete()) return;
-      if (username === MASTER_ADMIN_ACCOUNT.username) {
-        alert('Акаунт головного адміністратора видалити не можна.');
-        return;
-      }
+    async function deleteManagedAccount(username) {
+      if (!isMainAdmin()) return;
+      if (username === OWNER_USERNAME) return;
       if (!confirm(`Видалити акаунт @${username}?`)) return;
       appState.managedAccounts = (appState.managedAccounts || []).filter(a => a.username !== username);
-      saveData();
+      try {
+        await fetch(getAccountSyncUrl(username), { method: 'DELETE' });
+      } catch (e) {}
+      await saveData();
       refreshAllUI();
     }
 
     function renderManagedAccountsList() {
       const card = document.getElementById('createUserAccountCard');
-      const canCreate = canManageRolesAndDelete();
-      card.classList.toggle('hidden', !canCreate);
-      if (!canCreate) return;
+      const showCard = isMainAdmin();
+      card.classList.toggle('hidden', !showCard);
+      if (!showCard) return;
 
-      const list = Array.isArray(appState.managedAccounts) ? appState.managedAccounts : [];
+      const list = (appState.managedAccounts || []).filter(a => a.username !== OWNER_USERNAME);
       document.getElementById('createdAccountsCount').textContent = list.length;
 
-      document.getElementById('createdAccountsList').innerHTML = list.map(acc => {
-        const isMasterAdmin = acc.username === MASTER_ADMIN_ACCOUNT.username;
-        return `
-          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-start justify-between gap-2">
-            <div class="min-w-0 space-y-0.5">
-              <div class="text-xs font-bold text-slate-900 truncate">${escapeHtml(acc.fullName)}</div>
-              <div class="text-[11px] font-mono text-slate-600">@${escapeHtml(acc.username)} • пароль: <b>${escapeHtml(acc.password)}</b></div>
-              <span class="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${getRoleBadgeClass(acc.role)}">${escapeHtml(acc.role)}</span>
-            </div>
-            ${!isMasterAdmin ? `
-              <button onclick="deleteManagedAccount('${escapeHtml(acc.username)}')" class="p-1 text-slate-400 hover:text-rose-600 rounded-lg shrink-0" title="Видалити акаунт">
-                <i data-lucide="trash-2" class="w-4 h-4"></i>
-              </button>
-            ` : ''}
+      document.getElementById('createdAccountsList').innerHTML = list.map(acc => `
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-start justify-between gap-2">
+          <div class="min-w-0 space-y-0.5">
+            <div class="text-xs font-bold text-slate-900 truncate">${escapeHtml(acc.fullName)}</div>
+            <div class="text-[11px] font-mono text-slate-600">@${escapeHtml(acc.username)} • пароль: <b>${escapeHtml(acc.password)}</b></div>
+            <span class="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${getRoleBadgeClass(acc.role)}">${escapeHtml(acc.role)}</span>
           </div>
-        `;
-      }).join('');
+          <button onclick="deleteManagedAccount('${escapeHtml(acc.username)}')" class="p-1 text-slate-400 hover:text-rose-600 rounded-lg shrink-0" title="Видалити акаунт">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      `).join('');
     }
 
     // ==================== ОНОВЛЕННЯ ІНТЕРФЕЙСУ ====================
@@ -1108,7 +1147,7 @@
       } else {
         document.getElementById('headerAccountInfo').textContent = `Акаунт: Гість • Група: ${appState.groupName}`;
         document.getElementById('accountBtnLabel').textContent = 'Увійти';
-        document.getElementById('manageOwnerInfo').textContent = `Акаунт: Гість (увійдіть для керування) • Група: ${appState.groupName} (${syncCode})`;
+        document.getElementById('manageOwnerInfo').textContent = `Акаунт: Гість (натисніть «Увійти» для входу у свій акаунт) • Група: ${appState.groupName} (${syncCode})`;
       }
 
       const roleBadge = document.getElementById('manageRoleBadge');
@@ -1836,7 +1875,7 @@
       appState.groupName = val || 'ТЛ-26008';
       if (currentAccount) {
         currentAccount.groupName = appState.groupName;
-        localStorage.setItem('starosta_active_account', JSON.stringify(currentAccount));
+        sessionStorage.setItem(DEVICE_SESSION_KEY, JSON.stringify(currentAccount));
       }
       saveData();
       refreshAllUI();
@@ -2000,7 +2039,7 @@
     }
 
     function downloadBackupJson() {
-      const payload = { account: currentAccount, groupCode: syncCode, state: appState };
+      const payload = { account: currentAccount, groupCode: syncCode, state: sanitizeStateForSync(appState) };
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
       const dlAnchor = document.createElement('a');
       dlAnchor.setAttribute("href", dataStr);
