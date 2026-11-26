@@ -1,0 +1,914 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Журнал старости</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one narrow column built for a phone in one hand. A sticky tab bar on top, then the active panel. Rows are thumb-sized; the journal table scrolls sideways inside its own box. */
+:root{
+  --bg:#F1F4F9; --surface:#FFFFFF; --surface-2:#E7ECF4; --line:#D3DBE8;
+  --fg:#152033; --fg-2:#56627A; --accent:#1F4FA3; --accent-fg:#FFFFFF; --accent-soft:#DCE7FA;
+  --ok:#1A7A4A; --ok-soft:#D8F0E2; --bad:#B3261E; --bad-soft:#F8DEDB;
+  --warn:#955700; --warn-soft:#F8E7C8; --info:#3A4BB5; --info-soft:#E1E4F9;
+  --muted:#56627A; --muted-soft:#E7ECF4; --on-t:#FFFFFF;
+  --font-body:'Onest',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --radius:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1523; --surface:#151E31; --surface-2:#1D2840; --line:#2A3856;
+    --fg:#E8EDF7; --fg-2:#9AA7C0; --accent:#8DB2F5; --accent-fg:#0E1523; --accent-soft:#1E2F52;
+    --ok:#5BD08C; --ok-soft:#17352A; --bad:#FF8A80; --bad-soft:#3B1E20;
+    --warn:#F2B35A; --warn-soft:#3A2C12; --info:#9AA8FF; --info-soft:#232A52;
+    --muted:#9AA7C0; --muted-soft:#1D2840; --on-t:#0E1523; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1523; --surface:#151E31; --surface-2:#1D2840; --line:#2A3856;
+  --fg:#E8EDF7; --fg-2:#9AA7C0; --accent:#8DB2F5; --accent-fg:#0E1523; --accent-soft:#1E2F52;
+  --ok:#5BD08C; --ok-soft:#17352A; --bad:#FF8A80; --bad-soft:#3B1E20;
+  --warn:#F2B35A; --warn-soft:#3A2C12; --info:#9AA8FF; --info-soft:#232A52;
+  --muted:#9AA7C0; --muted-soft:#1D2840; --on-t:#0E1523; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--bg); color:var(--fg); font-family:var(--font-body); font-size:15px; line-height:1.45; margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px)); padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 56px;
+}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:30}
+.wrap{max-width:780px;margin:0 auto}
+h1,h2{margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:1.65rem;line-height:1.1;font-weight:700;letter-spacing:-.025em}
+h2{font-size:1.05rem;font-weight:700}
+.mono{font-family:var(--font-mono)}
+.sub,.hint{color:var(--fg-2);font-size:.85rem;margin:0}
+.head{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:8px 16px;padding-block:20px 12px}
+.date{font-family:var(--font-mono);font-size:.78rem;color:var(--fg-2);margin-top:6px}
+.sync{display:inline-flex;align-items:center;gap:7px;font-size:.78rem;color:var(--fg-2)}
+.sync i{width:8px;height:8px;border-radius:50%;background:var(--fg-2);display:block}
+.sync[data-s="saved"] i{background:var(--ok)}
+.sync[data-s="saving"] i{background:var(--warn)}
+.sync[data-s="error"] i{background:var(--bad)}
+
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);display:flex;gap:4px;padding-block:8px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{flex:1 0 auto;min-height:44px;padding:0 14px;border:1px solid transparent;border-radius:var(--radius);background:transparent;color:var(--fg-2);font:inherit;font-weight:600;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{background:var(--accent);color:var(--accent-fg)}
+.panel{padding-block:16px;display:grid;gap:14px;align-content:start}
+.panel[hidden]{display:none}
+
+.tone-ok{--t:var(--ok);--ts:var(--ok-soft)}
+.tone-bad{--t:var(--bad);--ts:var(--bad-soft)}
+.tone-warn{--t:var(--warn);--ts:var(--warn-soft)}
+.tone-info{--t:var(--info);--ts:var(--info-soft)}
+.tone-muted{--t:var(--muted);--ts:var(--muted-soft)}
+
+input,select,textarea{font:inherit;font-size:16px;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:44px;width:100%;min-width:0}
+textarea{min-height:96px;resize:vertical;line-height:1.45}
+input[type="checkbox"]{width:20px;height:20px;min-height:0;padding:0;accent-color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+label{display:grid;gap:5px;font-size:.82rem;color:var(--fg-2);font-weight:500}
+label.chk{display:flex;align-items:center;gap:8px;font-size:.9rem;color:var(--fg)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:12px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{min-height:44px;padding:0 16px;border-radius:var(--radius);border:1px solid var(--line);background:var(--surface);color:var(--fg);font:inherit;font-weight:600;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.sm{min-height:36px;padding:0 12px;font-size:.85rem}
+.btn[data-armed]{background:var(--bad);border-color:var(--bad);color:var(--on-t)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);font:inherit;text-decoration:underline;cursor:pointer}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.card.form{display:grid;gap:12px}
+.note{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;justify-content:space-between;background:var(--info-soft);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:14px}
+.note[hidden]{display:none}
+.note span{flex:1 1 220px}
+.empty{padding:22px 16px;border:1px dashed var(--line);border-radius:12px;color:var(--fg-2);text-align:center}
+.err{margin:0;color:var(--bad);font-size:.85rem}
+
+.sessions{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px}
+.chip{flex:0 0 auto;display:grid;gap:2px;text-align:left;min-width:128px;max-width:200px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);font:inherit;cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.chip .d{font-family:var(--font-mono);font-size:.72rem;color:var(--fg-2)}
+.chip .s{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sess-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px 16px;align-items:flex-start}
+.stats{display:flex;flex-wrap:wrap;gap:8px}
+.stat{display:inline-flex;align-items:baseline;gap:6px;padding:6px 11px;border-radius:999px;background:var(--ts);color:var(--t);font-weight:600;font-size:.82rem}
+.stat b{font-family:var(--font-mono);font-size:1rem}
+.stat .lbl{font-weight:500;opacity:.9}
+.list{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.who{display:flex;gap:10px;align-items:baseline;flex:1 1 170px;min-width:0}
+.num{font-family:var(--font-mono);font-size:.74rem;color:var(--fg-2);min-width:1.7em}
+.name{font-weight:600;overflow-wrap:anywhere}
+.grow{flex:1 1 160px}
+.marks{display:flex;gap:6px;flex-wrap:wrap}
+.mark{min-width:48px;height:44px;padding:0 10px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--t);font-family:var(--font-mono);font-weight:700;font-size:.95rem;cursor:pointer}
+.mark[aria-pressed="true"]{background:var(--t);border-color:var(--t);color:var(--on-t)}
+
+.tablebox{overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);max-height:68vh}
+.tablebox[hidden]{display:none}
+table{border-collapse:separate;border-spacing:0;font-size:.85rem;min-width:100%}
+th,td{padding:5px 7px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);text-align:center;white-space:nowrap}
+th{position:sticky;top:0;background:var(--surface-2);z-index:2;font-weight:600;font-size:.74rem;max-width:110px}
+th .sub{max-width:96px;overflow:hidden;text-overflow:ellipsis;font-size:.68rem}
+td.nm,th.nm{position:sticky;left:0;text-align:left;background:var(--surface);z-index:1;max-width:48vw;overflow:hidden;text-overflow:ellipsis}
+th.nm{z-index:3;background:var(--surface-2)}
+.cell{min-width:36px;height:34px;border:0;border-radius:6px;background:transparent;font-family:var(--font-mono);font-weight:700;color:var(--t,var(--fg-2));cursor:pointer}
+.cell.has{background:var(--ts)}
+.tot{font-family:var(--font-mono);font-weight:700;color:var(--t)}
+
+.cat-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-block:10px;border-bottom:1px solid var(--line)}
+.cat-row:last-child{border-bottom:0}
+.cat-row .code{width:64px;text-align:center;font-family:var(--font-mono);font-weight:700}
+.cat-row .lab{flex:1 1 150px}
+.cat-row select{width:120px}
+.thumbs{display:flex;flex-wrap:wrap;gap:8px}
+.thumb{position:relative;width:76px;height:76px;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--surface-2)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb button{position:absolute;top:3px;right:3px;width:28px;height:28px;border-radius:50%;border:0;background:var(--bg);color:var(--fg);cursor:pointer;font-size:1rem;line-height:1}
+.filechip{display:inline-flex;align-items:center;gap:8px;padding:6px 6px 6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:.85rem}
+.filechip button{width:28px;height:28px;border-radius:50%;border:0;background:var(--surface-2);color:var(--fg);cursor:pointer}
+.cd{margin:0;font-size:.9rem}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.76rem;font-weight:600;background:var(--ts);color:var(--t)}
+.stack{display:grid;gap:10px}
+.hw{display:grid;gap:8px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.hw.done{opacity:.62}
+.hw-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 12px;align-items:baseline}
+.hw-top strong{font-size:1rem}
+.hw .task{margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-line;color:var(--fg-2)}
+#hw-out{min-height:210px}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:.88rem;font-weight:600;z-index:40;max-width:calc(100vw - 32px);text-align:center}
+.toast[hidden]{display:none}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <div>
+      <h1>Журнал старости</h1>
+      <div class="date" id="today"></div>
+    </div>
+    <div class="sync" id="sync" data-s="connecting" role="status"><i></i><span id="sync-t">Підключаюсь…</span></div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Розділи">
+    <button class="tab" role="tab" type="button" data-tab="att">Відмітки</button>
+    <button class="tab" role="tab" type="button" data-tab="jr">Журнал</button>
+    <button class="tab" role="tab" type="button" data-tab="grp">Група</button>
+    <button class="tab" role="tab" type="button" data-tab="hw">Домашка</button>
+  </nav>
+
+  <div class="note" id="demo-note" hidden>
+    <span>Це приклад, щоб показати, як виглядає заповнений журнал. Щоб почати зі своєю групою, очистіть його.</span>
+    <button class="btn sm" id="demo-clear" type="button">Очистити приклад</button>
+  </div>
+
+  <!-- ВІДМІТКИ -->
+  <section class="panel" id="p-att" aria-label="Відмітки">
+    <div>
+      <div class="sessions" id="sessions"></div>
+      <div class="btns"><button class="btn primary" id="sess-new" type="button">+ Нова пара</button></div>
+    </div>
+
+    <form class="card form" id="session-form" hidden>
+      <h2 id="sf-title">Нова пара</h2>
+      <div class="grid2">
+        <label>Дата<input type="date" id="sf-date" required></label>
+        <label>Номер пари
+          <select id="sf-pair">
+            <option value="">—</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
+          </select>
+        </label>
+      </div>
+      <label>Предмет<input id="sf-subject" list="subjects" autocomplete="off" placeholder="Наприклад, Вища математика"></label>
+      <p class="err" id="sf-err" hidden></p>
+      <div class="btns">
+        <button class="btn primary" type="submit">Зберегти</button>
+        <button class="btn" type="button" id="sf-cancel">Скасувати</button>
+      </div>
+    </form>
+
+    <div class="empty" id="att-empty-sess" hidden>Ще немає жодної пари. Натисніть «Нова пара», щоб почати відмічати.</div>
+
+    <div id="att-body" hidden style="display:grid;gap:14px">
+      <div class="sess-head">
+        <div>
+          <h2 id="sess-title"></h2>
+          <div class="sub" id="sess-sub"></div>
+        </div>
+        <div class="btns">
+          <button class="btn sm" id="sess-edit" type="button">Змінити</button>
+          <button class="btn sm" id="sess-del" type="button">Видалити пару</button>
+        </div>
+      </div>
+      <div class="stats" id="att-stats"></div>
+      <div class="btns">
+        <button class="btn" id="att-rest" type="button">Решту — присутні</button>
+        <button class="btn" id="att-reset" type="button">Скинути відмітки</button>
+      </div>
+      <div class="empty" id="att-empty-stud" hidden>Список групи порожній. <button class="linkbtn" type="button" data-go="grp">Додати студентів</button></div>
+      <ul class="list" id="att-list"></ul>
+    </div>
+  </section>
+
+  <!-- ЖУРНАЛ -->
+  <section class="panel" id="p-jr" aria-label="Журнал" hidden>
+    <div class="card form">
+      <h2>Експорт в Excel</h2>
+      <label>Період<select id="ex-period"></select></label>
+      <div class="btns">
+        <button class="btn primary" id="xl-btn" type="button">Завантажити .xlsx</button>
+        <button class="btn" id="xl-copy" type="button">Копіювати таблицю</button>
+      </div>
+      <p class="hint" id="xl-note" hidden>Завантаження файлу тут недоступне. Натисніть «Копіювати таблицю» і вставте в Excel.</p>
+      <p class="hint">Студенти по рядках, пари по стовпцях, у кінці підрахунок кожної категорії. Клітинку в таблиці можна натиснути, щоб змінити відмітку.</p>
+    </div>
+    <div class="empty" id="jr-empty" hidden>Журнал порожній: потрібні хоча б один студент і одна пара.</div>
+    <div class="tablebox" id="jr-box" hidden><table id="jr-table"></table></div>
+  </section>
+
+  <!-- ГРУПА -->
+  <section class="panel" id="p-grp" aria-label="Група" hidden>
+    <div class="card form">
+      <div class="sess-head"><h2>Студенти</h2><span class="sub" id="stud-count"></span></div>
+      <form class="btns" id="add-form" style="flex-wrap:nowrap">
+        <input id="add-name" autocomplete="off" placeholder="Прізвище та імʼя" aria-label="Новий студент" enterkeyhint="done">
+        <button class="btn primary" type="submit" style="flex:0 0 auto">Додати</button>
+      </form>
+      <details>
+        <summary class="hint" style="cursor:pointer;min-height:32px">Додати списком</summary>
+        <div class="card form" style="margin-top:8px;border:0;padding:0">
+          <label>Кожен студент з нового рядка (нумерацію прибираю сам)<textarea id="bulk" placeholder="Бондаренко Олена&#10;Ковальчук Андрій"></textarea></label>
+          <div class="btns"><button class="btn" id="bulk-add" type="button">Додати список</button></div>
+        </div>
+      </details>
+      <div class="empty" id="stud-empty" hidden>Тут поки нікого. Додайте першого студента або вставте весь список.</div>
+      <ul class="list" id="stud-list"></ul>
+      <div class="btns"><button class="btn sm" id="stud-sort" type="button">Сортувати за алфавітом</button></div>
+    </div>
+
+    <div class="card form">
+      <h2>Категорії відвідування</h2>
+      <p class="hint">Позначка — це те, що потрапляє в таблицю: ✓, Н, ПП або свої. Позначка «Присутній» потрібна для кнопки «Решту — присутні».</p>
+      <div id="cat-list"></div>
+      <div class="btns"><button class="btn" id="cat-add" type="button">+ Нова категорія</button></div>
+    </div>
+  </section>
+
+  <!-- ДОМАШКА -->
+  <section class="panel" id="p-hw" aria-label="Домашка" hidden>
+    <div class="card form">
+      <h2>Що надіслали</h2>
+      <label>Текст повідомлення чи умова<textarea id="hw-raw" placeholder="Вставте повідомлення від викладача, умову, посилання…"></textarea></label>
+      <label>Фото або файл з текстом<input type="file" id="hw-files" multiple accept="image/*,.txt,.md,.csv"></label>
+      <div class="thumbs" id="hw-thumbs"></div>
+      <p class="hint" id="hw-fhint">Фото читає Claude. З файлів беру текст .txt, .md, .csv. Для PDF і Word скопіюйте текст у поле вище.</p>
+      <div class="btns">
+        <button class="btn primary" id="hw-parse" type="button">Заповнити поля з Claude</button>
+        <span class="hint" id="hw-ai-status" role="status"></span>
+      </div>
+    </div>
+
+    <div class="card form">
+      <h2>Шаблон для групи</h2>
+      <div class="grid2">
+        <label>Предмет<input id="hw-subject" list="subjects" autocomplete="off"></label>
+        <label>Викладач<input id="hw-teacher" autocomplete="off"></label>
+      </div>
+      <label>Завдання<textarea id="hw-task"></textarea></label>
+      <div class="grid2">
+        <label>Дедлайн, дата<input type="date" id="hw-date"></label>
+        <label>Дедлайн, година (необовʼязково)<input type="time" id="hw-time"></label>
+      </div>
+      <p class="cd" id="hw-cd"></p>
+      <label>Як здавати<input id="hw-submit" autocomplete="off" placeholder="Наприклад, фото в особисті повідомлення старості"></label>
+      <label>Примітки<input id="hw-notes" autocomplete="off"></label>
+      <label class="chk"><input type="checkbox" id="hw-emoji" checked> З емодзі</label>
+      <label>Готовий текст<textarea id="hw-out" placeholder="Шаблон зʼявиться тут, щойно заповните поля"></textarea></label>
+      <p class="hint">Скільки залишилось до дедлайну, рахується на момент, коли ви відкрили або скопіювали шаблон.</p>
+      <div class="btns">
+        <button class="btn primary" id="hw-copy" type="button">Копіювати</button>
+        <button class="btn" id="hw-save" type="button">Зберегти в список</button>
+        <button class="btn" id="hw-new" type="button">Нове завдання</button>
+        <button class="btn sm" id="out-reset" type="button" hidden>Скинути текст до шаблону</button>
+      </div>
+    </div>
+
+    <h2>Список завдань</h2>
+    <div class="empty" id="hw-empty" hidden>Збережених завдань ще немає.</div>
+    <div class="stack" id="hw-list"></div>
+  </section>
+</div>
+
+<datalist id="subjects"></datalist>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+function h(tag,attrs){
+  var el=document.createElement(tag), val;
+  if(attrs){ Object.keys(attrs).forEach(function(k){
+    var v=attrs[k]; if(v==null||v===false) return;
+    if(k==='class') el.className=v;
+    else if(k==='value') val=v;
+    else if(k==='checked') el.checked=!!v;
+    else if(k==='disabled') el.disabled=!!v;
+    else if(k.slice(0,2)==='on') el.addEventListener(k.slice(2),v);
+    else el.setAttribute(k, v===true?'':String(v));
+  }); }
+  var kids=Array.prototype.slice.call(arguments,2).flat(Infinity);
+  kids.forEach(function(kid){ if(kid==null||kid===false) return; el.append(kid.nodeType?kid:document.createTextNode(String(kid))); });
+  if(val!==undefined) el.value=val;
+  return el;
+}
+var uid=function(){return Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-3)};
+var pad=function(n){return String(n).padStart(2,'0')};
+function dstr(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function todayStr(){return dstr(new Date())}
+function parseD(s){var p=s.split('-').map(Number);return new Date(p[0],p[1]-1,p[2])}
+var MONTHS_GEN=['січня','лютого','березня','квітня','травня','червня','липня','серпня','вересня','жовтня','листопада','грудня'];
+var MONTHS_NOM=['січень','лютий','березень','квітень','травень','червень','липень','серпень','вересень','жовтень','листопад','грудень'];
+var WEEKDAYS=['неділя','понеділок','вівторок','середа','четвер','пʼятниця','субота'];
+function fmtLong(s){var d=parseD(s);var w=WEEKDAYS[d.getDay()];return w.charAt(0).toUpperCase()+w.slice(1)+', '+d.getDate()+' '+MONTHS_GEN[d.getMonth()]+' '+d.getFullYear()}
+function fmtShort(s){var d=parseD(s);return pad(d.getDate())+'.'+pad(d.getMonth()+1)}
+function plural(n){var a=n%10,b=n%100;if(a===1&&b!==11)return 'день';if(a>=2&&a<=4&&!(b>=12&&b<=14))return 'дні';return 'днів'}
+function cap1(s){return s?s.charAt(0).toUpperCase()+s.slice(1):s}
+
+/* ---------- стан ---------- */
+var LS_KEY='zhurnal-starosty-v1', TAB_KEY='zhurnal-starosty-tab';
+var TONES=[['ok','Зелений'],['bad','Червоний'],['warn','Жовтий'],['info','Синій'],['muted','Сірий']];
+function defaultCats(){return [
+  {id:'c_p',code:'✓',label:'Присутній',tone:'ok',present:true},
+  {id:'c_n',code:'Н',label:'Відсутній',tone:'bad'},
+  {id:'c_pp',code:'ПП',label:'Поважна причина',tone:'warn'},
+  {id:'c_h',code:'Х',label:'Хворіє (довідка)',tone:'info'}
+];}
+function emptyState(){return {v:1,demo:false,updatedAt:0,students:[],categories:defaultCats(),sessions:[],homework:[]}}
+function normalize(s){
+  var e=emptyState(); if(!s||typeof s!=='object') return e;
+  var o=Object.assign({},e,s);
+  o.students=Array.isArray(s.students)?s.students:[];
+  o.categories=(Array.isArray(s.categories)&&s.categories.length)?s.categories:defaultCats();
+  o.sessions=(Array.isArray(s.sessions)?s.sessions:[]).map(function(x){x.marks=(x.marks&&typeof x.marks==='object')?x.marks:{};return x});
+  o.homework=Array.isArray(s.homework)?s.homework:[];
+  return o;
+}
+function demoState(){
+  var st=emptyState(); st.demo=true;
+  var names=['Бондаренко Олена','Ковальчук Андрій','Мельник Софія','Шевченко Дмитро','Ткаченко Марія','Коваленко Ігор','Олійник Катерина','Кравчук Максим'];
+  st.students=names.map(function(n,i){return {id:'d'+i,name:n}});
+  var P=st.categories[0].id,N=st.categories[1].id,PP=st.categories[2].id,X=st.categories[3].id;
+  var t=new Date(); var off=function(k){return dstr(new Date(t.getFullYear(),t.getMonth(),t.getDate()+k))};
+  st.sessions=[
+    {id:'ds1',date:off(-2),pair:1,subject:'Вища математика',marks:{d0:P,d1:P,d2:N,d3:P,d4:PP,d5:P,d6:P,d7:X}},
+    {id:'ds2',date:off(-1),pair:3,subject:'Англійська мова',marks:{d0:P,d1:N,d2:P,d3:P,d4:P,d5:N,d6:P,d7:P}},
+    {id:'ds3',date:off(0),pair:2,subject:'Фізика',marks:{d0:P,d1:P}}
+  ];
+  st.homework=[{id:'dh1',subject:'Вища математика',teacher:'',task:'Розвʼязати №12–18 зі збірника (с. 45). Оформити письмово, надіслати одним PDF.',deadline:off(3),time:'23:59',submit:'Надіслати старості в особисті повідомлення',notes:'',done:false}];
+  return st;
+}
+function lsLoad(){try{var r=localStorage.getItem(LS_KEY);return r?JSON.parse(r):null}catch(e){return null}}
+function lsSave(){try{localStorage.setItem(LS_KEY,JSON.stringify(state))}catch(e){}}
+
+var saved=lsLoad();
+var state=saved?normalize(saved):demoState();
+var ui={tab:'att',sessionId:null,editing:null,hwEditing:null,manualOut:false,files:[],aiCtl:null};
+var ref=null, dl=null, sm=null, imgLimits=null;
+var saveTimer=null, saving=false, dirty=false, loadTimer=null;
+
+/* ---------- збереження ---------- */
+var STATUS={connecting:'Підключаюсь…',saved:'Зберігається в акаунті',saving:'Зберігаю…',local:'Зберігається лише в цьому браузері',error:'Не вдалося зберегти, повторю'};
+function setStatus(k){var el=$('#sync');el.setAttribute('data-s',k);$('#sync-t').textContent=STATUS[k]}
+function commit(){state.updatedAt=Date.now();lsSave();scheduleSave()}
+function scheduleSave(){
+  if(!ref){setStatus('local');return}
+  setStatus('saving'); clearTimeout(saveTimer); saveTimer=setTimeout(flush,500);
+}
+async function flush(){
+  saveTimer=null;
+  if(saving){dirty=true;return}
+  if(!ref){setStatus('local');return}
+  saving=true;
+  try{ await ref.set({updatedAt:state.updatedAt,data:state}); setStatus('saved'); }
+  catch(e){ setStatus('error'); }
+  finally{ saving=false; if(dirty){dirty=false;flush()} }
+}
+function hasContent(){return state.students.length||state.sessions.length||state.homework.length}
+
+/* ---------- допоміжне ---------- */
+var toastT=null;
+function toast(msg){var t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){t.hidden=true},2800)}
+function armed(btn,text,fn){
+  var t=null, orig=btn.textContent;
+  btn.addEventListener('click',function(){
+    if(btn.hasAttribute('data-armed')){clearTimeout(t);btn.removeAttribute('data-armed');btn.textContent=orig;fn()}
+    else{btn.setAttribute('data-armed','');btn.textContent=text;t=setTimeout(function(){btn.removeAttribute('data-armed');btn.textContent=orig},3500)}
+  });
+}
+async function copyText(txt,fallbackEl){
+  try{await navigator.clipboard.writeText(txt);toast('Скопійовано');return true}
+  catch(e){
+    if(fallbackEl){fallbackEl.focus();fallbackEl.select();toast('Текст виділено, скопіюйте його вручну')}
+    else toast('Не вдалося скопіювати автоматично');
+    return false;
+  }
+}
+var catById=function(id){return state.categories.find(function(c){return c.id===id})};
+var cmpSess=function(a,b){return a.date<b.date?-1:a.date>b.date?1:(a.pair||0)-(b.pair||0)};
+var sessAsc=function(){return state.sessions.slice().sort(cmpSess)};
+var sessDesc=function(){return state.sessions.slice().sort(function(a,b){return cmpSess(b,a)})};
+function currentSession(){
+  var s=state.sessions.find(function(x){return x.id===ui.sessionId});
+  if(!s){var l=sessDesc();s=l[0]||null;ui.sessionId=s?s.id:null}
+  return s;
+}
+function refreshSubjects(){
+  var set={};state.sessions.forEach(function(s){if(s.subject)set[s.subject]=1});state.homework.forEach(function(x){if(x.subject)set[x.subject]=1});
+  $('#subjects').replaceChildren.apply($('#subjects'),Object.keys(set).sort().map(function(v){return h('option',{value:v})}));
+}
+
+/* ---------- вкладки ---------- */
+function showTab(name){
+  ui.tab=name;
+  $$('.tab').forEach(function(b){b.setAttribute('aria-selected',String(b.getAttribute('data-tab')===name))});
+  $$('.panel').forEach(function(p){p.hidden=(p.id!=='p-'+name)});
+  if(name==='att')renderAttendance();
+  if(name==='jr')renderJournal();
+  if(name==='grp')renderGroup();
+  if(name==='hw')renderHwList();
+  try{localStorage.setItem(TAB_KEY,name)}catch(e){}
+}
+
+/* ---------- відмітки ---------- */
+function renderSessions(){
+  var box=$('#sessions'), cur=currentSession();
+  box.replaceChildren.apply(box,sessDesc().map(function(s){
+    return h('button',{type:'button',class:'chip','aria-pressed':String(!!cur&&cur.id===s.id),onclick:function(){ui.sessionId=s.id;$('#session-form').hidden=true;renderAttendance()}},
+      h('span',{class:'d'},fmtShort(s.date)+' · '+(s.pair?s.pair+' пара':'без номера')),
+      h('span',{class:'s'},s.subject));
+  }));
+}
+function renderAttendance(){
+  renderSessions();
+  var s=currentSession();
+  $('#att-empty-sess').hidden=!!s;
+  $('#att-body').hidden=!s;
+  refreshSubjects();
+  if(!s)return;
+  $('#sess-title').textContent=fmtLong(s.date);
+  $('#sess-sub').textContent=(s.pair?s.pair+' пара · ':'')+s.subject;
+  renderSummary(); renderList();
+}
+function renderSummary(){
+  var s=currentSession(), box=$('#att-stats'); box.replaceChildren(); if(!s)return;
+  var n=state.students.length, marked=0;
+  state.categories.forEach(function(c){
+    var k=state.students.filter(function(x){return s.marks[x.id]===c.id}).length; marked+=k;
+    box.append(h('span',{class:'stat tone-'+c.tone,title:c.label},h('b',null,k),c.code,h('span',{class:'lbl'},c.label)));
+  });
+  box.append(h('span',{class:'stat tone-muted'},h('b',null,n-marked),h('span',{class:'lbl'},'не відмічено')));
+}
+function renderList(){
+  var s=currentSession(), ul=$('#att-list'); if(!s)return;
+  $('#att-empty-stud').hidden=state.students.length>0; ul.hidden=!state.students.length;
+  ul.replaceChildren.apply(ul,state.students.map(function(st,i){
+    var group=h('div',{class:'marks',role:'group','aria-label':'Відмітка: '+st.name});
+    state.categories.forEach(function(c){
+      group.append(h('button',{type:'button',class:'mark tone-'+c.tone,title:c.label,'aria-label':st.name+': '+c.label,'aria-pressed':String(s.marks[st.id]===c.id),
+        onclick:function(){
+          if(s.marks[st.id]===c.id)delete s.marks[st.id];else s.marks[st.id]=c.id;
+          commit();
+          $$('.mark',group).forEach(function(b,k){b.setAttribute('aria-pressed',String(s.marks[st.id]===state.categories[k].id))});
+          renderSummary();
+        }},c.code));
+    });
+    return h('li',{class:'row'},h('div',{class:'who'},h('span',{class:'num'},pad(i+1)),h('span',{class:'name'},st.name)),group);
+  }));
+}
+function lastSubject(){var l=sessDesc();return l[0]?l[0].subject:''}
+function openSessionForm(edit){
+  ui.editing=edit?edit.id:null;
+  $('#session-form').hidden=false; $('#sf-err').hidden=true;
+  $('#sf-title').textContent=edit?'Змінити пару':'Нова пара';
+  $('#sf-date').value=edit?edit.date:todayStr();
+  $('#sf-pair').value=edit&&edit.pair?String(edit.pair):'';
+  $('#sf-subject').value=edit?edit.subject:lastSubject();
+  $('#sf-subject').focus();
+}
+function bindAttendance(){
+  $('#sess-new').addEventListener('click',function(){openSessionForm(null)});
+  $('#sf-cancel').addEventListener('click',function(){$('#session-form').hidden=true});
+  $('#session-form').addEventListener('submit',function(e){
+    e.preventDefault();
+    var date=$('#sf-date').value, subj=$('#sf-subject').value.trim(), pair=$('#sf-pair').value;
+    var err=$('#sf-err');
+    if(!date){err.textContent='Вкажіть дату пари.';err.hidden=false;return}
+    if(!subj){err.textContent='Вкажіть предмет.';err.hidden=false;return}
+    var s=ui.editing?state.sessions.find(function(x){return x.id===ui.editing}):null;
+    if(s){s.date=date;s.subject=subj;s.pair=pair?Number(pair):0}
+    else{s={id:uid(),date:date,pair:pair?Number(pair):0,subject:subj,marks:{}};state.sessions.push(s)}
+    ui.sessionId=s.id; commit(); $('#session-form').hidden=true; renderAttendance(); toast('Пару збережено');
+  });
+  $('#sess-edit').addEventListener('click',function(){var s=currentSession();if(s)openSessionForm(s)});
+  armed($('#sess-del'),'Точно видалити?',function(){
+    var s=currentSession();if(!s)return;
+    state.sessions=state.sessions.filter(function(x){return x.id!==s.id});ui.sessionId=null;commit();renderAttendance();
+  });
+  $('#att-rest').addEventListener('click',function(){
+    var s=currentSession();if(!s)return;
+    var pc=state.categories.find(function(c){return c.present})||state.categories[0];
+    state.students.forEach(function(st){if(!s.marks[st.id])s.marks[st.id]=pc.id});
+    commit();renderList();renderSummary();
+  });
+  armed($('#att-reset'),'Точно скинути?',function(){
+    var s=currentSession();if(!s)return; s.marks={};commit();renderList();renderSummary();
+  });
+}
+
+/* ---------- журнал і експорт ---------- */
+function journalSessions(period){
+  var ss=sessAsc(); if(period&&period!=='all')ss=ss.filter(function(s){return s.date.indexOf(period)===0}); return ss;
+}
+function cycle(s,id){
+  var cats=state.categories, idx=cats.findIndex(function(c){return c.id===s.marks[id]}), nx=idx+1;
+  if(nx>=cats.length)delete s.marks[id];else s.marks[id]=cats[nx].id;
+}
+function renderJournal(){
+  var sel=$('#ex-period'), prev=sel.value||'all';
+  var months=Array.from(new Set(state.sessions.map(function(s){return s.date.slice(0,7)}))).sort();
+  sel.replaceChildren.apply(sel,[h('option',{value:'all'},'Усі пари')].concat(months.map(function(m){var p=m.split('-').map(Number);return h('option',{value:m},MONTHS_NOM[p[1]-1]+' '+p[0])})));
+  sel.value=(prev==='all'||months.indexOf(prev)>-1)?prev:'all';
+  var ss=journalSessions(sel.value), box=$('#jr-box'), t=$('#jr-table');
+  var sl=box.scrollLeft, st=box.scrollTop;
+  var empty=!ss.length||!state.students.length;
+  $('#jr-empty').hidden=!empty; box.hidden=empty;
+  $('#xl-btn').disabled=empty; $('#xl-copy').disabled=empty;
+  if(empty)return;
+  var cats=state.categories;
+  var thead=h('thead',null,h('tr',null,
+    h('th',{class:'nm'},'Студент'),
+    ss.map(function(s){return h('th',{title:fmtLong(s.date)+' · '+s.subject},h('div',{class:'mono'},fmtShort(s.date)+(s.pair?'·'+s.pair:'')),h('div',{class:'sub'},s.subject))}),
+    cats.map(function(c){return h('th',{title:c.label,class:'tot tone-'+c.tone},c.code)})
+  ));
+  var tbody=h('tbody',null,state.students.map(function(stu,i){
+    return h('tr',null,
+      h('td',{class:'nm'},(i+1)+'. '+stu.name),
+      ss.map(function(s){
+        var c=catById(s.marks[stu.id]);
+        return h('td',null,h('button',{type:'button',class:'cell'+(c?' has tone-'+c.tone:''),'aria-label':stu.name+', '+fmtShort(s.date)+': '+(c?c.label:'не відмічено'),onclick:function(){cycle(s,stu.id);commit();renderJournal()}},c?c.code:'·'));
+      }),
+      cats.map(function(c){return h('td',{class:'tot tone-'+c.tone},ss.filter(function(s){return s.marks[stu.id]===c.id}).length)})
+    );
+  }));
+  t.replaceChildren(thead,tbody);
+  box.scrollLeft=sl; box.scrollTop=st;
+}
+function buildAoa(period){
+  var ss=journalSessions(period), cats=state.categories;
+  var head1=['',''].concat(ss.map(function(s){return fmtShort(s.date)+(s.pair?' · '+s.pair+' п.':'')}),cats.map(function(c,i){return i===0?'Підсумок':''}));
+  var head2=['№','ПІБ'].concat(ss.map(function(s){return s.subject}),cats.map(function(c){return c.code+' — '+c.label}));
+  var rows=state.students.map(function(st,i){
+    return [i+1,st.name].concat(
+      ss.map(function(s){var c=catById(s.marks[st.id]);return c?c.code:''}),
+      cats.map(function(c){return ss.filter(function(s){return s.marks[st.id]===c.id}).length})
+    );
+  });
+  return {aoa:[head1,head2].concat(rows),ss:ss,cats:cats};
+}
+function colName(n){var s='';n++;while(n>0){var m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=Math.floor((n-1)/26)}return s}
+async function exportXlsx(){
+  if(!window.XLSX){toast('Бібліотека Excel не завантажилась. Скористайтеся «Копіювати таблицю»');return}
+  if(!dl){toast('Завантаження тут недоступне');return}
+  var b=buildAoa($('#ex-period').value);
+  if(!b.ss.length||!state.students.length){toast('Поки нічого експортувати');return}
+  var ws=XLSX.utils.aoa_to_sheet(b.aoa);
+  var first=colName(2), last=colName(1+b.ss.length);
+  state.students.forEach(function(st,i){
+    var r=i+2;
+    b.cats.forEach(function(c,k){
+      var addr=XLSX.utils.encode_cell({r:r,c:2+b.ss.length+k});
+      var cnt=b.ss.filter(function(s){return s.marks[st.id]===c.id}).length;
+      ws[addr]={t:'n',v:cnt,f:'COUNTIF('+first+(r+1)+':'+last+(r+1)+',"'+String(c.code).replace(/"/g,'""')+'")'};
+    });
+  });
+  ws['!cols']=[{wch:4},{wch:30}].concat(b.ss.map(function(){return {wch:14}}),b.cats.map(function(){return {wch:14}}));
+  var lg=XLSX.utils.aoa_to_sheet([['Позначка','Значення']].concat(state.categories.map(function(c){return [c.code,c.label]})));
+  lg['!cols']=[{wch:10},{wch:28}];
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Відвідуваність');
+  XLSX.utils.book_append_sheet(wb,lg,'Позначки');
+  var buf=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+  try{await dl.save({filename:'vidviduvanist-'+todayStr()+'.xlsx',data:buf});toast('Файл готовий')}
+  catch(e){if(e&&e.code==='declined')return;toast('Не вдалося зберегти файл. Скористайтеся «Копіювати таблицю»')}
+}
+function bindJournal(){
+  $('#ex-period').addEventListener('change',renderJournal);
+  $('#xl-btn').addEventListener('click',exportXlsx);
+  $('#xl-copy').addEventListener('click',function(){
+    var b=buildAoa($('#ex-period').value);
+    if(!b.ss.length||!state.students.length){toast('Поки нічого копіювати');return}
+    copyText(b.aoa.map(function(r){return r.join('\t')}).join('\n'));
+  });
+}
+
+/* ---------- група і категорії ---------- */
+function renderGroup(){
+  $('#stud-count').textContent=state.students.length?state.students.length+' у групі':'Поки нікого';
+  var ul=$('#stud-list');
+  ul.hidden=!state.students.length; $('#stud-empty').hidden=state.students.length>0;
+  ul.replaceChildren.apply(ul,state.students.map(function(st,i){
+    var del=h('button',{type:'button',class:'btn sm','aria-label':'Видалити '+st.name},'Видалити');
+    armed(del,'Точно?',function(){
+      state.students=state.students.filter(function(x){return x.id!==st.id});
+      state.sessions.forEach(function(s){delete s.marks[st.id]});
+      commit();renderGroup();
+    });
+    return h('li',{class:'row'},h('span',{class:'num'},pad(i+1)),
+      h('input',{class:'grow',value:st.name,'aria-label':'ПІБ студента',autocomplete:'off',onchange:function(e){
+        var v=e.target.value.trim(); if(!v){e.target.value=st.name;return}
+        st.name=v;commit();
+      }}),del);
+  }));
+  renderCats();
+}
+function renderCats(){
+  var box=$('#cat-list');
+  box.replaceChildren.apply(box,state.categories.map(function(c){
+    var del=h('button',{type:'button',class:'btn sm','aria-label':'Видалити категорію '+c.label},'Видалити');
+    armed(del,'Точно?',function(){
+      if(state.categories.length<2){toast('Потрібна хоча б одна категорія');return}
+      state.categories=state.categories.filter(function(x){return x.id!==c.id});
+      state.sessions.forEach(function(s){Object.keys(s.marks).forEach(function(k){if(s.marks[k]===c.id)delete s.marks[k]})});
+      commit();renderCats();
+    });
+    return h('div',{class:'cat-row'},
+      h('input',{class:'code',value:c.code,maxlength:'3','aria-label':'Позначка',autocomplete:'off',onchange:function(e){c.code=e.target.value.trim()||c.code;e.target.value=c.code;commit()}}),
+      h('input',{class:'lab',value:c.label,'aria-label':'Назва',autocomplete:'off',onchange:function(e){c.label=e.target.value.trim()||c.label;e.target.value=c.label;commit()}}),
+      h('select',{'aria-label':'Колір',value:c.tone,onchange:function(e){c.tone=e.target.value;commit()}},TONES.map(function(t){return h('option',{value:t[0]},t[1])})),
+      h('label',{class:'chk'},h('input',{type:'checkbox',checked:!!c.present,onchange:function(e){c.present=e.target.checked;commit()}}),'Присутній'),
+      del);
+  }));
+}
+function addStudents(list){
+  var have={};state.students.forEach(function(s){have[s.name.toLowerCase()]=1});
+  var added=0;
+  list.forEach(function(raw){
+    var n=raw.replace(/^\s*\d+[.)]\s*/,'').trim(); if(!n||have[n.toLowerCase()])return;
+    have[n.toLowerCase()]=1; state.students.push({id:uid(),name:n}); added++;
+  });
+  if(added){commit();renderGroup();toast('Додано: '+added)}else toast('Нових імен немає');
+  return added;
+}
+function bindGroup(){
+  $('#add-form').addEventListener('submit',function(e){
+    e.preventDefault();var inp=$('#add-name');var v=inp.value.trim();if(!v)return;
+    if(addStudents([v]))inp.value='';inp.focus();
+  });
+  $('#bulk-add').addEventListener('click',function(){
+    var ta=$('#bulk'); if(addStudents(ta.value.split(/\r?\n/)))ta.value='';
+  });
+  $('#stud-sort').addEventListener('click',function(){
+    state.students.sort(function(a,b){return a.name.localeCompare(b.name,'uk')});commit();renderGroup();
+  });
+  $('#cat-add').addEventListener('click',function(){
+    state.categories.push({id:uid(),code:'?',label:'Нова категорія',tone:'muted'});commit();renderCats();
+    var rows=$$('.cat-row .code');if(rows.length){rows[rows.length-1].focus();rows[rows.length-1].select()}
+  });
+}
+
+/* ---------- домашка ---------- */
+function countdown(dl_,time){
+  if(!dl_)return null;
+  var now=new Date(), d=parseD(dl_), t0=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  var days=Math.round((d-t0)/86400000);
+  if(days<0)return {text:'прострочено на '+(-days)+' '+plural(-days),tone:'bad'};
+  if(days===0){
+    if(time){
+      var p=time.split(':').map(Number), end=new Date(now.getFullYear(),now.getMonth(),now.getDate(),p[0],p[1]), ms=end-now;
+      if(ms<0)return {text:'час на здачу вийшов',tone:'bad'};
+      var hrs=Math.floor(ms/3600000), mins=Math.floor((ms%3600000)/60000);
+      return {text:'здати сьогодні, залишилось '+(hrs?hrs+' год ':'')+mins+' хв',tone:'warn'};
+    }
+    return {text:'здати сьогодні',tone:'warn'};
+  }
+  var verb=(days%10===1&&days%100!==11)?'залишився':'залишилось';
+  return {text:verb+' '+days+' '+plural(days)+(days===1?' (завтра)':''),tone:days<=1?'warn':'info'};
+}
+function template(it,emoji){
+  if(!it.subject&&!it.task&&!it.deadline)return '';
+  var E=function(e){return emoji?e+' ':''}, L=[];
+  L.push(E('📚')+'Домашнє завдання'+(it.subject?' · '+it.subject:''));
+  if(it.teacher)L.push(E('👤')+'Викладач: '+it.teacher);
+  if(it.task)L.push('',E('📝')+'Завдання:',it.task.trim());
+  if(it.deadline){
+    L.push('',E('⏰')+'Дедлайн: '+fmtLong(it.deadline)+(it.time?', '+it.time:''));
+    var cd=countdown(it.deadline,it.time); if(cd)L.push(E('⏳')+cap1(cd.text));
+  }
+  if(it.submit)L.push('',E('📤')+'Як здати: '+it.submit);
+  if(it.notes)L.push('',E('ℹ️')+it.notes);
+  return L.join('\n');
+}
+function readForm(){
+  return {subject:$('#hw-subject').value.trim(),teacher:$('#hw-teacher').value.trim(),task:$('#hw-task').value,deadline:$('#hw-date').value,time:$('#hw-time').value,submit:$('#hw-submit').value.trim(),notes:$('#hw-notes').value.trim()};
+}
+function updateOutput(){
+  var it=readForm(), cd=countdown(it.deadline,it.time);
+  $('#hw-cd').textContent=cd?'До дедлайну: '+cd.text:'';
+  if(!ui.manualOut)$('#hw-out').value=template(it,$('#hw-emoji').checked);
+}
+function fillForm(it,edit){
+  $('#hw-subject').value=it.subject||'';$('#hw-teacher').value=it.teacher||'';$('#hw-task').value=it.task||'';
+  $('#hw-date').value=it.deadline||'';$('#hw-time').value=it.time||'';$('#hw-submit').value=it.submit||'';$('#hw-notes').value=it.notes||'';
+  ui.hwEditing=edit?it.id:null; ui.manualOut=false;$('#out-reset').hidden=true;
+  $('#hw-save').textContent=edit?'Оновити в списку':'Зберегти в список';
+  updateOutput();
+}
+function resetForm(){
+  fillForm({},false); $('#hw-raw').value=''; clearFiles(); $('#hw-ai-status').textContent='';
+}
+function saveHw(){
+  var it=readForm(); if(!it.subject&&!it.task){toast('Заповніть предмет або завдання');return}
+  var ex=ui.hwEditing?state.homework.find(function(x){return x.id===ui.hwEditing}):null;
+  if(ex){Object.assign(ex,it)} else {var n=Object.assign({id:uid(),done:false},it);state.homework.push(n);ui.hwEditing=n.id}
+  $('#hw-save').textContent='Оновити в списку';
+  commit();renderHwList();refreshSubjects();toast('Збережено в списку');
+}
+function renderHwList(){
+  var box=$('#hw-list');
+  var items=state.homework.slice().sort(function(a,b){
+    if(!!a.done!==!!b.done)return a.done?1:-1;
+    var ad=a.deadline||'9999',bd=b.deadline||'9999'; return ad<bd?-1:ad>bd?1:0;
+  });
+  $('#hw-empty').hidden=items.length>0;
+  box.replaceChildren.apply(box,items.map(function(it){
+    var cd=it.done?null:countdown(it.deadline,it.time);
+    var del=h('button',{type:'button',class:'btn sm'},'Видалити');
+    armed(del,'Точно?',function(){
+      state.homework=state.homework.filter(function(x){return x.id!==it.id});
+      if(ui.hwEditing===it.id){ui.hwEditing=null;$('#hw-save').textContent='Зберегти в список'}
+      commit();renderHwList();
+    });
+    return h('article',{class:'hw'+(it.done?' done':'')},
+      h('div',{class:'hw-top'},h('strong',null,it.subject||'Без предмета'),
+        it.done?h('span',{class:'badge tone-ok'},'виконано'):(cd?h('span',{class:'badge tone-'+cd.tone},cd.text):null)),
+      it.deadline?h('div',{class:'sub'},'Дедлайн: '+fmtLong(it.deadline)+(it.time?', '+it.time:'')):null,
+      it.task?h('p',{class:'task'},it.task):null,
+      h('div',{class:'btns'},
+        h('button',{type:'button',class:'btn sm primary',onclick:function(){
+          fillForm(it,true);
+          copyText($('#hw-out').value,$('#hw-out'));
+        }},'Копіювати шаблон'),
+        h('button',{type:'button',class:'btn sm',onclick:function(){fillForm(it,true);window.scrollTo(0,$('#hw-subject').getBoundingClientRect().top+window.scrollY-120)}},'У форму'),
+        h('button',{type:'button',class:'btn sm',onclick:function(){it.done=!it.done;commit();renderHwList()}},it.done?'Повернути':'Виконано'),
+        del));
+  }));
+}
+
+/* файли та Claude */
+function isImage(f){return f.type&&f.type.indexOf('image/')===0}
+function renderThumbs(){
+  var box=$('#hw-thumbs');
+  box.replaceChildren.apply(box,ui.files.map(function(f,i){
+    var rm=h('button',{type:'button','aria-label':'Прибрати '+f.name,onclick:function(){if(f._url)URL.revokeObjectURL(f._url);ui.files.splice(i,1);renderThumbs()}},'×');
+    return h('div',{class:'thumb',title:f.name},h('img',{src:f._url,alt:f.name}),rm);
+  }));
+}
+function clearFiles(){ui.files.forEach(function(f){if(f._url)URL.revokeObjectURL(f._url)});ui.files=[];renderThumbs();$('#hw-files').value=''}
+async function onFiles(e){
+  var list=Array.prototype.slice.call(e.target.files||[]), note=[];
+  for(var i=0;i<list.length;i++){
+    var f=list[i];
+    if(isImage(f)){
+      if(!imgLimits||!imgLimits.images){note.push('Фото тут не читаються. Вставте текст вручну.');continue}
+      f._url=URL.createObjectURL(f); ui.files.push(f);
+    } else if(/\.(txt|md|csv)$/i.test(f.name)||(f.type&&f.type.indexOf('text/')===0)){
+      try{
+        var txt=(await f.text()).slice(0,20000), ta=$('#hw-raw');
+        ta.value=(ta.value?ta.value+'\n\n':'')+'Файл '+f.name+':\n'+txt;
+      }catch(err){note.push('Не вдалося прочитати '+f.name)}
+    } else note.push(f.name+': цей формат не читаю, скопіюйте текст у поле.');
+  }
+  e.target.value=''; renderThumbs();
+  if(note.length)toast(note[0]);
+}
+var AI_ERR={not_granted:'Доступ до Claude для цієї сторінки не дозволено.',rate_limited:'Забагато запитів. Спробуйте трохи пізніше.',image_rejected:'Не вдалося прочитати фото. Спробуйте інше.',refused:'Claude не зміг опрацювати ці дані. Змініть текст або фото.',invalid_json:'Не вдалося розібрати відповідь. Спробуйте ще раз.',upstream_error:'Збій зʼєднання. Спробуйте ще раз.',session_expired:'Увійдіть в акаунт ще раз.',prompt_too_large:'Забагато тексту. Скоротіть його.'};
+async function parseWithClaude(){
+  var st=$('#hw-ai-status'), btn=$('#hw-parse');
+  if(ui.aiCtl){ui.aiCtl.abort();return}
+  var raw=$('#hw-raw').value.trim(), imgs=ui.files.filter(isImage);
+  if(!raw&&!imgs.length){st.textContent='Вставте текст або додайте фото.';return}
+  var now=new Date();
+  var prompt='Ти допомагаєш старості студентської групи оформити домашнє завдання з вхідних даних (текст і, можливо, фото).\n'
+   +'Сьогодні '+todayStr()+' ('+WEEKDAYS[now.getDay()]+').\n'
+   +'Поверни лише один JSON-обʼєкт такого вигляду: {"subject":"","teacher":"","task":"","deadline":"","time":"","submit":"","notes":""}.\n'
+   +'Правила: нічого не вигадуй, якщо чогось немає у даних, залиш порожній рядок. subject: назва предмета. task: суть завдання українською, зі збереженням номерів задач, сторінок, варіантів і посилань. '
+   +'deadline у форматі YYYY-MM-DD; якщо сказано «до пʼятниці» чи «наступного вівторка», обчисли найближчу майбутню дату відносно сьогодні. time у форматі HH:MM. submit: як і куди здавати. notes: інші важливі деталі.\n\n'
+   +'Текст від користувача:\n'+(raw||'(немає, дивись фото)');
+  var ctl=new AbortController(); ui.aiCtl=ctl; btn.textContent='Зупинити'; st.textContent='Claude читає…';
+  try{
+    var opts={signal:ctl.signal,modelTier:'default'};
+    if(imgs.length)opts.images=imgs.slice(0,(imgLimits&&imgLimits.images&&imgLimits.images.maxCount)||4);
+    var r=await sm.json(prompt,opts);
+    if(!r||typeof r!=='object'||Array.isArray(r))throw {code:'invalid_json'};
+    var s=function(v){return typeof v==='string'?v.trim():''};
+    if(s(r.subject))$('#hw-subject').value=s(r.subject);
+    if(s(r.teacher))$('#hw-teacher').value=s(r.teacher);
+    if(s(r.task))$('#hw-task').value=s(r.task);
+    if(s(r.submit))$('#hw-submit').value=s(r.submit);
+    if(s(r.notes))$('#hw-notes').value=s(r.notes);
+    if(/^\d{4}-\d{2}-\d{2}$/.test(s(r.deadline)))$('#hw-date').value=s(r.deadline);
+    if(/^\d{2}:\d{2}$/.test(s(r.time)))$('#hw-time').value=s(r.time);
+    ui.manualOut=false;$('#out-reset').hidden=true;updateOutput();
+    st.textContent='Поля заповнено. Перевірте їх перед копіюванням.';
+  }catch(e){
+    st.textContent=(e&&e.code==='cancelled')?'Зупинено.':(AI_ERR[e&&e.code]||'Не вийшло. Спробуйте ще раз.');
+  }finally{ui.aiCtl=null;btn.textContent='Заповнити поля з Claude'}
+}
+function bindHomework(){
+  ['#hw-subject','#hw-teacher','#hw-task','#hw-date','#hw-time','#hw-submit','#hw-notes','#hw-emoji'].forEach(function(id){
+    $(id).addEventListener('input',updateOutput); $(id).addEventListener('change',updateOutput);
+  });
+  $('#hw-out').addEventListener('input',function(){ui.manualOut=true;$('#out-reset').hidden=false});
+  $('#out-reset').addEventListener('click',function(){ui.manualOut=false;$('#out-reset').hidden=true;updateOutput()});
+  $('#hw-copy').addEventListener('click',function(){
+    if(!ui.manualOut)updateOutput();
+    var v=$('#hw-out').value; if(!v.trim()){toast('Спочатку заповніть поля');return}
+    copyText(v,$('#hw-out'));
+  });
+  $('#hw-save').addEventListener('click',saveHw);
+  $('#hw-new').addEventListener('click',resetForm);
+  $('#hw-files').addEventListener('change',onFiles);
+  $('#hw-parse').addEventListener('click',parseWithClaude);
+}
+
+/* ---------- загальне ---------- */
+function renderAll(){
+  $('#demo-note').hidden=!state.demo;
+  $('#today').textContent=fmtLong(todayStr());
+  refreshSubjects();
+  if(ui.tab==='att')renderAttendance();
+  if(ui.tab==='jr')renderJournal();
+  if(ui.tab==='grp')renderGroup();
+  if(ui.tab==='hw')renderHwList();
+}
+async function cap(n){try{return window.claude&&window.claude.use?await window.claude.use(n):null}catch(e){return null}}
+async function connect(){
+  loadTimer=setTimeout(function(){setStatus('local')},10000);
+  var res=await Promise.all([cap('db'),cap('user'),cap('downloads'),cap('sample')]);
+  var dbm=res[0], user=res[1]; dl=res[2]; sm=res[3];
+  $('#xl-btn').hidden=!dl; $('#xl-note').hidden=!!dl;
+  $('#hw-parse').hidden=!sm; $('#hw-ai-status').hidden=!sm;
+  if(sm){try{imgLimits=await sm.limits()}catch(e){imgLimits=null}}
+  var canImg=!!(imgLimits&&imgLimits.images);
+  $('#hw-files').setAttribute('accept',canImg?'image/*,.txt,.md,.csv':'.txt,.md,.csv');
+  $('#hw-fhint').textContent=sm
+    ?(canImg?'Фото читає Claude. З файлів беру текст .txt, .md, .csv. Для PDF і Word скопіюйте текст у поле вище.':'Фото тут не читаються. З файлів беру текст .txt, .md, .csv; для PDF і Word скопіюйте текст у поле вище.')
+    :'Заповніть поля вручну або вставте текст у поле вище. З файлів беру текст .txt, .md, .csv.';
+  var id=null; try{id=user&&user.id?await user.id():null}catch(e){id=null}
+  if(!dbm||!id){clearTimeout(loadTimer);setStatus('local');return}
+  ref=dbm.doc('data/users/'+id+'/app');
+  ref.onSnapshot(function(snap){
+    if(!snap.metadata.fromCache)clearTimeout(loadTimer);
+    var d=snap.exists?snap.data():null;
+    var busy=!!saveTimer||saving;
+    if(d&&d.data&&typeof d.updatedAt==='number'&&!snap.metadata.hasPendingWrites&&!busy&&d.updatedAt>(state.updatedAt||0)){
+      state=normalize(d.data); state.updatedAt=d.updatedAt; lsSave();
+      if(!state.sessions.some(function(s){return s.id===ui.sessionId}))ui.sessionId=null;
+      renderAll();
+    }
+    if(!snap.metadata.fromCache){
+      var remoteAt=d&&typeof d.updatedAt==='number'?d.updatedAt:0;
+      if(!state.demo&&hasContent()&&remoteAt<(state.updatedAt||0))scheduleSave(); else if(!busy)setStatus('saved');
+    }
+  },function(){setStatus('local')});
+}
+function init(){
+  $$('.tab').forEach(function(b){b.addEventListener('click',function(){showTab(b.getAttribute('data-tab'))})});
+  document.addEventListener('click',function(e){var g=e.target.closest&&e.target.closest('[data-go]');if(g)showTab(g.getAttribute('data-go'))});
+  armed($('#demo-clear'),'Точно очистити?',function(){
+    var n=emptyState(); state=n; ui.sessionId=null; commit(); resetForm(); renderAll(); showTab('grp'); toast('Починаємо з чистого журналу');
+  });
+  var d=$('#sf-date'); d.value=todayStr();
+  bindAttendance(); bindJournal(); bindGroup(); bindHomework();
+  if(state.demo&&state.homework[0])fillForm(state.homework[0],true); else updateOutput();
+  var tab='att'; try{tab=localStorage.getItem(TAB_KEY)||'att'}catch(e){}
+  if(['att','jr','grp','hw'].indexOf(tab)<0)tab='att';
+  $('#today').textContent=fmtLong(todayStr());
+  setStatus('connecting');
+  showTab(tab); renderAll();
+  connect();
+}
+init();
+})();
+</script>
+
+</body></html>
