@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Кабінет Старости — Журнал та ДЗ</title>
+  <title>Кабінет Старости — Акаунти, Журнал та ДЗ</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -69,32 +69,37 @@
 
   <!-- ВЕРХНЯ ПАНЕЛЬ -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
-      <div class="flex items-center gap-2.5">
-        <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 min-h-[4rem] py-2 flex flex-wrap items-center justify-between gap-2">
+      <!-- Інформація про групу та активний акаунт -->
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm shrink-0">
           <i data-lucide="clipboard-check" class="w-5 h-5"></i>
         </div>
-        <div>
-          <h1 class="font-bold text-base sm:text-lg leading-tight text-slate-900">Кабінет Старости</h1>
-          <p id="headerGroupName" class="text-xs text-slate-500 font-medium">Моя група</p>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 id="headerGroupName" class="font-bold text-sm sm:text-base leading-tight text-slate-900 truncate">Моя група</h1>
+            <span id="headerGroupCode" class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">GRP-000000</span>
+          </div>
+          <p id="headerAccountInfo" class="text-xs text-slate-500 font-medium truncate">Акаунт: Гість</p>
         </div>
       </div>
 
+      <!-- Статус бази та кнопка акаунту -->
       <div class="flex items-center gap-2">
-        <button onclick="pullFromFirebase(false)" id="syncIndicator" class="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition" title="Натисніть, щоб підтягнути свіжі дані з Firebase">
+        <button onclick="pullFromFirebase(false)" id="syncIndicator" class="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition" title="Оновити дані з Firebase">
           <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
           <span id="syncStatusText">Firebase</span>
         </button>
 
-        <button onclick="openSyncModal()" class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition" title="Синхронізація між телефоном і ноутбуком">
-          <i data-lucide="smartphone" class="w-4 h-4"></i>
-          <span>Пристрої</span>
+        <button onclick="openAccountModal()" class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition">
+          <i data-lucide="user-circle-2" class="w-4 h-4"></i>
+          <span id="accountBtnLabel">Увійти</span>
         </button>
       </div>
     </div>
 
     <!-- ВКЛАДКИ -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex gap-1 overflow-x-auto border-t border-slate-100 bg-slate-50/70">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 flex gap-1 overflow-x-auto border-t border-slate-100 bg-slate-50/70">
       <button onclick="switchTab('journal')" id="tab-journal" class="nav-tab flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap transition">
         <i data-lucide="calendar-days" class="w-4 h-4"></i>
         <span>Журнал відвідування</span>
@@ -105,7 +110,7 @@
       </button>
       <button onclick="switchTab('manage')" id="tab-manage" class="nav-tab flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-slate-900 whitespace-nowrap transition">
         <i data-lucide="users" class="w-4 h-4"></i>
-        <span>Група та Предмети</span>
+        <span>Група, Ролі та Предмети</span>
       </button>
     </div>
   </header>
@@ -170,7 +175,7 @@
             <i data-lucide="user-plus" class="w-6 h-6"></i>
           </div>
           <h3 class="text-base font-semibold text-slate-800">Список групи порожній</h3>
-          <p class="text-sm text-slate-500 mt-1 mb-4">Додайте одногрупників, щоб почати вести журнал відвідування.</p>
+          <p class="text-sm text-slate-500 mt-1 mb-4">Додайте людей до списку, щоб вести журнал відвідування.</p>
           <button onclick="switchTab('manage')" class="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition">
             Перейти до списку групи
           </button>
@@ -218,7 +223,7 @@
 
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Опис завдання / умови</label>
-            <textarea id="hwDescription" rows="4" oninput="generateHwPreview()" placeholder="Наприклад: Виконати задачі №1-5 зі сторінки 42. Прикріплені фото/файли додаються нижче..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+            <textarea id="hwDescription" rows="4" oninput="generateHwPreview()" placeholder="Наприклад: Виконати задачі №1-5 зі сторінки 42..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -239,7 +244,7 @@
               <button type="button" onclick="addManualAttachmentPrompt()" class="text-xs font-semibold text-indigo-600 hover:underline">+ Вписати назву вручну</button>
             </div>
 
-            <label id="hwDropZone" class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer bg-slate-50 hover:bg-indigo-50/40 hover:border-indigo-300 transition">
+            <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer bg-slate-50 hover:bg-indigo-50/40 hover:border-indigo-300 transition">
               <div class="flex flex-col items-center justify-center pt-2 pb-2 text-center px-2">
                 <i data-lucide="paperclip" class="w-5 h-5 text-indigo-500 mb-1"></i>
                 <p class="text-xs text-slate-700 font-medium">Натисніть, щоб обрати фото або файли</p>
@@ -294,25 +299,33 @@
       </div>
     </section>
 
-    <!-- ВКЛАДКА 3: ГРУПА ТА ПРЕДМЕТИ -->
+    <!-- ВКЛАДКА 3: ГРУПА, РОЛІ ТА ПРЕДМЕТИ -->
     <section id="view-manage" class="hidden space-y-5">
-      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h2 class="text-base font-bold text-slate-900">Назва навчальної групи</h2>
-          <p class="text-xs text-slate-500">Відображається в шапці сайту та при експорті в Excel</p>
+
+      <!-- Картка інформації про групу та власника -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h2 class="text-base font-bold text-slate-900">Дані групи та активного акаунту</h2>
+            <span id="manageRoleBadge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800">Гість</span>
+          </div>
+          <p id="manageOwnerInfo" class="text-xs text-slate-500">Власник / активний користувач: не авторизовано</p>
         </div>
-        <div class="flex gap-2">
-          <input type="text" id="groupNameInput" placeholder="Наприклад: ТЛ-26008Б" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-          <button onclick="saveGroupName()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition">Зберегти</button>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <input type="text" id="groupNameInput" placeholder="Назва групи (напр. ТЛ-26008Б)" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <button onclick="saveGroupName()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition">Зберегти назву</button>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <div class="flex items-center justify-between">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+        <!-- Список людей та їх ролей (7 колонок) -->
+        <div class="lg:col-span-7 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
               <i data-lucide="users" class="w-5 h-5 text-indigo-600"></i>
-              <span>Одногрупники (<span id="studentsCountBadge">0</span>)</span>
+              <span>Учасники списку та ролі (<span id="studentsCountBadge">0</span>)</span>
             </h2>
             <div class="flex gap-1.5">
               <button onclick="sortStudentsAlpha()" class="px-2.5 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition">А-Я</button>
@@ -320,18 +333,27 @@
             </div>
           </div>
 
-          <form onsubmit="addStudent(event)" class="flex gap-2">
-            <input type="text" id="newStudentName" required placeholder="Прізвище та Ім'я студента..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition flex items-center gap-1">
+          <!-- Форма додавання людини з вибором ролі -->
+          <form onsubmit="addStudent(event)" class="flex flex-col sm:flex-row gap-2">
+            <input type="text" id="newStudentName" required placeholder="Прізвище та Ім'я людини..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <select id="newStudentRole" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="Студент">Студент</option>
+              <option value="Помічник старости">Помічник старости</option>
+              <option value="Замстарости">Замстарости</option>
+              <option value="Староста">Староста</option>
+            </select>
+            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition flex items-center justify-center gap-1 shrink-0">
               <i data-lucide="plus" class="w-4 h-4"></i>
               <span>Додати</span>
             </button>
           </form>
 
-          <div id="studentsManageList" class="divide-y divide-slate-100 max-h-[420px] overflow-y-auto pr-1"></div>
+          <!-- Список учасників -->
+          <div id="studentsManageList" class="divide-y divide-slate-100 max-h-[440px] overflow-y-auto pr-1"></div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <!-- Управління предметами (5 колонок) -->
+        <div class="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
             <i data-lucide="book-marked" class="w-5 h-5 text-indigo-600"></i>
             <span>Предмети (<span id="subjectsCountBadge">0</span>)</span>
@@ -339,14 +361,15 @@
 
           <form onsubmit="addSubject(event)" class="flex gap-2">
             <input type="text" id="newSubjectName" required placeholder="Назва предмета..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition flex items-center gap-1">
+            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition flex items-center gap-1 shrink-0">
               <i data-lucide="plus" class="w-4 h-4"></i>
               <span>Додати</span>
             </button>
           </form>
 
-          <div id="subjectsManageList" class="divide-y divide-slate-100 max-h-[420px] overflow-y-auto pr-1"></div>
+          <div id="subjectsManageList" class="divide-y divide-slate-100 max-h-[440px] overflow-y-auto pr-1"></div>
         </div>
+
       </div>
     </section>
 
@@ -420,9 +443,18 @@
   <!-- МОДАЛЬНЕ ВІКНО: ДОДАТИ СПИСКОМ -->
   <div id="bulkAddModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" onclick="closeBulkAddModal(event)">
     <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl modal-animate" onclick="event.stopPropagation()">
-      <h3 class="font-bold text-base text-slate-900 mb-1">Додати одногрупників списком</h3>
-      <p class="text-xs text-slate-500 mb-3">Кожен студент — з нового рядка:</p>
-      <textarea id="bulkStudentsTextarea" rows="7" placeholder="Іваненко Іван&#10;Петренко Марія&#10;Коваленко Олександр" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"></textarea>
+      <h3 class="font-bold text-base text-slate-900 mb-1">Додати людей списком</h3>
+      <p class="text-xs text-slate-500 mb-2">Кожен рядок — окрема людина:</p>
+      <textarea id="bulkStudentsTextarea" rows="6" placeholder="Іваненко Іван&#10;Петренко Марія&#10;Коваленко Олександр" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"></textarea>
+      <div class="mb-3">
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Роль для доданих:</label>
+        <select id="bulkRoleSelect" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium">
+          <option value="Студент">Студент</option>
+          <option value="Помічник старости">Помічник старости</option>
+          <option value="Замстарости">Замстарости</option>
+          <option value="Староста">Староста</option>
+        </select>
+      </div>
       <div class="flex justify-end gap-2">
         <button onclick="closeBulkAddModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl">Скасувати</button>
         <button onclick="processBulkAdd()" class="px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl">Додати всіх</button>
@@ -430,39 +462,97 @@
     </div>
   </div>
 
-  <!-- МОДАЛЬНЕ ВІКНО: СИНХРОНІЗАЦІЯ ПРИСТРОЇВ -->
-  <div id="syncModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" onclick="closeSyncModal(event)">
+  <!-- МОДАЛЬНЕ ВІКНО: АКАУНТИ ТА ВХІД У ГРУПУ -->
+  <div id="accountModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-3 sm:p-4" onclick="closeAccountModal(event)">
     <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl modal-animate space-y-4" onclick="event.stopPropagation()">
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
-          <i data-lucide="smartphone" class="w-5 h-5 text-indigo-600"></i>
-          <span>Синхронізація між пристроями</span>
+          <i data-lucide="user-check" class="w-5 h-5 text-indigo-600"></i>
+          <span>Акаунт та Група</span>
         </h3>
-        <button onclick="closeSyncModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
+        <button onclick="closeAccountModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
 
-      <p class="text-xs text-slate-600 leading-relaxed">
-        База підключена до <b>Firebase Realtime Database</b>. Введіть ваш <b>Код групи</b> на телефоні або іншому комп'ютері, щоб миттєво підтягнути журнал та списки.
-      </p>
-
-      <div class="p-3 bg-indigo-50 border border-indigo-100 rounded-xl space-y-2">
-        <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-700">Ваш Код групи:</span>
-        <div class="flex items-center gap-2">
-          <input type="text" id="mySyncCodeDisplay" readonly class="flex-1 px-3 py-2 bg-white border border-indigo-200 rounded-lg font-mono text-sm font-bold text-slate-800" />
-          <button onclick="copySyncCode()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition">Копіювати</button>
+      <!-- Блок поточного залогіненого акаунту -->
+      <div id="activeAccountCard" class="hidden p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 space-y-2">
+        <div class="flex items-center justify-between gap-2">
+          <div>
+            <div id="accCardName" class="text-sm font-bold text-slate-900"></div>
+            <div id="accCardMeta" class="text-xs text-indigo-800 font-medium"></div>
+          </div>
+          <button onclick="logoutAccount()" class="px-3 py-1.5 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-lg text-xs font-semibold transition">
+            Вийти
+          </button>
+        </div>
+        <div class="text-[11px] text-slate-600">
+          Код групи для синхронізації на іншому пристрої: <b id="accCardGroupCode" class="font-mono text-slate-900"></b>
         </div>
       </div>
 
-      <div class="border-t border-slate-100 pt-3 space-y-2">
-        <span class="text-xs font-semibold text-slate-700">Підключитися за кодом з іншого пристрою:</span>
-        <div class="flex gap-2">
-          <input type="text" id="connectSyncCodeInput" placeholder="Наприклад: GRP-A1B2C3" class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-sm uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-          <button onclick="pullFromFirebase(true)" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition">Завантажити</button>
-        </div>
+      <!-- Перемикач Вхід / Реєстрація -->
+      <div class="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+        <button onclick="switchAuthMode('login')" id="authTabLogin" class="py-2 rounded-lg bg-white text-slate-900 shadow-xs transition">Вхід в акаунт</button>
+        <button onclick="switchAuthMode('register')" id="authTabRegister" class="py-2 rounded-lg text-slate-600 hover:text-slate-900 transition">Створити акаунт</button>
       </div>
 
+      <!-- Форма ВХОДУ -->
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Логін</label>
+          <input type="text" id="loginUsername" required placeholder="Наприклад: ivan_starosta" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Пароль</label>
+          <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
+          Увійти та синхронізувати
+        </button>
+      </form>
+
+      <!-- Форма РЕЄСТРАЦІЇ -->
+      <form id="registerForm" onsubmit="handleRegister(event)" class="hidden space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Ваше Прізвище та Ім'я</label>
+          <input type="text" id="regFullName" required placeholder="Іван Килинич" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Логін</label>
+            <input type="text" id="regUsername" required placeholder="ivan_tl26" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Пароль</label>
+            <input type="password" id="regPassword" required minlength="4" placeholder="Мінімум 4 символи" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Назва групи</label>
+            <input type="text" id="regGroupName" required placeholder="ТЛ-26008Б" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Ваша роль</label>
+            <select id="regRole" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="Староста">Староста</option>
+              <option value="Замстарости">Замстарости</option>
+              <option value="Помічник старости">Помічник старости</option>
+              <option value="Студент">Студент</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Код групи (залиште порожнім для нового або введіть існуючий)</label>
+          <input type="text" id="regGroupCode" placeholder="Наприклад: GRP-TL26008" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
+          Створити акаунт і зберегти в Firebase
+        </button>
+      </form>
+
+      <!-- Резервне збереження / відновлення файлу -->
       <div class="border-t border-slate-100 pt-3 flex items-center justify-between gap-2">
         <button onclick="downloadBackupJson()" class="flex-1 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition flex items-center justify-center gap-1.5">
           <i data-lucide="download" class="w-3.5 h-3.5"></i>
@@ -483,17 +573,22 @@
       'Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень',
       'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'
     ];
+    const ROLES_LIST = ['Староста', 'Замстарости', 'Помічник старости', 'Студент'];
 
     // Ваше сховище Firebase Realtime Database
     const FIREBASE_DB_URL = 'https://saint-dla-starist-default-rtdb.europe-west1.firebasedatabase.app';
 
+    let currentAccount = null; // { username, fullName, role, groupCode, groupName }
+    let syncCode = localStorage.getItem('starosta_sync_code') || 'GRP-DEFAULT';
+
     let appState = {
       groupName: 'Моя група',
+      ownerName: 'Не вказано',
       students: [
-        { id: 'st_1', name: 'Бондаренко Олександр' },
-        { id: 'st_2', name: 'Коваленко Софія' },
-        { id: 'st_3', name: 'Мельник Артем' },
-        { id: 'st_4', name: 'Шевченко Анастасія' }
+        { id: 'st_1', name: 'Бондаренко Олександр', role: 'Староста' },
+        { id: 'st_2', name: 'Коваленко Софія', role: 'Замстарости' },
+        { id: 'st_3', name: 'Мельник Артем', role: 'Помічник старости' },
+        { id: 'st_4', name: 'Шевченко Анастасія', role: 'Студент' }
       ],
       subjects: [
         'Вища математика',
@@ -506,16 +601,48 @@
       updatedAt: 0
     };
 
-    let syncCode = localStorage.getItem('starosta_sync_code');
-    if (!syncCode) {
-      syncCode = 'GRP-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-      localStorage.setItem('starosta_sync_code', syncCode);
-    }
-
     let attachedFilesMeta = [];
     let activeCellContext = null;
 
+    // ==================== ПРАВА РОЛЕЙ ====================
+    function getActiveRole() {
+      if (currentAccount && currentAccount.role) return currentAccount.role;
+      return 'Староста'; // Гостьовий локальний режим до входу
+    }
+
+    function canEditJournal() {
+      return ['Староста', 'Замстарости', 'Помічник старости'].includes(getActiveRole());
+    }
+
+    function canAddPeople() {
+      return ['Староста', 'Замстарости', 'Помічник старости'].includes(getActiveRole());
+    }
+
+    function canManageRolesAndDelete() {
+      return ['Староста', 'Замстарости'].includes(getActiveRole());
+    }
+
+    function getRoleBadgeClass(role) {
+      switch (role) {
+        case 'Староста': return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+        case 'Замстарости': return 'bg-purple-100 text-purple-800 border-purple-200';
+        case 'Помічник старости': return 'bg-amber-100 text-amber-800 border-amber-200';
+        default: return 'bg-slate-100 text-slate-700 border-slate-200';
+      }
+    }
+
+    // ==================== ІНІЦІАЛІЗАЦІЯ ====================
     document.addEventListener('DOMContentLoaded', () => {
+      const savedAcc = localStorage.getItem('starosta_active_account');
+      if (savedAcc) {
+        try {
+          currentAccount = JSON.parse(savedAcc);
+          if (currentAccount && currentAccount.groupCode) {
+            syncCode = currentAccount.groupCode;
+          }
+        } catch (e) {}
+      }
+
       loadFromLocal();
 
       const now = new Date();
@@ -529,7 +656,7 @@
       const tD = String(tomorrow.getDate()).padStart(2, '0');
       document.getElementById('hwDeadline').value = `${tY}-${tM}-${tD}T23:59`;
 
-      // Вставка фото / скріншотів через Ctrl+V / Cmd+V
+      // Швидка вставка скріншотів через Ctrl+V / Cmd+V
       document.addEventListener('paste', (e) => {
         const items = e.clipboardData?.items;
         if (!items) return;
@@ -561,15 +688,18 @@
       return `${FIREBASE_DB_URL}/groups/${cleanCode}.json`;
     }
 
+    function getFirebaseAccountUrl(username) {
+      const cleanUser = encodeURIComponent(String(username).trim().toLowerCase());
+      return `${FIREBASE_DB_URL}/accounts/${cleanUser}.json`;
+    }
+
     function loadFromLocal() {
       const raw = localStorage.getItem(`starosta_data_${syncCode}`);
       if (raw) {
         try {
           const parsed = JSON.parse(raw);
           appState = { ...appState, ...parsed };
-        } catch (e) {
-          console.error('Помилка читання локальних даних:', e);
-        }
+        } catch (e) {}
       }
     }
 
@@ -586,6 +716,9 @@
 
     async function saveData() {
       appState.updatedAt = Date.now();
+      if (currentAccount && currentAccount.fullName) {
+        appState.ownerName = `${currentAccount.fullName} (${currentAccount.role})`;
+      }
       localStorage.setItem(`starosta_data_${syncCode}`, JSON.stringify(appState));
       setSyncBadge('sync', 'Запис у Firebase...');
 
@@ -598,43 +731,36 @@
         if (res.ok) {
           setSyncBadge('ok', 'Firebase OK');
         } else {
-          setSyncBadge('err', 'Правила БД / Помилка');
+          setSyncBadge('err', 'Правила БД');
         }
       } catch (e) {
-        setSyncBadge('err', 'Офлайн / Помилка');
+        setSyncBadge('err', 'Офлайн');
       }
     }
 
     async function pullFromFirebase(fromModalInput) {
-      const inputEl = document.getElementById('connectSyncCodeInput');
-      const targetCode = fromModalInput && inputEl && inputEl.value.trim()
-        ? inputEl.value.trim().toUpperCase()
-        : syncCode;
-
       setSyncBadge('sync', 'Синхронізація...');
-
       try {
-        const res = await fetch(getFirebaseGroupUrl(targetCode));
+        const res = await fetch(getFirebaseGroupUrl(syncCode));
         if (!res.ok) {
           setSyncBadge('err', 'Помилка доступу');
-          if (fromModalInput) {
-            alert('Firebase відхилив запит. Перевірте вкладку Rules у Firebase Realtime Database (чи дозволено .read та .write).');
-          }
           return;
         }
-
         const cloudData = await res.json();
         if (cloudData && typeof cloudData === 'object') {
           const localUpdated = appState.updatedAt || 0;
           const cloudUpdated = cloudData.updatedAt || 0;
 
           if (fromModalInput || cloudUpdated >= localUpdated) {
-            syncCode = targetCode;
-            localStorage.setItem('starosta_sync_code', syncCode);
             appState = {
               groupName: cloudData.groupName || 'Моя група',
-              students: Array.isArray(cloudData.students) ? cloudData.students : [],
-              subjects: Array.isArray(cloudData.subjects) && cloudData.subjects.length ? cloudData.subjects : ['Загальний предмет'],
+              ownerName: cloudData.ownerName || 'Не вказано',
+              students: Array.isArray(cloudData.students)
+                ? cloudData.students.map(s => ({ ...s, role: s.role || 'Студент' }))
+                : [],
+              subjects: Array.isArray(cloudData.subjects) && cloudData.subjects.length
+                ? cloudData.subjects
+                : ['Загальний предмет'],
               attendance: cloudData.attendance && typeof cloudData.attendance === 'object' ? cloudData.attendance : {},
               savedHomeworks: Array.isArray(cloudData.savedHomeworks) ? cloudData.savedHomeworks : [],
               updatedAt: cloudUpdated
@@ -642,34 +768,169 @@
             localStorage.setItem(`starosta_data_${syncCode}`, JSON.stringify(appState));
             refreshAllUI();
           }
-
           setSyncBadge('ok', 'Firebase OK');
-          if (fromModalInput) {
-            closeSyncModal();
-            alert(`Синхронізовано з Firebase за кодом ${syncCode}!`);
-          }
         } else {
-          if (fromModalInput) {
-            syncCode = targetCode;
-            localStorage.setItem('starosta_sync_code', syncCode);
-            await saveData();
-            closeSyncModal();
-            alert(`Створено новий запис у Firebase для коду ${syncCode}.`);
-          } else {
-            setSyncBadge('ok', 'Firebase OK');
-          }
+          setSyncBadge('ok', 'Firebase OK');
         }
       } catch (err) {
         setSyncBadge('err', 'Немає зв’язку');
-        if (fromModalInput) {
-          alert('Не вдалося з’єднатися з Firebase Realtime Database. Перевірте інтернет або посилання бази.');
-        }
       }
     }
 
+    // ==================== АКАУНТИ (ВХІД / РЕЄСТРАЦІЯ / ВИХІД) ====================
+    function openAccountModal() {
+      updateAccountModalUI();
+      document.getElementById('accountModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeAccountModal(e) {
+      if (e && e.target !== e.currentTarget) return;
+      document.getElementById('accountModal').classList.add('hidden');
+    }
+
+    function switchAuthMode(mode) {
+      const isLogin = mode === 'login';
+      document.getElementById('loginForm').classList.toggle('hidden', !isLogin);
+      document.getElementById('registerForm').classList.toggle('hidden', isLogin);
+
+      document.getElementById('authTabLogin').className = isLogin
+        ? 'py-2 rounded-lg bg-white text-slate-900 shadow-xs transition'
+        : 'py-2 rounded-lg text-slate-600 hover:text-slate-900 transition';
+      document.getElementById('authTabRegister').className = !isLogin
+        ? 'py-2 rounded-lg bg-white text-slate-900 shadow-xs transition'
+        : 'py-2 rounded-lg text-slate-600 hover:text-slate-900 transition';
+    }
+
+    function updateAccountModalUI() {
+      const card = document.getElementById('activeAccountCard');
+      if (currentAccount) {
+        card.classList.remove('hidden');
+        document.getElementById('accCardName').textContent = `${currentAccount.fullName} (@${currentAccount.username})`;
+        document.getElementById('accCardMeta').textContent = `Роль: ${currentAccount.role} • Група: ${currentAccount.groupName || appState.groupName}`;
+        document.getElementById('accCardGroupCode').textContent = currentAccount.groupCode || syncCode;
+      } else {
+        card.classList.add('hidden');
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const fullName = document.getElementById('regFullName').value.trim();
+      const username = document.getElementById('regUsername').value.trim().toLowerCase();
+      const password = document.getElementById('regPassword').value;
+      const groupName = document.getElementById('regGroupName').value.trim() || 'Моя група';
+      const role = document.getElementById('regRole').value;
+      let groupCode = document.getElementById('regGroupCode').value.trim().toUpperCase();
+
+      if (!groupCode) {
+        groupCode = 'GRP-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+      }
+
+      const accountObj = {
+        username,
+        password,
+        fullName,
+        role,
+        groupName,
+        groupCode
+      };
+
+      try {
+        await fetch(getFirebaseAccountUrl(username), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(accountObj)
+        });
+      } catch (err) {}
+
+      currentAccount = accountObj;
+      syncCode = groupCode;
+      localStorage.setItem('starosta_active_account', JSON.stringify(currentAccount));
+      localStorage.setItem('starosta_sync_code', syncCode);
+
+      appState.groupName = groupName;
+      appState.ownerName = `${fullName} (${role})`;
+
+      // Додаємо власника акаунту у список учасників, якщо його ще там немає
+      if (!appState.students.some(s => s.name.toLowerCase() === fullName.toLowerCase())) {
+        appState.students.unshift({
+          id: 'st_' + Date.now(),
+          name: fullName,
+          role
+        });
+      }
+
+      await saveData();
+      refreshAllUI();
+      closeAccountModal();
+      alert(`Акаунт створено! Група: ${groupName} (Код: ${groupCode})`);
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('loginUsername').value.trim().toLowerCase();
+      const password = document.getElementById('loginPassword').value;
+
+      setSyncBadge('sync', 'Вхід...');
+      try {
+        const res = await fetch(getFirebaseAccountUrl(username));
+        if (!res.ok) {
+          alert('Помилка доступу до бази акаунтів. Перевірте правила Firebase.');
+          setSyncBadge('err', 'Правила БД');
+          return;
+        }
+        const accData = await res.json();
+        if (!accData || accData.password !== password) {
+          alert('Невірний логін або пароль.');
+          setSyncBadge('ok', 'Firebase OK');
+          return;
+        }
+
+        currentAccount = accData;
+        syncCode = accData.groupCode || syncCode;
+        localStorage.setItem('starosta_active_account', JSON.stringify(currentAccount));
+        localStorage.setItem('starosta_sync_code', syncCode);
+
+        loadFromLocal();
+        await pullFromFirebase(true);
+        refreshAllUI();
+        closeAccountModal();
+        alert(`Вітаємо, ${currentAccount.fullName}! Роль: ${currentAccount.role}`);
+      } catch (err) {
+        setSyncBadge('err', 'Офлайн');
+        alert('Не вдалося перевірити акаунт через мережу.');
+      }
+    }
+
+    function logoutAccount() {
+      currentAccount = null;
+      localStorage.removeItem('starosta_active_account');
+      updateAccountModalUI();
+      refreshAllUI();
+    }
+
+    // ==================== ОНОВЛЕННЯ ІНТЕРФЕЙСУ ====================
     function refreshAllUI() {
       document.getElementById('headerGroupName').textContent = appState.groupName || 'Моя група';
+      document.getElementById('headerGroupCode').textContent = syncCode;
       document.getElementById('groupNameInput').value = appState.groupName || '';
+
+      const role = getActiveRole();
+      if (currentAccount) {
+        document.getElementById('headerAccountInfo').textContent = `${currentAccount.fullName} • ${role}`;
+        document.getElementById('accountBtnLabel').textContent = 'Акаунт';
+        document.getElementById('manageOwnerInfo').textContent = `Акаунт: ${currentAccount.fullName} (@${currentAccount.username}) • Група: ${appState.groupName} (${syncCode})`;
+      } else {
+        document.getElementById('headerAccountInfo').textContent = `Режим без входу (${role}) • Код: ${syncCode}`;
+        document.getElementById('accountBtnLabel').textContent = 'Увійти';
+        document.getElementById('manageOwnerInfo').textContent = `Власник групи: ${appState.ownerName || 'Не вказано'} • Код групи: ${syncCode}`;
+      }
+
+      const roleBadge = document.getElementById('manageRoleBadge');
+      roleBadge.textContent = `Ваша роль: ${role}`;
+      roleBadge.className = `text-xs font-semibold px-2.5 py-0.5 rounded-full border ${getRoleBadgeClass(role)}`;
+
       populateSubjectSelects();
       renderJournal();
       renderManageLists();
@@ -708,6 +969,7 @@
       if (subjects.includes(prevH)) hwSel.value = prevH;
     }
 
+    // ==================== МІСЯЧНИЙ ЖУРНАЛ ====================
     function getDaysInMonth(yearMonthStr) {
       const [year, month] = yearMonthStr.split('-').map(Number);
       const totalDays = new Date(year, month, 0).getDate();
@@ -759,7 +1021,7 @@
 
       let theadHtml = `
         <tr class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
-          <th class="sticky-header py-2.5 px-3 font-bold text-slate-800 min-w-[190px] sm:min-w-[230px] border-r border-slate-200">
+          <th class="sticky-header py-2.5 px-3 font-bold text-slate-800 min-w-[200px] sm:min-w-[240px] border-r border-slate-200">
             № / Прізвище та Ім'я
           </th>
       `;
@@ -815,11 +1077,15 @@
           `;
         });
 
+        const roleTag = student.role && student.role !== 'Студент'
+          ? `<span class="ml-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded ${getRoleBadgeClass(student.role)}">${escapeHtml(student.role)}</span>`
+          : '';
+
         tbodyHtml += `
           <tr class="hover:bg-slate-50/80 transition">
             <td class="sticky-col py-2 px-3 font-medium text-slate-800 border-r border-slate-200 whitespace-nowrap">
               <span class="text-xs text-slate-400 mr-1.5 font-mono">${idx + 1}.</span>
-              <span>${escapeHtml(student.name)}</span>
+              <span>${escapeHtml(student.name)}</span>${roleTag}
             </td>
             ${cellsHtml}
             <td class="py-2 px-2 text-center font-bold text-emerald-700 bg-emerald-50/40 border-r border-slate-100">${presentCount}</td>
@@ -832,6 +1098,10 @@
     }
 
     function openStatusModal(studentId, dateStr, weekdayShort) {
+      if (!canEditJournal()) {
+        alert(`Ваша роль (${getActiveRole()}) дозволяє лише перегляд журналу.`);
+        return;
+      }
       const student = appState.students.find(s => s.id === studentId);
       const subject = document.getElementById('journalSubjectSelect').value;
       const pair = document.getElementById('journalPairSelect').value;
@@ -866,8 +1136,12 @@
     }
 
     function openQuickRollCall() {
+      if (!canEditJournal()) {
+        alert(`Ваша роль (${getActiveRole()}) дозволяє лише перегляд журналу.`);
+        return;
+      }
       if (!appState.students.length) {
-        alert('Спочатку додайте одногрупників у вкладці "Група та Предмети".');
+        alert('Спочатку додайте людей до списку у вкладці "Група, Ролі та Предмети".');
         return;
       }
       const monthVal = document.getElementById('monthPicker').value;
@@ -970,10 +1244,10 @@
       const days = getDaysInMonth(monthVal);
 
       const sheetData = [
-        [`Журнал відвідування групи: ${appState.groupName}`],
+        [`Журнал відвідування групи: ${appState.groupName} (${syncCode})`],
         [`Предмет: ${subject} | Пара: ${pair}-ша | Період: ${monthName} ${year}`],
         [],
-        ['№', 'Прізвище та Ім\'я', ...days.map(d => `${d.day} (${d.weekdayShort})`), 'Присутній (✓)', 'Пропуски (Н)', 'Поважна (ПП)', 'Хвороба (ХВ)', 'Звільнений (ЗВ)']
+        ['№', 'Прізвище та Ім\'я', 'Роль', ...days.map(d => `${d.day} (${d.weekdayShort})`), 'Присутній (✓)', 'Пропуски (Н)', 'Поважна (ПП)', 'Хвороба (ХВ)', 'Звільнений (ЗВ)']
       ];
 
       appState.students.forEach((student, idx) => {
@@ -989,7 +1263,7 @@
           return st;
         });
 
-        sheetData.push([idx + 1, student.name, ...rowCells, cPresent, cN, cPP, cHV, cZV]);
+        sheetData.push([idx + 1, student.name, student.role || 'Студент', ...rowCells, cPresent, cN, cPP, cHV, cZV]);
       });
 
       const wb = XLSX.utils.book_new();
@@ -997,6 +1271,7 @@
       ws['!cols'] = [
         { wch: 4 },
         { wch: 28 },
+        { wch: 18 },
         ...days.map(() => ({ wch: 7 })),
         { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 15 }
       ];
@@ -1022,7 +1297,7 @@
     }
 
     function addManualAttachmentPrompt() {
-      const name = prompt('Введіть назву файлу або фото (наприклад: методичка.pdf або фото_дошки.jpg):');
+      const name = prompt('Введіть назву файлу або фото:');
       if (name && name.trim()) {
         const clean = name.trim();
         const isImage = /\.(png|jpe?g|gif|webp)$/i.test(clean);
@@ -1168,6 +1443,10 @@
     }
 
     function saveHomeworkToArchive() {
+      if (!canEditJournal()) {
+        alert(`Ваша роль (${getActiveRole()}) дозволяє лише перегляд.`);
+        return;
+      }
       const subject = document.getElementById('hwSubject').value;
       const type = document.getElementById('hwType').value;
       const deadlineVal = document.getElementById('hwDeadline').value;
@@ -1198,6 +1477,7 @@
     }
 
     function deleteSavedHw(id) {
+      if (!canEditJournal()) return;
       appState.savedHomeworks = appState.savedHomeworks.filter(h => h.id !== id);
       saveData();
       renderSavedHomeworks();
@@ -1241,8 +1521,12 @@
       lucide.createIcons();
     }
 
-    // ==================== ГРУПА ТА ПРЕДМЕТИ ====================
+    // ==================== ГРУПА, РОЛІ ТА ПРЕДМЕТИ ====================
     function saveGroupName() {
+      if (!canManageRolesAndDelete()) {
+        alert('Змінювати назву групи може лише Староста або Замстарости.');
+        return;
+      }
       const val = document.getElementById('groupNameInput').value.trim();
       appState.groupName = val || 'Моя група';
       saveData();
@@ -1251,23 +1535,44 @@
 
     function addStudent(e) {
       e.preventDefault();
+      if (!canAddPeople()) {
+        alert(`Ваша роль (${getActiveRole()}) не дозволяє додавати людей до списку.`);
+        return;
+      }
       const input = document.getElementById('newStudentName');
+      const roleSel = document.getElementById('newStudentRole');
       const name = input.value.trim();
       if (!name) return;
 
       appState.students.push({
         id: 'st_' + Date.now() + '_' + Math.random().toString(36).substring(2, 5),
-        name
+        name,
+        role: roleSel.value || 'Студент'
       });
       input.value = '';
+      roleSel.value = 'Студент';
+      saveData();
+      refreshAllUI();
+    }
+
+    function changeStudentRole(id, newRole) {
+      if (!canManageRolesAndDelete()) {
+        alert('Змінювати ролі може лише Староста або Замстарости.');
+        refreshAllUI();
+        return;
+      }
+      const st = appState.students.find(s => s.id === id);
+      if (!st) return;
+      st.role = newRole;
       saveData();
       refreshAllUI();
     }
 
     function editStudentName(id) {
+      if (!canAddPeople()) return;
       const student = appState.students.find(s => s.id === id);
       if (!student) return;
-      const newName = prompt('Редагувати ПІБ студента:', student.name);
+      const newName = prompt('Редагувати ПІБ:', student.name);
       if (newName && newName.trim()) {
         student.name = newName.trim();
         saveData();
@@ -1276,7 +1581,11 @@
     }
 
     function deleteStudent(id) {
-      if (!confirm('Видалити цього одногрупника зі списку?')) return;
+      if (!canManageRolesAndDelete()) {
+        alert('Видаляти людей зі списку може лише Староста або Замстарости.');
+        return;
+      }
+      if (!confirm('Видалити цю людину зі списку?')) return;
       appState.students = appState.students.filter(s => s.id !== id);
       saveData();
       refreshAllUI();
@@ -1289,6 +1598,10 @@
     }
 
     function openBulkAddModal() {
+      if (!canAddPeople()) {
+        alert(`Ваша роль (${getActiveRole()}) не дозволяє додавати людей до списку.`);
+        return;
+      }
       document.getElementById('bulkAddModal').classList.remove('hidden');
     }
 
@@ -1299,11 +1612,13 @@
 
     function processBulkAdd() {
       const text = document.getElementById('bulkStudentsTextarea').value;
+      const role = document.getElementById('bulkRoleSelect').value || 'Студент';
       const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
       lines.forEach((name, i) => {
         appState.students.push({
           id: 'st_' + Date.now() + '_' + i,
-          name
+          name,
+          role
         });
       });
       document.getElementById('bulkStudentsTextarea').value = '';
@@ -1314,6 +1629,10 @@
 
     function addSubject(e) {
       e.preventDefault();
+      if (!canEditJournal()) {
+        alert(`Ваша роль (${getActiveRole()}) не дозволяє змінювати предмети.`);
+        return;
+      }
       const input = document.getElementById('newSubjectName');
       const name = input.value.trim();
       if (!name || appState.subjects.includes(name)) return;
@@ -1325,6 +1644,10 @@
     }
 
     function deleteSubject(name) {
+      if (!canManageRolesAndDelete()) {
+        alert('Видаляти предмети може лише Староста або Замстарости.');
+        return;
+      }
       if (appState.subjects.length <= 1) {
         alert('Має залишитися хоча б один предмет.');
         return;
@@ -1341,23 +1664,34 @@
 
       const stList = document.getElementById('studentsManageList');
       if (!appState.students.length) {
-        stList.innerHTML = `<p class="text-xs text-slate-400 py-4 text-center">Список студентів порожній</p>`;
+        stList.innerHTML = `<p class="text-xs text-slate-400 py-4 text-center">Список порожній</p>`;
       } else {
-        stList.innerHTML = appState.students.map((st, idx) => `
-          <div class="py-2.5 flex items-center justify-between gap-2">
-            <div class="text-sm font-medium text-slate-800">
-              <span class="text-xs text-slate-400 font-mono mr-2">${idx + 1}.</span>${escapeHtml(st.name)}
+        stList.innerHTML = appState.students.map((st, idx) => {
+          const currentRole = st.role || 'Студент';
+          const roleOptions = ROLES_LIST.map(r =>
+            `<option value="${r}" ${currentRole === r ? 'selected' : ''}>${r}</option>`
+          ).join('');
+
+          return `
+            <div class="py-2.5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2">
+              <div class="text-sm font-medium text-slate-800 min-w-0">
+                <span class="text-xs text-slate-400 font-mono mr-1.5">${idx + 1}.</span>
+                <span class="truncate">${escapeHtml(st.name)}</span>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <select onchange="changeStudentRole('${st.id}', this.value)" class="px-2 py-1 text-xs font-semibold rounded-lg border ${getRoleBadgeClass(currentRole)} focus:outline-none">
+                  ${roleOptions}
+                </select>
+                <button onclick="editStudentName('${st.id}')" class="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg" title="Редагувати ПІБ">
+                  <i data-lucide="pencil" class="w-4 h-4"></i>
+                </button>
+                <button onclick="deleteStudent('${st.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg" title="Видалити">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </div>
             </div>
-            <div class="flex items-center gap-1">
-              <button onclick="editStudentName('${st.id}')" class="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg" title="Редагувати">
-                <i data-lucide="pencil" class="w-4 h-4"></i>
-              </button>
-              <button onclick="deleteStudent('${st.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg" title="Видалити">
-                <i data-lucide="trash-2" class="w-4 h-4"></i>
-              </button>
-            </div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
       }
 
       const subList = document.getElementById('subjectsManageList');
@@ -1373,28 +1707,10 @@
       lucide.createIcons();
     }
 
-    // ==================== СИНХРОНІЗАЦІЯ ТА ФАЙЛИ ====================
-    function openSyncModal() {
-      document.getElementById('mySyncCodeDisplay').value = syncCode;
-      document.getElementById('connectSyncCodeInput').value = syncCode;
-      document.getElementById('syncModal').classList.remove('hidden');
-      lucide.createIcons();
-    }
-
-    function closeSyncModal(e) {
-      if (e && e.target !== e.currentTarget) return;
-      document.getElementById('syncModal').classList.add('hidden');
-    }
-
-    function copySyncCode() {
-      const inp = document.getElementById('mySyncCodeDisplay');
-      inp.select();
-      navigator.clipboard?.writeText(inp.value).catch(() => {});
-      alert('Код групи скопійовано!');
-    }
-
+    // ==================== РЕЗЕРВНІ ФАЙЛИ ====================
     function downloadBackupJson() {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+      const payload = { account: currentAccount, groupCode: syncCode, state: appState };
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
       const dlAnchor = document.createElement('a');
       dlAnchor.setAttribute("href", dataStr);
       dlAnchor.setAttribute("download", `Журнал_${appState.groupName}_${syncCode}.json`);
@@ -1410,11 +1726,20 @@
       reader.onload = function(e) {
         try {
           const imported = JSON.parse(e.target.result);
-          if (imported && Array.isArray(imported.students)) {
-            appState = { ...appState, ...imported };
+          const nextState = imported && imported.state ? imported.state : imported;
+          if (nextState && Array.isArray(nextState.students)) {
+            if (imported.groupCode) {
+              syncCode = imported.groupCode;
+              localStorage.setItem('starosta_sync_code', syncCode);
+            }
+            if (imported.account) {
+              currentAccount = imported.account;
+              localStorage.setItem('starosta_active_account', JSON.stringify(currentAccount));
+            }
+            appState = { ...appState, ...nextState };
             saveData();
             refreshAllUI();
-            closeSyncModal();
+            closeAccountModal();
             alert('Дані успішно відновлено з файлу!');
           } else {
             alert('Невірний формат файлу.');
