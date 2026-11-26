@@ -1,914 +1,1403 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>Журнал старости</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
-<style>
-/* Layout: one narrow column built for a phone in one hand. A sticky tab bar on top, then the active panel. Rows are thumb-sized; the journal table scrolls sideways inside its own box. */
-:root{
-  --bg:#F1F4F9; --surface:#FFFFFF; --surface-2:#E7ECF4; --line:#D3DBE8;
-  --fg:#152033; --fg-2:#56627A; --accent:#1F4FA3; --accent-fg:#FFFFFF; --accent-soft:#DCE7FA;
-  --ok:#1A7A4A; --ok-soft:#D8F0E2; --bad:#B3261E; --bad-soft:#F8DEDB;
-  --warn:#955700; --warn-soft:#F8E7C8; --info:#3A4BB5; --info-soft:#E1E4F9;
-  --muted:#56627A; --muted-soft:#E7ECF4; --on-t:#FFFFFF;
-  --font-body:'Onest',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-  --font-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
-  --radius:10px;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0E1523; --surface:#151E31; --surface-2:#1D2840; --line:#2A3856;
-    --fg:#E8EDF7; --fg-2:#9AA7C0; --accent:#8DB2F5; --accent-fg:#0E1523; --accent-soft:#1E2F52;
-    --ok:#5BD08C; --ok-soft:#17352A; --bad:#FF8A80; --bad-soft:#3B1E20;
-    --warn:#F2B35A; --warn-soft:#3A2C12; --info:#9AA8FF; --info-soft:#232A52;
-    --muted:#9AA7C0; --muted-soft:#1D2840; --on-t:#0E1523; color-scheme:dark;
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#0E1523; --surface:#151E31; --surface-2:#1D2840; --line:#2A3856;
-  --fg:#E8EDF7; --fg-2:#9AA7C0; --accent:#8DB2F5; --accent-fg:#0E1523; --accent-soft:#1E2F52;
-  --ok:#5BD08C; --ok-soft:#17352A; --bad:#FF8A80; --bad-soft:#3B1E20;
-  --warn:#F2B35A; --warn-soft:#3A2C12; --info:#9AA8FF; --info-soft:#232A52;
-  --muted:#9AA7C0; --muted-soft:#1D2840; --on-t:#0E1523; color-scheme:dark;
-}
-*{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
-body{
-  background:var(--bg); color:var(--fg); font-family:var(--font-body); font-size:15px; line-height:1.45; margin:0;
-  padding-left:max(16px,env(safe-area-inset-left,0px)); padding-right:max(16px,env(safe-area-inset-right,0px));
-  padding-block:0 56px;
-}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:30}
-.wrap{max-width:780px;margin:0 auto}
-h1,h2{margin:0;letter-spacing:-.01em;text-wrap:balance}
-h1{font-size:1.65rem;line-height:1.1;font-weight:700;letter-spacing:-.025em}
-h2{font-size:1.05rem;font-weight:700}
-.mono{font-family:var(--font-mono)}
-.sub,.hint{color:var(--fg-2);font-size:.85rem;margin:0}
-.head{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:8px 16px;padding-block:20px 12px}
-.date{font-family:var(--font-mono);font-size:.78rem;color:var(--fg-2);margin-top:6px}
-.sync{display:inline-flex;align-items:center;gap:7px;font-size:.78rem;color:var(--fg-2)}
-.sync i{width:8px;height:8px;border-radius:50%;background:var(--fg-2);display:block}
-.sync[data-s="saved"] i{background:var(--ok)}
-.sync[data-s="saving"] i{background:var(--warn)}
-.sync[data-s="error"] i{background:var(--bad)}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Кабінет Старости — Журнал та ДЗ</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- SheetJS для експорту в Excel (.xlsx) -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 
-.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);display:flex;gap:4px;padding-block:8px;border-bottom:1px solid var(--line);overflow-x:auto}
-.tab{flex:1 0 auto;min-height:44px;padding:0 14px;border:1px solid transparent;border-radius:var(--radius);background:transparent;color:var(--fg-2);font:inherit;font-weight:600;cursor:pointer;white-space:nowrap}
-.tab[aria-selected="true"]{background:var(--accent);color:var(--accent-fg)}
-.panel{padding-block:16px;display:grid;gap:14px;align-content:start}
-.panel[hidden]{display:none}
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-.tone-ok{--t:var(--ok);--ts:var(--ok-soft)}
-.tone-bad{--t:var(--bad);--ts:var(--bad-soft)}
-.tone-warn{--t:var(--warn);--ts:var(--warn-soft)}
-.tone-info{--t:var(--info);--ts:var(--info-soft)}
-.tone-muted{--t:var(--muted);--ts:var(--muted-soft)}
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-input,select,textarea{font:inherit;font-size:16px;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:44px;width:100%;min-width:0}
-textarea{min-height:96px;resize:vertical;line-height:1.45}
-input[type="checkbox"]{width:20px;height:20px;min-height:0;padding:0;accent-color:var(--accent)}
-:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-label{display:grid;gap:5px;font-size:.82rem;color:var(--fg-2);font-weight:500}
-label.chk{display:flex;align-items:center;gap:8px;font-size:.9rem;color:var(--fg)}
-.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:12px}
-.btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.btn{min-height:44px;padding:0 16px;border-radius:var(--radius);border:1px solid var(--line);background:var(--surface);color:var(--fg);font:inherit;font-weight:600;cursor:pointer}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
-.btn.sm{min-height:36px;padding:0 12px;font-size:.85rem}
-.btn[data-armed]{background:var(--bad);border-color:var(--bad);color:var(--on-t)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.linkbtn{background:none;border:0;padding:0;color:var(--accent);font:inherit;text-decoration:underline;cursor:pointer}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
-.card.form{display:grid;gap:12px}
-.note{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;justify-content:space-between;background:var(--info-soft);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:14px}
-.note[hidden]{display:none}
-.note span{flex:1 1 220px}
-.empty{padding:22px 16px;border:1px dashed var(--line);border-radius:12px;color:var(--fg-2);text-align:center}
-.err{margin:0;color:var(--bad);font-size:.85rem}
+    /* Кастомний скролбар для таблиці журналу */
+    .journal-scroll::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+    .journal-scroll::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+    .journal-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .journal-scroll::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
 
-.sessions{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px}
-.chip{flex:0 0 auto;display:grid;gap:2px;text-align:left;min-width:128px;max-width:200px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);font:inherit;cursor:pointer}
-.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
-.chip .d{font-family:var(--font-mono);font-size:.72rem;color:var(--fg-2)}
-.chip .s{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sess-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px 16px;align-items:flex-start}
-.stats{display:flex;flex-wrap:wrap;gap:8px}
-.stat{display:inline-flex;align-items:baseline;gap:6px;padding:6px 11px;border-radius:999px;background:var(--ts);color:var(--t);font-weight:600;font-size:.82rem}
-.stat b{font-family:var(--font-mono);font-size:1rem}
-.stat .lbl{font-weight:500;opacity:.9}
-.list{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
-.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 12px;border-bottom:1px solid var(--line)}
-.row:last-child{border-bottom:0}
-.who{display:flex;gap:10px;align-items:baseline;flex:1 1 170px;min-width:0}
-.num{font-family:var(--font-mono);font-size:.74rem;color:var(--fg-2);min-width:1.7em}
-.name{font-weight:600;overflow-wrap:anywhere}
-.grow{flex:1 1 160px}
-.marks{display:flex;gap:6px;flex-wrap:wrap}
-.mark{min-width:48px;height:44px;padding:0 10px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--t);font-family:var(--font-mono);font-weight:700;font-size:.95rem;cursor:pointer}
-.mark[aria-pressed="true"]{background:var(--t);border-color:var(--t);color:var(--on-t)}
+    /* Закріплена колонка зі списком студентів */
+    .sticky-col {
+      position: sticky;
+      left: 0;
+      z-index: 10;
+      background-color: #ffffff;
+      box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.08);
+    }
+    .sticky-header {
+      position: sticky;
+      left: 0;
+      z-index: 20;
+      background-color: #f1f5f9;
+      box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.08);
+    }
 
-.tablebox{overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);max-height:68vh}
-.tablebox[hidden]{display:none}
-table{border-collapse:separate;border-spacing:0;font-size:.85rem;min-width:100%}
-th,td{padding:5px 7px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);text-align:center;white-space:nowrap}
-th{position:sticky;top:0;background:var(--surface-2);z-index:2;font-weight:600;font-size:.74rem;max-width:110px}
-th .sub{max-width:96px;overflow:hidden;text-overflow:ellipsis;font-size:.68rem}
-td.nm,th.nm{position:sticky;left:0;text-align:left;background:var(--surface);z-index:1;max-width:48vw;overflow:hidden;text-overflow:ellipsis}
-th.nm{z-index:3;background:var(--surface-2)}
-.cell{min-width:36px;height:34px;border:0;border-radius:6px;background:transparent;font-family:var(--font-mono);font-weight:700;color:var(--t,var(--fg-2));cursor:pointer}
-.cell.has{background:var(--ts)}
-.tot{font-family:var(--font-mono);font-weight:700;color:var(--t)}
+    /* Анімація появи модальних вікон */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.97); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .modal-animate {
+      animation: fadeIn 0.15s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
 
-.cat-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-block:10px;border-bottom:1px solid var(--line)}
-.cat-row:last-child{border-bottom:0}
-.cat-row .code{width:64px;text-align:center;font-family:var(--font-mono);font-weight:700}
-.cat-row .lab{flex:1 1 150px}
-.cat-row select{width:120px}
-.thumbs{display:flex;flex-wrap:wrap;gap:8px}
-.thumb{position:relative;width:76px;height:76px;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--surface-2)}
-.thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.thumb button{position:absolute;top:3px;right:3px;width:28px;height:28px;border-radius:50%;border:0;background:var(--bg);color:var(--fg);cursor:pointer;font-size:1rem;line-height:1}
-.filechip{display:inline-flex;align-items:center;gap:8px;padding:6px 6px 6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:.85rem}
-.filechip button{width:28px;height:28px;border-radius:50%;border:0;background:var(--surface-2);color:var(--fg);cursor:pointer}
-.cd{margin:0;font-size:.9rem}
-.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.76rem;font-weight:600;background:var(--ts);color:var(--t)}
-.stack{display:grid;gap:10px}
-.hw{display:grid;gap:8px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
-.hw.done{opacity:.62}
-.hw-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 12px;align-items:baseline}
-.hw-top strong{font-size:1rem}
-.hw .task{margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-line;color:var(--fg-2)}
-#hw-out{min-height:210px}
+  <!-- ВЕРХНЯ ПАНЕЛЬ (ШАПКА) -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm">
+          <i data-lucide="clipboard-check" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-base sm:text-lg leading-tight text-slate-900">Кабінет Старости</h1>
+          <p id="headerGroupName" class="text-xs text-slate-500 font-medium">Моя група</p>
+        </div>
+      </div>
 
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:.88rem;font-weight:600;z-index:40;max-width:calc(100vw - 32px);text-align:center}
-.toast[hidden]{display:none}
-@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
-</style>
+      <!-- Статус синхронізації та кнопка пристроїв -->
+      <div class="flex items-center gap-2">
+        <div id="syncIndicator" class="hidden sm:flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Збережено</span>
+        </div>
 
-<div class="wrap">
-  <header class="head">
-    <div>
-      <h1>Журнал старости</h1>
-      <div class="date" id="today"></div>
+        <button onclick="openSyncModal()" class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition" title="Синхронізація між телефоном і ноутбуком">
+          <i data-lucide="smartphone" class="w-4 h-4 text-indigo-600"></i>
+          <span class="hidden md:inline">Синхронізація</span>
+        </button>
+      </div>
     </div>
-    <div class="sync" id="sync" data-s="connecting" role="status"><i></i><span id="sync-t">Підключаюсь…</span></div>
+
+    <!-- НАВІГАЦІЙНІ ВКЛАДКИ -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex gap-1 overflow-x-auto border-t border-slate-100 bg-slate-50/70">
+      <button onclick="switchTab('journal')" id="tab-journal" class="nav-tab active flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap transition">
+        <i data-lucide="calendar-days" class="w-4 h-4"></i>
+        <span>Журнал відвідування</span>
+      </button>
+      <button onclick="switchTab('homework')" id="tab-homework" class="nav-tab flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-slate-900 whitespace-nowrap transition">
+        <i data-lucide="book-open-check" class="w-4 h-4"></i>
+        <span>Підготовка ДЗ</span>
+      </button>
+      <button onclick="switchTab('manage')" id="tab-manage" class="nav-tab flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-slate-900 whitespace-nowrap transition">
+        <i data-lucide="users" class="w-4 h-4"></i>
+        <span>Група та Предмети</span>
+      </button>
+    </div>
   </header>
 
-  <nav class="tabs" role="tablist" aria-label="Розділи">
-    <button class="tab" role="tab" type="button" data-tab="att">Відмітки</button>
-    <button class="tab" role="tab" type="button" data-tab="jr">Журнал</button>
-    <button class="tab" role="tab" type="button" data-tab="grp">Група</button>
-    <button class="tab" role="tab" type="button" data-tab="hw">Домашка</button>
-  </nav>
+  <!-- ОСНОВНИЙ КОНТЕНТ -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-5">
 
-  <div class="note" id="demo-note" hidden>
-    <span>Це приклад, щоб показати, як виглядає заповнений журнал. Щоб почати зі своєю групою, очистіть його.</span>
-    <button class="btn sm" id="demo-clear" type="button">Очистити приклад</button>
+    <!-- ==================== ВКЛАДКА 1: ЖУРНАЛ ==================== -->
+    <section id="view-journal" class="space-y-4">
+      
+      <!-- Панель керування журналом -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          
+          <!-- Вибір місяця -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Місяць та рік</label>
+            <input type="month" id="monthPicker" onchange="renderJournal()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+
+          <!-- Вибір предмета -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Предмет (Дисципліна)</label>
+            <select id="journalSubjectSelect" onchange="renderJournal()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </select>
+          </div>
+
+          <!-- Вибір пари -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Номер пари</label>
+            <select id="journalPairSelect" onchange="renderJournal()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="1">1-ша пара</option>
+              <option value="2">2-га пара</option>
+              <option value="3">3-тя пара</option>
+              <option value="4">4-та пара</option>
+              <option value="5">5-та пара</option>
+              <option value="6">6-та пара</option>
+            </select>
+          </div>
+
+          <!-- Кнопки дій -->
+          <div class="flex items-end gap-2">
+            <button onclick="openQuickRollCall()" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
+              <i data-lucide="check-square" class="w-4 h-4"></i>
+              <span>Перекличка</span>
+            </button>
+            <button onclick="exportToExcel()" class="flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition" title="Завантажити Excel таблицю">
+              <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+              <span>Excel</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Легенда позначок -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100 text-xs">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-slate-500 font-medium">Позначки:</span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-bold">✓ <span class="font-normal">Був</span></span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 font-bold">Н <span class="font-normal">Немає</span></span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 font-bold">ПП <span class="font-normal">Поважна причина</span></span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-100 text-sky-800 font-bold">ХВ <span class="font-normal">Хвороба</span></span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 font-bold">ЗВ <span class="font-normal">Звільнений</span></span>
+          </div>
+          <span class="text-slate-400">Натисніть на клітинку, щоб змінити статус</span>
+        </div>
+      </div>
+
+      <!-- Таблиця місячного журналу -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div id="journalEmptyState" class="hidden p-10 text-center">
+          <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+            <i data-lucide="user-plus" class="w-6 h-6"></i>
+          </div>
+          <h3 class="text-base font-semibold text-slate-800">Список групи порожній</h3>
+          <p class="text-sm text-slate-500 mt-1 mb-4">Додайте одногрупників, щоб почати вести журнал відвідування.</p>
+          <button onclick="switchTab('manage')" class="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition">
+            Перейти до списку групи
+          </button>
+        </div>
+
+        <div id="journalTableWrapper" class="overflow-x-auto journal-scroll">
+          <table class="w-full border-collapse text-left">
+            <thead id="journalThead"></thead>
+            <tbody id="journalTbody" class="divide-y divide-slate-100 text-sm"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== ВКЛАДКА 2: ПІДГОТОВКА ДЗ ==================== -->
+    <section id="view-homework" class="hidden space-y-5">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        
+        <!-- Ліва колонка: Форма створення ДЗ -->
+        <div class="lg:col-span-6 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="sparkles" class="w-5 h-5 text-indigo-600"></i>
+              <span>Конструктор домашнього завдання</span>
+            </h2>
+            <button onclick="clearHwForm()" class="text-xs text-slate-500 hover:text-rose-600 font-medium">Очистити</button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Предмет</label>
+              <select id="hwSubject" oninput="generateHwPreview()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Тип завдання</label>
+              <select id="hwType" oninput="generateHwPreview()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="Домашнє завдання">Домашнє завдання</option>
+                <option value="Практична робота">Практична робота</option>
+                <option value="Лабораторна робота">Лабораторна робота</option>
+                <option value="Самостійна робота">Самостійна робота</option>
+                <option value="Модульна / Контрольна">Модульна / Контрольна</option>
+                <option value="Реферат / Презентація">Реферат / Презентація</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Що потрібно зробити (опис, номери, тема)</label>
+            <textarea id="hwDescription" rows="4" oninput="generateHwPreview()" placeholder="Наприклад: Виконати задачі №1-5 зі сторінки 42. Оформити у Word та скинути викладачу на пошту..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Кінцевий термін (Дедлайн)</label>
+              <input type="datetime-local" id="hwDeadline" oninput="generateHwPreview()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Посилання (матеріали / здача)</label>
+              <input type="url" id="hwLink" oninput="generateHwPreview()" placeholder="https://classroom.google.com/..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+          </div>
+
+          <!-- Прикріплення файлів та фото -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Прикріпити фото або файли (документи, скріни)</label>
+            <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100 transition">
+              <div class="flex flex-col items-center justify-center pt-2 pb-2">
+                <i data-lucide="paperclip" class="w-5 h-5 text-slate-400 mb-1"></i>
+                <p class="text-xs text-slate-600 font-medium">Натисніть, щоб обрати фото або файли</p>
+                <p class="text-[11px] text-slate-400">Назви файлів автоматично додадуться у шаблон</p>
+              </div>
+              <input id="hwFilesInput" type="file" multiple class="hidden" onchange="handleHwFiles(event)" />
+            </label>
+            <div id="hwAttachedList" class="mt-2 flex flex-wrap gap-2"></div>
+          </div>
+
+          <button onclick="saveHomeworkToArchive()" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2">
+            <i data-lucide="bookmark-plus" class="w-4 h-4"></i>
+            <span>Зберегти завдання в список актуальних ДЗ</span>
+          </button>
+        </div>
+
+        <!-- Права колонка: Готовий шаблон для групи -->
+        <div class="lg:col-span-6 space-y-4">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            <div class="flex items-center justify-between">
+              <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                <i data-lucide="send" class="w-4 h-4 text-indigo-600"></i>
+                <span>Готовий шаблон для чату групи</span>
+              </h2>
+              <span id="deadlineBadge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">Без терміну</span>
+            </div>
+
+            <div class="relative">
+              <textarea id="hwPreviewBox" rows="12" readonly class="w-full p-4 bg-slate-900 text-slate-100 font-mono text-xs sm:text-sm rounded-xl leading-relaxed focus:outline-none"></textarea>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <button onclick="copyHwTemplate()" id="copyHwBtn" class="flex-1 py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition flex items-center justify-center gap-2">
+                <i data-lucide="copy" class="w-4 h-4"></i>
+                <span>Скопіювати текст для групи</span>
+              </button>
+              <button onclick="shareHwNative()" class="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2" title="Поділитися через Telegram / Viber">
+                <i data-lucide="share-2" class="w-4 h-4"></i>
+                <span>Надіслати</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Збережені актуальні ДЗ -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+              <i data-lucide="clock" class="w-4 h-4 text-amber-500"></i>
+              <span>Збережені завдання групи</span>
+            </h3>
+            <div id="savedHwList" class="space-y-2.5"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==================== ВКЛАДКА 3: ГРУПА ТА ПРЕДМЕТИ ==================== -->
+    <section id="view-manage" class="hidden space-y-5">
+      
+      <!-- Назва групи -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Назва навчальної групи</h2>
+          <p class="text-xs text-slate-500">Відображається в шапці сайту та при експорті в Excel</p>
+        </div>
+        <div class="flex gap-2">
+          <input type="text" id="groupNameInput" placeholder="Наприклад: ТЛ-26008Б" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <button onclick="saveGroupName()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition">Зберегти</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        
+        <!-- Управління одногрупниками -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="users" class="w-5 h-5 text-indigo-600"></i>
+              <span>Одногрупники (<span id="studentsCountBadge">0</span>)</span>
+            </h2>
+            <div class="flex gap-1.5">
+              <button onclick="sortStudentsAlpha()" class="px-2.5 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition" title="Відсортувати за алфавітом">
+                А-Я
+              </button>
+              <button onclick="openBulkAddModal()" class="px-2.5 py-1.5 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition">
+                + Додати списком
+              </button>
+            </div>
+          </div>
+
+          <!-- Форма додавання одного студента -->
+          <form onsubmit="addStudent(event)" class="flex gap-2">
+            <input type="text" id="newStudentName" required placeholder="Прізвище та Ім'я студента..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition flex items-center gap-1">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>Додати</span>
+            </button>
+          </form>
+
+          <!-- Список студентів -->
+          <div id="studentsManageList" class="divide-y divide-slate-100 max-h-[420px] overflow-y-auto pr-1"></div>
+        </div>
+
+        <!-- Управління предметами -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="book-marked" class="w-5 h-5 text-indigo-600"></i>
+              <span>Предмети (<span id="subjectsCountBadge">0</span>)</span>
+            </h2>
+          </div>
+
+          <form onsubmit="addSubject(event)" class="flex gap-2">
+            <input type="text" id="newSubjectName" required placeholder="Назва предмета (напр. Логістика)..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition flex items-center gap-1">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>Додати</span>
+            </button>
+          </form>
+
+          <div id="subjectsManageList" class="divide-y divide-slate-100 max-h-[420px] overflow-y-auto pr-1"></div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== МОДАЛЬНЕ ВІКНО: ВИБІР СТАТУСУ КЛІТИНКИ ==================== -->
+  <div id="statusModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4" onclick="closeStatusModal(event)">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl modal-animate" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between mb-1">
+        <h3 id="statusModalStudent" class="font-bold text-base text-slate-900">Студент</h3>
+        <button onclick="closeStatusModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <p id="statusModalDetails" class="text-xs text-slate-500 mb-4">Дата та пара</p>
+
+      <div class="grid grid-cols-1 gap-2">
+        <button onclick="setCellStatus('✓')" class="flex items-center justify-between px-4 py-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 font-semibold text-sm transition">
+          <span class="flex items-center gap-2.5"><span class="w-7 h-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold">✓</span> Присутній на парі</span>
+        </button>
+        <button onclick="setCellStatus('Н')" class="flex items-center justify-between px-4 py-3 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-900 font-semibold text-sm transition">
+          <span class="flex items-center gap-2.5"><span class="w-7 h-7 rounded-lg bg-rose-500 text-white flex items-center justify-center font-bold">Н</span> Відсутній (без причини)</span>
+        </button>
+        <button onclick="setCellStatus('ПП')" class="flex items-center justify-between px-4 py-3 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 font-semibold text-sm transition">
+          <span class="flex items-center gap-2.5"><span class="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold">ПП</span> Поважна причина</span>
+        </button>
+        <button onclick="setCellStatus('ХВ')" class="flex items-center justify-between px-4 py-3 rounded-xl bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-900 font-semibold text-sm transition">
+          <span class="flex items-center gap-2.5"><span class="w-7 h-7 rounded-lg bg-sky-500 text-white flex items-center justify-center font-bold">ХВ</span> Хвороба (довідка)</span>
+        </button>
+        <button onclick="setCellStatus('ЗВ')" class="flex items-center justify-between px-4 py-3 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-900 font-semibold text-sm transition">
+          <span class="flex items-center gap-2.5"><span class="w-7 h-7 rounded-lg bg-purple-500 text-white flex items-center justify-center font-bold">ЗВ</span> Звільнений / Захід</span>
+        </button>
+        <button onclick="setCellStatus('')" class="flex items-center justify-center px-4 py-2.5 mt-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium text-xs transition">
+          Очистити клітинку
+        </button>
+      </div>
+    </div>
   </div>
 
-  <!-- ВІДМІТКИ -->
-  <section class="panel" id="p-att" aria-label="Відмітки">
-    <div>
-      <div class="sessions" id="sessions"></div>
-      <div class="btns"><button class="btn primary" id="sess-new" type="button">+ Нова пара</button></div>
-    </div>
+  <!-- ==================== МОДАЛЬНЕ ВІКНО: ШВИДКА ПЕРЕКЛИЧКА ==================== -->
+  <div id="rollCallModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4" onclick="closeRollCallModal(event)">
+    <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-xl modal-animate" onclick="event.stopPropagation()">
+      <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h3 class="font-bold text-base text-slate-900">Швидка перекличка на парі</h3>
+          <p id="rollCallSubtitle" class="text-xs text-slate-500">Оберіть дату для відмітки</p>
+        </div>
+        <button onclick="closeRollCallModal()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
 
-    <form class="card form" id="session-form" hidden>
-      <h2 id="sf-title">Нова пара</h2>
-      <div class="grid2">
-        <label>Дата<input type="date" id="sf-date" required></label>
-        <label>Номер пари
-          <select id="sf-pair">
-            <option value="">—</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
-          </select>
+      <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <label class="text-xs font-semibold text-slate-600">Число місяця:</label>
+          <select id="rollCallDaySelect" onchange="renderRollCallList()" class="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-sm font-semibold"></select>
+        </div>
+        <button onclick="markAllPresentInRollCall()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition">
+          ✓ Усі присутні
+        </button>
+      </div>
+
+      <div id="rollCallList" class="flex-1 overflow-y-auto p-4 divide-y divide-slate-100"></div>
+
+      <div class="p-4 border-t border-slate-100 flex justify-end">
+        <button onclick="closeRollCallModal()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition">
+          Готово
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== МОДАЛЬНЕ ВІКНО: ДОДАТИ СПИСКОМ ==================== -->
+  <div id="bulkAddModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4" onclick="closeBulkAddModal(event)">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl modal-animate" onclick="event.stopPropagation()">
+      <h3 class="font-bold text-base text-slate-900 mb-1">Додати одногрупників списком</h3>
+      <p class="text-xs text-slate-500 mb-3">Вставте список студентів — кожен з нового рядка:</p>
+      <textarea id="bulkStudentsTextarea" rows="7" placeholder="Іваненко Іван&#10;Петренко Марія&#10;Коваленко Олександр" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"></textarea>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeBulkAddModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl">Скасувати</button>
+        <button onclick="processBulkAdd()" class="px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl">Додати всіх</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== МОДАЛЬНЕ ВІКНО: СИНХРОНІЗАЦІЯ ПРИСТРОЇВ ==================== -->
+  <div id="syncModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4" onclick="closeSyncModal(event)">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl modal-animate space-y-4" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
+          <i data-lucide="cloud" class="w-5 h-5 text-indigo-600"></i>
+          <span>Синхронізація між пристроями</span>
+        </h3>
+        <button onclick="closeSyncModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Щоб відкрити цей самий журнал на телефоні або іншому ноутбуці, скопіюйте <b>Код групи</b> та введіть його на іншому пристрої (або скористайтеся резервним файлом).
+      </p>
+
+      <div class="p-3 bg-indigo-50 border border-indigo-100 rounded-xl space-y-2">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-700">Ваш Код групи для входу:</span>
+        <div class="flex items-center gap-2">
+          <input type="text" id="mySyncCodeDisplay" readonly class="flex-1 px-3 py-2 bg-white border border-indigo-200 rounded-lg font-mono text-sm font-bold text-slate-800" />
+          <button onclick="copySyncCode()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition">
+            Копіювати
+          </button>
+        </div>
+      </div>
+
+      <div class="border-t border-slate-100 pt-3 space-y-2">
+        <span class="text-xs font-semibold text-slate-700">Підключитися до існуючої групи з іншого пристрою:</span>
+        <div class="flex gap-2">
+          <input type="text" id="connectSyncCodeInput" placeholder="Вставте код групи..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <button onclick="connectWithSyncCode()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition">
+            Увійти
+          </button>
+        </div>
+      </div>
+
+      <div class="border-t border-slate-100 pt-3 flex items-center justify-between gap-2">
+        <button onclick="downloadBackupJson()" class="flex-1 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition flex items-center justify-center gap-1.5">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i>
+          <span>Зберегти копію</span>
+        </button>
+        <label class="flex-1 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer">
+          <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+          <span>Відновити з файлу</span>
+          <input type="file" accept=".json" class="hidden" onchange="restoreBackupJson(event)" />
         </label>
       </div>
-      <label>Предмет<input id="sf-subject" list="subjects" autocomplete="off" placeholder="Наприклад, Вища математика"></label>
-      <p class="err" id="sf-err" hidden></p>
-      <div class="btns">
-        <button class="btn primary" type="submit">Зберегти</button>
-        <button class="btn" type="button" id="sf-cancel">Скасувати</button>
-      </div>
-    </form>
-
-    <div class="empty" id="att-empty-sess" hidden>Ще немає жодної пари. Натисніть «Нова пара», щоб почати відмічати.</div>
-
-    <div id="att-body" hidden style="display:grid;gap:14px">
-      <div class="sess-head">
-        <div>
-          <h2 id="sess-title"></h2>
-          <div class="sub" id="sess-sub"></div>
-        </div>
-        <div class="btns">
-          <button class="btn sm" id="sess-edit" type="button">Змінити</button>
-          <button class="btn sm" id="sess-del" type="button">Видалити пару</button>
-        </div>
-      </div>
-      <div class="stats" id="att-stats"></div>
-      <div class="btns">
-        <button class="btn" id="att-rest" type="button">Решту — присутні</button>
-        <button class="btn" id="att-reset" type="button">Скинути відмітки</button>
-      </div>
-      <div class="empty" id="att-empty-stud" hidden>Список групи порожній. <button class="linkbtn" type="button" data-go="grp">Додати студентів</button></div>
-      <ul class="list" id="att-list"></ul>
     </div>
-  </section>
+  </div>
 
-  <!-- ЖУРНАЛ -->
-  <section class="panel" id="p-jr" aria-label="Журнал" hidden>
-    <div class="card form">
-      <h2>Експорт в Excel</h2>
-      <label>Період<select id="ex-period"></select></label>
-      <div class="btns">
-        <button class="btn primary" id="xl-btn" type="button">Завантажити .xlsx</button>
-        <button class="btn" id="xl-copy" type="button">Копіювати таблицю</button>
-      </div>
-      <p class="hint" id="xl-note" hidden>Завантаження файлу тут недоступне. Натисніть «Копіювати таблицю» і вставте в Excel.</p>
-      <p class="hint">Студенти по рядках, пари по стовпцях, у кінці підрахунок кожної категорії. Клітинку в таблиці можна натиснути, щоб змінити відмітку.</p>
-    </div>
-    <div class="empty" id="jr-empty" hidden>Журнал порожній: потрібні хоча б один студент і одна пара.</div>
-    <div class="tablebox" id="jr-box" hidden><table id="jr-table"></table></div>
-  </section>
+  <!-- Firebase SDK (для хмарного збереження між пристроями) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  <!-- ГРУПА -->
-  <section class="panel" id="p-grp" aria-label="Група" hidden>
-    <div class="card form">
-      <div class="sess-head"><h2>Студенти</h2><span class="sub" id="stud-count"></span></div>
-      <form class="btns" id="add-form" style="flex-wrap:nowrap">
-        <input id="add-name" autocomplete="off" placeholder="Прізвище та імʼя" aria-label="Новий студент" enterkeyhint="done">
-        <button class="btn primary" type="submit" style="flex:0 0 auto">Додати</button>
-      </form>
-      <details>
-        <summary class="hint" style="cursor:pointer;min-height:32px">Додати списком</summary>
-        <div class="card form" style="margin-top:8px;border:0;padding:0">
-          <label>Кожен студент з нового рядка (нумерацію прибираю сам)<textarea id="bulk" placeholder="Бондаренко Олена&#10;Ковальчук Андрій"></textarea></label>
-          <div class="btns"><button class="btn" id="bulk-add" type="button">Додати список</button></div>
-        </div>
-      </details>
-      <div class="empty" id="stud-empty" hidden>Тут поки нікого. Додайте першого студента або вставте весь список.</div>
-      <ul class="list" id="stud-list"></ul>
-      <div class="btns"><button class="btn sm" id="stud-sort" type="button">Сортувати за алфавітом</button></div>
-    </div>
+    // Конфігурація хмарного сховища (опціонально: вставте свій Firebase config для крос-девайс синхронізації,
+    // без нього застосунок автоматично працює через локальне сховище браузера)
+    const firebaseConfig = window.__FIREBASE_CONFIG__ || null;
+    window.cloudSyncEnabled = false;
+    window.db = null;
 
-    <div class="card form">
-      <h2>Категорії відвідування</h2>
-      <p class="hint">Позначка — це те, що потрапляє в таблицю: ✓, Н, ПП або свої. Позначка «Присутній» потрібна для кнопки «Решту — присутні».</p>
-      <div id="cat-list"></div>
-      <div class="btns"><button class="btn" id="cat-add" type="button">+ Нова категорія</button></div>
-    </div>
-  </section>
-
-  <!-- ДОМАШКА -->
-  <section class="panel" id="p-hw" aria-label="Домашка" hidden>
-    <div class="card form">
-      <h2>Що надіслали</h2>
-      <label>Текст повідомлення чи умова<textarea id="hw-raw" placeholder="Вставте повідомлення від викладача, умову, посилання…"></textarea></label>
-      <label>Фото або файл з текстом<input type="file" id="hw-files" multiple accept="image/*,.txt,.md,.csv"></label>
-      <div class="thumbs" id="hw-thumbs"></div>
-      <p class="hint" id="hw-fhint">Фото читає Claude. З файлів беру текст .txt, .md, .csv. Для PDF і Word скопіюйте текст у поле вище.</p>
-      <div class="btns">
-        <button class="btn primary" id="hw-parse" type="button">Заповнити поля з Claude</button>
-        <span class="hint" id="hw-ai-status" role="status"></span>
-      </div>
-    </div>
-
-    <div class="card form">
-      <h2>Шаблон для групи</h2>
-      <div class="grid2">
-        <label>Предмет<input id="hw-subject" list="subjects" autocomplete="off"></label>
-        <label>Викладач<input id="hw-teacher" autocomplete="off"></label>
-      </div>
-      <label>Завдання<textarea id="hw-task"></textarea></label>
-      <div class="grid2">
-        <label>Дедлайн, дата<input type="date" id="hw-date"></label>
-        <label>Дедлайн, година (необовʼязково)<input type="time" id="hw-time"></label>
-      </div>
-      <p class="cd" id="hw-cd"></p>
-      <label>Як здавати<input id="hw-submit" autocomplete="off" placeholder="Наприклад, фото в особисті повідомлення старості"></label>
-      <label>Примітки<input id="hw-notes" autocomplete="off"></label>
-      <label class="chk"><input type="checkbox" id="hw-emoji" checked> З емодзі</label>
-      <label>Готовий текст<textarea id="hw-out" placeholder="Шаблон зʼявиться тут, щойно заповните поля"></textarea></label>
-      <p class="hint">Скільки залишилось до дедлайну, рахується на момент, коли ви відкрили або скопіювали шаблон.</p>
-      <div class="btns">
-        <button class="btn primary" id="hw-copy" type="button">Копіювати</button>
-        <button class="btn" id="hw-save" type="button">Зберегти в список</button>
-        <button class="btn" id="hw-new" type="button">Нове завдання</button>
-        <button class="btn sm" id="out-reset" type="button" hidden>Скинути текст до шаблону</button>
-      </div>
-    </div>
-
-    <h2>Список завдань</h2>
-    <div class="empty" id="hw-empty" hidden>Збережених завдань ще немає.</div>
-    <div class="stack" id="hw-list"></div>
-  </section>
-</div>
-
-<datalist id="subjects"></datalist>
-<div class="toast" id="toast" role="status" hidden></div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script>
-(function(){
-'use strict';
-var $=function(s,r){return (r||document).querySelector(s)};
-var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
-function h(tag,attrs){
-  var el=document.createElement(tag), val;
-  if(attrs){ Object.keys(attrs).forEach(function(k){
-    var v=attrs[k]; if(v==null||v===false) return;
-    if(k==='class') el.className=v;
-    else if(k==='value') val=v;
-    else if(k==='checked') el.checked=!!v;
-    else if(k==='disabled') el.disabled=!!v;
-    else if(k.slice(0,2)==='on') el.addEventListener(k.slice(2),v);
-    else el.setAttribute(k, v===true?'':String(v));
-  }); }
-  var kids=Array.prototype.slice.call(arguments,2).flat(Infinity);
-  kids.forEach(function(kid){ if(kid==null||kid===false) return; el.append(kid.nodeType?kid:document.createTextNode(String(kid))); });
-  if(val!==undefined) el.value=val;
-  return el;
-}
-var uid=function(){return Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-3)};
-var pad=function(n){return String(n).padStart(2,'0')};
-function dstr(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
-function todayStr(){return dstr(new Date())}
-function parseD(s){var p=s.split('-').map(Number);return new Date(p[0],p[1]-1,p[2])}
-var MONTHS_GEN=['січня','лютого','березня','квітня','травня','червня','липня','серпня','вересня','жовтня','листопада','грудня'];
-var MONTHS_NOM=['січень','лютий','березень','квітень','травень','червень','липень','серпень','вересень','жовтень','листопад','грудень'];
-var WEEKDAYS=['неділя','понеділок','вівторок','середа','четвер','пʼятниця','субота'];
-function fmtLong(s){var d=parseD(s);var w=WEEKDAYS[d.getDay()];return w.charAt(0).toUpperCase()+w.slice(1)+', '+d.getDate()+' '+MONTHS_GEN[d.getMonth()]+' '+d.getFullYear()}
-function fmtShort(s){var d=parseD(s);return pad(d.getDate())+'.'+pad(d.getMonth()+1)}
-function plural(n){var a=n%10,b=n%100;if(a===1&&b!==11)return 'день';if(a>=2&&a<=4&&!(b>=12&&b<=14))return 'дні';return 'днів'}
-function cap1(s){return s?s.charAt(0).toUpperCase()+s.slice(1):s}
-
-/* ---------- стан ---------- */
-var LS_KEY='zhurnal-starosty-v1', TAB_KEY='zhurnal-starosty-tab';
-var TONES=[['ok','Зелений'],['bad','Червоний'],['warn','Жовтий'],['info','Синій'],['muted','Сірий']];
-function defaultCats(){return [
-  {id:'c_p',code:'✓',label:'Присутній',tone:'ok',present:true},
-  {id:'c_n',code:'Н',label:'Відсутній',tone:'bad'},
-  {id:'c_pp',code:'ПП',label:'Поважна причина',tone:'warn'},
-  {id:'c_h',code:'Х',label:'Хворіє (довідка)',tone:'info'}
-];}
-function emptyState(){return {v:1,demo:false,updatedAt:0,students:[],categories:defaultCats(),sessions:[],homework:[]}}
-function normalize(s){
-  var e=emptyState(); if(!s||typeof s!=='object') return e;
-  var o=Object.assign({},e,s);
-  o.students=Array.isArray(s.students)?s.students:[];
-  o.categories=(Array.isArray(s.categories)&&s.categories.length)?s.categories:defaultCats();
-  o.sessions=(Array.isArray(s.sessions)?s.sessions:[]).map(function(x){x.marks=(x.marks&&typeof x.marks==='object')?x.marks:{};return x});
-  o.homework=Array.isArray(s.homework)?s.homework:[];
-  return o;
-}
-function demoState(){
-  var st=emptyState(); st.demo=true;
-  var names=['Бондаренко Олена','Ковальчук Андрій','Мельник Софія','Шевченко Дмитро','Ткаченко Марія','Коваленко Ігор','Олійник Катерина','Кравчук Максим'];
-  st.students=names.map(function(n,i){return {id:'d'+i,name:n}});
-  var P=st.categories[0].id,N=st.categories[1].id,PP=st.categories[2].id,X=st.categories[3].id;
-  var t=new Date(); var off=function(k){return dstr(new Date(t.getFullYear(),t.getMonth(),t.getDate()+k))};
-  st.sessions=[
-    {id:'ds1',date:off(-2),pair:1,subject:'Вища математика',marks:{d0:P,d1:P,d2:N,d3:P,d4:PP,d5:P,d6:P,d7:X}},
-    {id:'ds2',date:off(-1),pair:3,subject:'Англійська мова',marks:{d0:P,d1:N,d2:P,d3:P,d4:P,d5:N,d6:P,d7:P}},
-    {id:'ds3',date:off(0),pair:2,subject:'Фізика',marks:{d0:P,d1:P}}
-  ];
-  st.homework=[{id:'dh1',subject:'Вища математика',teacher:'',task:'Розвʼязати №12–18 зі збірника (с. 45). Оформити письмово, надіслати одним PDF.',deadline:off(3),time:'23:59',submit:'Надіслати старості в особисті повідомлення',notes:'',done:false}];
-  return st;
-}
-function lsLoad(){try{var r=localStorage.getItem(LS_KEY);return r?JSON.parse(r):null}catch(e){return null}}
-function lsSave(){try{localStorage.setItem(LS_KEY,JSON.stringify(state))}catch(e){}}
-
-var saved=lsLoad();
-var state=saved?normalize(saved):demoState();
-var ui={tab:'att',sessionId:null,editing:null,hwEditing:null,manualOut:false,files:[],aiCtl:null};
-var ref=null, dl=null, sm=null, imgLimits=null;
-var saveTimer=null, saving=false, dirty=false, loadTimer=null;
-
-/* ---------- збереження ---------- */
-var STATUS={connecting:'Підключаюсь…',saved:'Зберігається в акаунті',saving:'Зберігаю…',local:'Зберігається лише в цьому браузері',error:'Не вдалося зберегти, повторю'};
-function setStatus(k){var el=$('#sync');el.setAttribute('data-s',k);$('#sync-t').textContent=STATUS[k]}
-function commit(){state.updatedAt=Date.now();lsSave();scheduleSave()}
-function scheduleSave(){
-  if(!ref){setStatus('local');return}
-  setStatus('saving'); clearTimeout(saveTimer); saveTimer=setTimeout(flush,500);
-}
-async function flush(){
-  saveTimer=null;
-  if(saving){dirty=true;return}
-  if(!ref){setStatus('local');return}
-  saving=true;
-  try{ await ref.set({updatedAt:state.updatedAt,data:state}); setStatus('saved'); }
-  catch(e){ setStatus('error'); }
-  finally{ saving=false; if(dirty){dirty=false;flush()} }
-}
-function hasContent(){return state.students.length||state.sessions.length||state.homework.length}
-
-/* ---------- допоміжне ---------- */
-var toastT=null;
-function toast(msg){var t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){t.hidden=true},2800)}
-function armed(btn,text,fn){
-  var t=null, orig=btn.textContent;
-  btn.addEventListener('click',function(){
-    if(btn.hasAttribute('data-armed')){clearTimeout(t);btn.removeAttribute('data-armed');btn.textContent=orig;fn()}
-    else{btn.setAttribute('data-armed','');btn.textContent=text;t=setTimeout(function(){btn.removeAttribute('data-armed');btn.textContent=orig},3500)}
-  });
-}
-async function copyText(txt,fallbackEl){
-  try{await navigator.clipboard.writeText(txt);toast('Скопійовано');return true}
-  catch(e){
-    if(fallbackEl){fallbackEl.focus();fallbackEl.select();toast('Текст виділено, скопіюйте його вручну')}
-    else toast('Не вдалося скопіювати автоматично');
-    return false;
-  }
-}
-var catById=function(id){return state.categories.find(function(c){return c.id===id})};
-var cmpSess=function(a,b){return a.date<b.date?-1:a.date>b.date?1:(a.pair||0)-(b.pair||0)};
-var sessAsc=function(){return state.sessions.slice().sort(cmpSess)};
-var sessDesc=function(){return state.sessions.slice().sort(function(a,b){return cmpSess(b,a)})};
-function currentSession(){
-  var s=state.sessions.find(function(x){return x.id===ui.sessionId});
-  if(!s){var l=sessDesc();s=l[0]||null;ui.sessionId=s?s.id:null}
-  return s;
-}
-function refreshSubjects(){
-  var set={};state.sessions.forEach(function(s){if(s.subject)set[s.subject]=1});state.homework.forEach(function(x){if(x.subject)set[x.subject]=1});
-  $('#subjects').replaceChildren.apply($('#subjects'),Object.keys(set).sort().map(function(v){return h('option',{value:v})}));
-}
-
-/* ---------- вкладки ---------- */
-function showTab(name){
-  ui.tab=name;
-  $$('.tab').forEach(function(b){b.setAttribute('aria-selected',String(b.getAttribute('data-tab')===name))});
-  $$('.panel').forEach(function(p){p.hidden=(p.id!=='p-'+name)});
-  if(name==='att')renderAttendance();
-  if(name==='jr')renderJournal();
-  if(name==='grp')renderGroup();
-  if(name==='hw')renderHwList();
-  try{localStorage.setItem(TAB_KEY,name)}catch(e){}
-}
-
-/* ---------- відмітки ---------- */
-function renderSessions(){
-  var box=$('#sessions'), cur=currentSession();
-  box.replaceChildren.apply(box,sessDesc().map(function(s){
-    return h('button',{type:'button',class:'chip','aria-pressed':String(!!cur&&cur.id===s.id),onclick:function(){ui.sessionId=s.id;$('#session-form').hidden=true;renderAttendance()}},
-      h('span',{class:'d'},fmtShort(s.date)+' · '+(s.pair?s.pair+' пара':'без номера')),
-      h('span',{class:'s'},s.subject));
-  }));
-}
-function renderAttendance(){
-  renderSessions();
-  var s=currentSession();
-  $('#att-empty-sess').hidden=!!s;
-  $('#att-body').hidden=!s;
-  refreshSubjects();
-  if(!s)return;
-  $('#sess-title').textContent=fmtLong(s.date);
-  $('#sess-sub').textContent=(s.pair?s.pair+' пара · ':'')+s.subject;
-  renderSummary(); renderList();
-}
-function renderSummary(){
-  var s=currentSession(), box=$('#att-stats'); box.replaceChildren(); if(!s)return;
-  var n=state.students.length, marked=0;
-  state.categories.forEach(function(c){
-    var k=state.students.filter(function(x){return s.marks[x.id]===c.id}).length; marked+=k;
-    box.append(h('span',{class:'stat tone-'+c.tone,title:c.label},h('b',null,k),c.code,h('span',{class:'lbl'},c.label)));
-  });
-  box.append(h('span',{class:'stat tone-muted'},h('b',null,n-marked),h('span',{class:'lbl'},'не відмічено')));
-}
-function renderList(){
-  var s=currentSession(), ul=$('#att-list'); if(!s)return;
-  $('#att-empty-stud').hidden=state.students.length>0; ul.hidden=!state.students.length;
-  ul.replaceChildren.apply(ul,state.students.map(function(st,i){
-    var group=h('div',{class:'marks',role:'group','aria-label':'Відмітка: '+st.name});
-    state.categories.forEach(function(c){
-      group.append(h('button',{type:'button',class:'mark tone-'+c.tone,title:c.label,'aria-label':st.name+': '+c.label,'aria-pressed':String(s.marks[st.id]===c.id),
-        onclick:function(){
-          if(s.marks[st.id]===c.id)delete s.marks[st.id];else s.marks[st.id]=c.id;
-          commit();
-          $$('.mark',group).forEach(function(b,k){b.setAttribute('aria-pressed',String(s.marks[st.id]===state.categories[k].id))});
-          renderSummary();
-        }},c.code));
-    });
-    return h('li',{class:'row'},h('div',{class:'who'},h('span',{class:'num'},pad(i+1)),h('span',{class:'name'},st.name)),group);
-  }));
-}
-function lastSubject(){var l=sessDesc();return l[0]?l[0].subject:''}
-function openSessionForm(edit){
-  ui.editing=edit?edit.id:null;
-  $('#session-form').hidden=false; $('#sf-err').hidden=true;
-  $('#sf-title').textContent=edit?'Змінити пару':'Нова пара';
-  $('#sf-date').value=edit?edit.date:todayStr();
-  $('#sf-pair').value=edit&&edit.pair?String(edit.pair):'';
-  $('#sf-subject').value=edit?edit.subject:lastSubject();
-  $('#sf-subject').focus();
-}
-function bindAttendance(){
-  $('#sess-new').addEventListener('click',function(){openSessionForm(null)});
-  $('#sf-cancel').addEventListener('click',function(){$('#session-form').hidden=true});
-  $('#session-form').addEventListener('submit',function(e){
-    e.preventDefault();
-    var date=$('#sf-date').value, subj=$('#sf-subject').value.trim(), pair=$('#sf-pair').value;
-    var err=$('#sf-err');
-    if(!date){err.textContent='Вкажіть дату пари.';err.hidden=false;return}
-    if(!subj){err.textContent='Вкажіть предмет.';err.hidden=false;return}
-    var s=ui.editing?state.sessions.find(function(x){return x.id===ui.editing}):null;
-    if(s){s.date=date;s.subject=subj;s.pair=pair?Number(pair):0}
-    else{s={id:uid(),date:date,pair:pair?Number(pair):0,subject:subj,marks:{}};state.sessions.push(s)}
-    ui.sessionId=s.id; commit(); $('#session-form').hidden=true; renderAttendance(); toast('Пару збережено');
-  });
-  $('#sess-edit').addEventListener('click',function(){var s=currentSession();if(s)openSessionForm(s)});
-  armed($('#sess-del'),'Точно видалити?',function(){
-    var s=currentSession();if(!s)return;
-    state.sessions=state.sessions.filter(function(x){return x.id!==s.id});ui.sessionId=null;commit();renderAttendance();
-  });
-  $('#att-rest').addEventListener('click',function(){
-    var s=currentSession();if(!s)return;
-    var pc=state.categories.find(function(c){return c.present})||state.categories[0];
-    state.students.forEach(function(st){if(!s.marks[st.id])s.marks[st.id]=pc.id});
-    commit();renderList();renderSummary();
-  });
-  armed($('#att-reset'),'Точно скинути?',function(){
-    var s=currentSession();if(!s)return; s.marks={};commit();renderList();renderSummary();
-  });
-}
-
-/* ---------- журнал і експорт ---------- */
-function journalSessions(period){
-  var ss=sessAsc(); if(period&&period!=='all')ss=ss.filter(function(s){return s.date.indexOf(period)===0}); return ss;
-}
-function cycle(s,id){
-  var cats=state.categories, idx=cats.findIndex(function(c){return c.id===s.marks[id]}), nx=idx+1;
-  if(nx>=cats.length)delete s.marks[id];else s.marks[id]=cats[nx].id;
-}
-function renderJournal(){
-  var sel=$('#ex-period'), prev=sel.value||'all';
-  var months=Array.from(new Set(state.sessions.map(function(s){return s.date.slice(0,7)}))).sort();
-  sel.replaceChildren.apply(sel,[h('option',{value:'all'},'Усі пари')].concat(months.map(function(m){var p=m.split('-').map(Number);return h('option',{value:m},MONTHS_NOM[p[1]-1]+' '+p[0])})));
-  sel.value=(prev==='all'||months.indexOf(prev)>-1)?prev:'all';
-  var ss=journalSessions(sel.value), box=$('#jr-box'), t=$('#jr-table');
-  var sl=box.scrollLeft, st=box.scrollTop;
-  var empty=!ss.length||!state.students.length;
-  $('#jr-empty').hidden=!empty; box.hidden=empty;
-  $('#xl-btn').disabled=empty; $('#xl-copy').disabled=empty;
-  if(empty)return;
-  var cats=state.categories;
-  var thead=h('thead',null,h('tr',null,
-    h('th',{class:'nm'},'Студент'),
-    ss.map(function(s){return h('th',{title:fmtLong(s.date)+' · '+s.subject},h('div',{class:'mono'},fmtShort(s.date)+(s.pair?'·'+s.pair:'')),h('div',{class:'sub'},s.subject))}),
-    cats.map(function(c){return h('th',{title:c.label,class:'tot tone-'+c.tone},c.code)})
-  ));
-  var tbody=h('tbody',null,state.students.map(function(stu,i){
-    return h('tr',null,
-      h('td',{class:'nm'},(i+1)+'. '+stu.name),
-      ss.map(function(s){
-        var c=catById(s.marks[stu.id]);
-        return h('td',null,h('button',{type:'button',class:'cell'+(c?' has tone-'+c.tone:''),'aria-label':stu.name+', '+fmtShort(s.date)+': '+(c?c.label:'не відмічено'),onclick:function(){cycle(s,stu.id);commit();renderJournal()}},c?c.code:'·'));
-      }),
-      cats.map(function(c){return h('td',{class:'tot tone-'+c.tone},ss.filter(function(s){return s.marks[stu.id]===c.id}).length)})
-    );
-  }));
-  t.replaceChildren(thead,tbody);
-  box.scrollLeft=sl; box.scrollTop=st;
-}
-function buildAoa(period){
-  var ss=journalSessions(period), cats=state.categories;
-  var head1=['',''].concat(ss.map(function(s){return fmtShort(s.date)+(s.pair?' · '+s.pair+' п.':'')}),cats.map(function(c,i){return i===0?'Підсумок':''}));
-  var head2=['№','ПІБ'].concat(ss.map(function(s){return s.subject}),cats.map(function(c){return c.code+' — '+c.label}));
-  var rows=state.students.map(function(st,i){
-    return [i+1,st.name].concat(
-      ss.map(function(s){var c=catById(s.marks[st.id]);return c?c.code:''}),
-      cats.map(function(c){return ss.filter(function(s){return s.marks[st.id]===c.id}).length})
-    );
-  });
-  return {aoa:[head1,head2].concat(rows),ss:ss,cats:cats};
-}
-function colName(n){var s='';n++;while(n>0){var m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=Math.floor((n-1)/26)}return s}
-async function exportXlsx(){
-  if(!window.XLSX){toast('Бібліотека Excel не завантажилась. Скористайтеся «Копіювати таблицю»');return}
-  if(!dl){toast('Завантаження тут недоступне');return}
-  var b=buildAoa($('#ex-period').value);
-  if(!b.ss.length||!state.students.length){toast('Поки нічого експортувати');return}
-  var ws=XLSX.utils.aoa_to_sheet(b.aoa);
-  var first=colName(2), last=colName(1+b.ss.length);
-  state.students.forEach(function(st,i){
-    var r=i+2;
-    b.cats.forEach(function(c,k){
-      var addr=XLSX.utils.encode_cell({r:r,c:2+b.ss.length+k});
-      var cnt=b.ss.filter(function(s){return s.marks[st.id]===c.id}).length;
-      ws[addr]={t:'n',v:cnt,f:'COUNTIF('+first+(r+1)+':'+last+(r+1)+',"'+String(c.code).replace(/"/g,'""')+'")'};
-    });
-  });
-  ws['!cols']=[{wch:4},{wch:30}].concat(b.ss.map(function(){return {wch:14}}),b.cats.map(function(){return {wch:14}}));
-  var lg=XLSX.utils.aoa_to_sheet([['Позначка','Значення']].concat(state.categories.map(function(c){return [c.code,c.label]})));
-  lg['!cols']=[{wch:10},{wch:28}];
-  var wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,'Відвідуваність');
-  XLSX.utils.book_append_sheet(wb,lg,'Позначки');
-  var buf=XLSX.write(wb,{bookType:'xlsx',type:'array'});
-  try{await dl.save({filename:'vidviduvanist-'+todayStr()+'.xlsx',data:buf});toast('Файл готовий')}
-  catch(e){if(e&&e.code==='declined')return;toast('Не вдалося зберегти файл. Скористайтеся «Копіювати таблицю»')}
-}
-function bindJournal(){
-  $('#ex-period').addEventListener('change',renderJournal);
-  $('#xl-btn').addEventListener('click',exportXlsx);
-  $('#xl-copy').addEventListener('click',function(){
-    var b=buildAoa($('#ex-period').value);
-    if(!b.ss.length||!state.students.length){toast('Поки нічого копіювати');return}
-    copyText(b.aoa.map(function(r){return r.join('\t')}).join('\n'));
-  });
-}
-
-/* ---------- група і категорії ---------- */
-function renderGroup(){
-  $('#stud-count').textContent=state.students.length?state.students.length+' у групі':'Поки нікого';
-  var ul=$('#stud-list');
-  ul.hidden=!state.students.length; $('#stud-empty').hidden=state.students.length>0;
-  ul.replaceChildren.apply(ul,state.students.map(function(st,i){
-    var del=h('button',{type:'button',class:'btn sm','aria-label':'Видалити '+st.name},'Видалити');
-    armed(del,'Точно?',function(){
-      state.students=state.students.filter(function(x){return x.id!==st.id});
-      state.sessions.forEach(function(s){delete s.marks[st.id]});
-      commit();renderGroup();
-    });
-    return h('li',{class:'row'},h('span',{class:'num'},pad(i+1)),
-      h('input',{class:'grow',value:st.name,'aria-label':'ПІБ студента',autocomplete:'off',onchange:function(e){
-        var v=e.target.value.trim(); if(!v){e.target.value=st.name;return}
-        st.name=v;commit();
-      }}),del);
-  }));
-  renderCats();
-}
-function renderCats(){
-  var box=$('#cat-list');
-  box.replaceChildren.apply(box,state.categories.map(function(c){
-    var del=h('button',{type:'button',class:'btn sm','aria-label':'Видалити категорію '+c.label},'Видалити');
-    armed(del,'Точно?',function(){
-      if(state.categories.length<2){toast('Потрібна хоча б одна категорія');return}
-      state.categories=state.categories.filter(function(x){return x.id!==c.id});
-      state.sessions.forEach(function(s){Object.keys(s.marks).forEach(function(k){if(s.marks[k]===c.id)delete s.marks[k]})});
-      commit();renderCats();
-    });
-    return h('div',{class:'cat-row'},
-      h('input',{class:'code',value:c.code,maxlength:'3','aria-label':'Позначка',autocomplete:'off',onchange:function(e){c.code=e.target.value.trim()||c.code;e.target.value=c.code;commit()}}),
-      h('input',{class:'lab',value:c.label,'aria-label':'Назва',autocomplete:'off',onchange:function(e){c.label=e.target.value.trim()||c.label;e.target.value=c.label;commit()}}),
-      h('select',{'aria-label':'Колір',value:c.tone,onchange:function(e){c.tone=e.target.value;commit()}},TONES.map(function(t){return h('option',{value:t[0]},t[1])})),
-      h('label',{class:'chk'},h('input',{type:'checkbox',checked:!!c.present,onchange:function(e){c.present=e.target.checked;commit()}}),'Присутній'),
-      del);
-  }));
-}
-function addStudents(list){
-  var have={};state.students.forEach(function(s){have[s.name.toLowerCase()]=1});
-  var added=0;
-  list.forEach(function(raw){
-    var n=raw.replace(/^\s*\d+[.)]\s*/,'').trim(); if(!n||have[n.toLowerCase()])return;
-    have[n.toLowerCase()]=1; state.students.push({id:uid(),name:n}); added++;
-  });
-  if(added){commit();renderGroup();toast('Додано: '+added)}else toast('Нових імен немає');
-  return added;
-}
-function bindGroup(){
-  $('#add-form').addEventListener('submit',function(e){
-    e.preventDefault();var inp=$('#add-name');var v=inp.value.trim();if(!v)return;
-    if(addStudents([v]))inp.value='';inp.focus();
-  });
-  $('#bulk-add').addEventListener('click',function(){
-    var ta=$('#bulk'); if(addStudents(ta.value.split(/\r?\n/)))ta.value='';
-  });
-  $('#stud-sort').addEventListener('click',function(){
-    state.students.sort(function(a,b){return a.name.localeCompare(b.name,'uk')});commit();renderGroup();
-  });
-  $('#cat-add').addEventListener('click',function(){
-    state.categories.push({id:uid(),code:'?',label:'Нова категорія',tone:'muted'});commit();renderCats();
-    var rows=$$('.cat-row .code');if(rows.length){rows[rows.length-1].focus();rows[rows.length-1].select()}
-  });
-}
-
-/* ---------- домашка ---------- */
-function countdown(dl_,time){
-  if(!dl_)return null;
-  var now=new Date(), d=parseD(dl_), t0=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-  var days=Math.round((d-t0)/86400000);
-  if(days<0)return {text:'прострочено на '+(-days)+' '+plural(-days),tone:'bad'};
-  if(days===0){
-    if(time){
-      var p=time.split(':').map(Number), end=new Date(now.getFullYear(),now.getMonth(),now.getDate(),p[0],p[1]), ms=end-now;
-      if(ms<0)return {text:'час на здачу вийшов',tone:'bad'};
-      var hrs=Math.floor(ms/3600000), mins=Math.floor((ms%3600000)/60000);
-      return {text:'здати сьогодні, залишилось '+(hrs?hrs+' год ':'')+mins+' хв',tone:'warn'};
+    if (firebaseConfig && firebaseConfig.apiKey) {
+      try {
+        const app = initializeApp(firebaseConfig);
+        window.db = getFirestore(app);
+        window.cloudSyncEnabled = true;
+        window.firestoreOps = { doc, setDoc, onSnapshot };
+        window.initCloudListener();
+      } catch (e) {
+        console.warn("Хмарна синхронізація недоступна, працює локальний режим:", e);
+      }
     }
-    return {text:'здати сьогодні',tone:'warn'};
-  }
-  var verb=(days%10===1&&days%100!==11)?'залишився':'залишилось';
-  return {text:verb+' '+days+' '+plural(days)+(days===1?' (завтра)':''),tone:days<=1?'warn':'info'};
-}
-function template(it,emoji){
-  if(!it.subject&&!it.task&&!it.deadline)return '';
-  var E=function(e){return emoji?e+' ':''}, L=[];
-  L.push(E('📚')+'Домашнє завдання'+(it.subject?' · '+it.subject:''));
-  if(it.teacher)L.push(E('👤')+'Викладач: '+it.teacher);
-  if(it.task)L.push('',E('📝')+'Завдання:',it.task.trim());
-  if(it.deadline){
-    L.push('',E('⏰')+'Дедлайн: '+fmtLong(it.deadline)+(it.time?', '+it.time:''));
-    var cd=countdown(it.deadline,it.time); if(cd)L.push(E('⏳')+cap1(cd.text));
-  }
-  if(it.submit)L.push('',E('📤')+'Як здати: '+it.submit);
-  if(it.notes)L.push('',E('ℹ️')+it.notes);
-  return L.join('\n');
-}
-function readForm(){
-  return {subject:$('#hw-subject').value.trim(),teacher:$('#hw-teacher').value.trim(),task:$('#hw-task').value,deadline:$('#hw-date').value,time:$('#hw-time').value,submit:$('#hw-submit').value.trim(),notes:$('#hw-notes').value.trim()};
-}
-function updateOutput(){
-  var it=readForm(), cd=countdown(it.deadline,it.time);
-  $('#hw-cd').textContent=cd?'До дедлайну: '+cd.text:'';
-  if(!ui.manualOut)$('#hw-out').value=template(it,$('#hw-emoji').checked);
-}
-function fillForm(it,edit){
-  $('#hw-subject').value=it.subject||'';$('#hw-teacher').value=it.teacher||'';$('#hw-task').value=it.task||'';
-  $('#hw-date').value=it.deadline||'';$('#hw-time').value=it.time||'';$('#hw-submit').value=it.submit||'';$('#hw-notes').value=it.notes||'';
-  ui.hwEditing=edit?it.id:null; ui.manualOut=false;$('#out-reset').hidden=true;
-  $('#hw-save').textContent=edit?'Оновити в списку':'Зберегти в список';
-  updateOutput();
-}
-function resetForm(){
-  fillForm({},false); $('#hw-raw').value=''; clearFiles(); $('#hw-ai-status').textContent='';
-}
-function saveHw(){
-  var it=readForm(); if(!it.subject&&!it.task){toast('Заповніть предмет або завдання');return}
-  var ex=ui.hwEditing?state.homework.find(function(x){return x.id===ui.hwEditing}):null;
-  if(ex){Object.assign(ex,it)} else {var n=Object.assign({id:uid(),done:false},it);state.homework.push(n);ui.hwEditing=n.id}
-  $('#hw-save').textContent='Оновити в списку';
-  commit();renderHwList();refreshSubjects();toast('Збережено в списку');
-}
-function renderHwList(){
-  var box=$('#hw-list');
-  var items=state.homework.slice().sort(function(a,b){
-    if(!!a.done!==!!b.done)return a.done?1:-1;
-    var ad=a.deadline||'9999',bd=b.deadline||'9999'; return ad<bd?-1:ad>bd?1:0;
-  });
-  $('#hw-empty').hidden=items.length>0;
-  box.replaceChildren.apply(box,items.map(function(it){
-    var cd=it.done?null:countdown(it.deadline,it.time);
-    var del=h('button',{type:'button',class:'btn sm'},'Видалити');
-    armed(del,'Точно?',function(){
-      state.homework=state.homework.filter(function(x){return x.id!==it.id});
-      if(ui.hwEditing===it.id){ui.hwEditing=null;$('#hw-save').textContent='Зберегти в список'}
-      commit();renderHwList();
+  </script>
+
+  <!-- ОСНОВНА ЛОГІКА ЗАСТОСУНКУ -->
+  <script>
+    // Дні тижня українською
+    const WEEKDAYS_UA = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+    const MONTHS_UA = [
+      'Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень',
+      'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'
+    ];
+
+    // Початковий стан
+    let appState = {
+      groupName: 'Моя група',
+      students: [
+        { id: 'st_1', name: 'Бондаренко Олександр' },
+        { id: 'st_2', name: 'Коваленко Софія' },
+        { id: 'st_3', name: 'Мельник Артем' },
+        { id: 'st_4', name: 'Шевченко Анастасія' }
+      ],
+      subjects: [
+        'Вища математика',
+        'Іноземна мова',
+        'Основи логістики',
+        'Інформаційні технології'
+      ],
+      // Ключ формату: "YYYY-MM-DD|subject|pair|studentId" -> "✓" | "Н" | "ПП" | "ХВ" | "ЗВ"
+      attendance: {},
+      savedHomeworks: []
+    };
+
+    let syncCode = localStorage.getItem('starosta_sync_code');
+    if (!syncCode) {
+      syncCode = 'GRP-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+      localStorage.setItem('starosta_sync_code', syncCode);
+    }
+
+    let attachedFilesMeta = [];
+    let activeCellContext = null;
+    let unsubscribeSnapshot = null;
+
+    // ==================== ІНІЦІАЛІЗАЦІЯ ====================
+    document.addEventListener('DOMContentLoaded', () => {
+      loadFromLocal();
+
+      // Встановлюємо поточний місяць
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      document.getElementById('monthPicker').value = `${yyyy}-${mm}`;
+
+      // Дедлайн за замовчуванням: завтра о 23:59
+      const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      const tY = tomorrow.getFullYear();
+      const tM = String(tomorrow.getMonth() + 1).padStart(2, '0');
+      const tD = String(tomorrow.getDate()).padStart(2, '0');
+      document.getElementById('hwDeadline').value = `${tY}-${tM}-${tD}T23:59`;
+
+      refreshAllUI();
+      lucide.createIcons();
     });
-    return h('article',{class:'hw'+(it.done?' done':'')},
-      h('div',{class:'hw-top'},h('strong',null,it.subject||'Без предмета'),
-        it.done?h('span',{class:'badge tone-ok'},'виконано'):(cd?h('span',{class:'badge tone-'+cd.tone},cd.text):null)),
-      it.deadline?h('div',{class:'sub'},'Дедлайн: '+fmtLong(it.deadline)+(it.time?', '+it.time:'')):null,
-      it.task?h('p',{class:'task'},it.task):null,
-      h('div',{class:'btns'},
-        h('button',{type:'button',class:'btn sm primary',onclick:function(){
-          fillForm(it,true);
-          copyText($('#hw-out').value,$('#hw-out'));
-        }},'Копіювати шаблон'),
-        h('button',{type:'button',class:'btn sm',onclick:function(){fillForm(it,true);window.scrollTo(0,$('#hw-subject').getBoundingClientRect().top+window.scrollY-120)}},'У форму'),
-        h('button',{type:'button',class:'btn sm',onclick:function(){it.done=!it.done;commit();renderHwList()}},it.done?'Повернути':'Виконано'),
-        del));
-  }));
-}
 
-/* файли та Claude */
-function isImage(f){return f.type&&f.type.indexOf('image/')===0}
-function renderThumbs(){
-  var box=$('#hw-thumbs');
-  box.replaceChildren.apply(box,ui.files.map(function(f,i){
-    var rm=h('button',{type:'button','aria-label':'Прибрати '+f.name,onclick:function(){if(f._url)URL.revokeObjectURL(f._url);ui.files.splice(i,1);renderThumbs()}},'×');
-    return h('div',{class:'thumb',title:f.name},h('img',{src:f._url,alt:f.name}),rm);
-  }));
-}
-function clearFiles(){ui.files.forEach(function(f){if(f._url)URL.revokeObjectURL(f._url)});ui.files=[];renderThumbs();$('#hw-files').value=''}
-async function onFiles(e){
-  var list=Array.prototype.slice.call(e.target.files||[]), note=[];
-  for(var i=0;i<list.length;i++){
-    var f=list[i];
-    if(isImage(f)){
-      if(!imgLimits||!imgLimits.images){note.push('Фото тут не читаються. Вставте текст вручну.');continue}
-      f._url=URL.createObjectURL(f); ui.files.push(f);
-    } else if(/\.(txt|md|csv)$/i.test(f.name)||(f.type&&f.type.indexOf('text/')===0)){
-      try{
-        var txt=(await f.text()).slice(0,20000), ta=$('#hw-raw');
-        ta.value=(ta.value?ta.value+'\n\n':'')+'Файл '+f.name+':\n'+txt;
-      }catch(err){note.push('Не вдалося прочитати '+f.name)}
-    } else note.push(f.name+': цей формат не читаю, скопіюйте текст у поле.');
-  }
-  e.target.value=''; renderThumbs();
-  if(note.length)toast(note[0]);
-}
-var AI_ERR={not_granted:'Доступ до Claude для цієї сторінки не дозволено.',rate_limited:'Забагато запитів. Спробуйте трохи пізніше.',image_rejected:'Не вдалося прочитати фото. Спробуйте інше.',refused:'Claude не зміг опрацювати ці дані. Змініть текст або фото.',invalid_json:'Не вдалося розібрати відповідь. Спробуйте ще раз.',upstream_error:'Збій зʼєднання. Спробуйте ще раз.',session_expired:'Увійдіть в акаунт ще раз.',prompt_too_large:'Забагато тексту. Скоротіть його.'};
-async function parseWithClaude(){
-  var st=$('#hw-ai-status'), btn=$('#hw-parse');
-  if(ui.aiCtl){ui.aiCtl.abort();return}
-  var raw=$('#hw-raw').value.trim(), imgs=ui.files.filter(isImage);
-  if(!raw&&!imgs.length){st.textContent='Вставте текст або додайте фото.';return}
-  var now=new Date();
-  var prompt='Ти допомагаєш старості студентської групи оформити домашнє завдання з вхідних даних (текст і, можливо, фото).\n'
-   +'Сьогодні '+todayStr()+' ('+WEEKDAYS[now.getDay()]+').\n'
-   +'Поверни лише один JSON-обʼєкт такого вигляду: {"subject":"","teacher":"","task":"","deadline":"","time":"","submit":"","notes":""}.\n'
-   +'Правила: нічого не вигадуй, якщо чогось немає у даних, залиш порожній рядок. subject: назва предмета. task: суть завдання українською, зі збереженням номерів задач, сторінок, варіантів і посилань. '
-   +'deadline у форматі YYYY-MM-DD; якщо сказано «до пʼятниці» чи «наступного вівторка», обчисли найближчу майбутню дату відносно сьогодні. time у форматі HH:MM. submit: як і куди здавати. notes: інші важливі деталі.\n\n'
-   +'Текст від користувача:\n'+(raw||'(немає, дивись фото)');
-  var ctl=new AbortController(); ui.aiCtl=ctl; btn.textContent='Зупинити'; st.textContent='Claude читає…';
-  try{
-    var opts={signal:ctl.signal,modelTier:'default'};
-    if(imgs.length)opts.images=imgs.slice(0,(imgLimits&&imgLimits.images&&imgLimits.images.maxCount)||4);
-    var r=await sm.json(prompt,opts);
-    if(!r||typeof r!=='object'||Array.isArray(r))throw {code:'invalid_json'};
-    var s=function(v){return typeof v==='string'?v.trim():''};
-    if(s(r.subject))$('#hw-subject').value=s(r.subject);
-    if(s(r.teacher))$('#hw-teacher').value=s(r.teacher);
-    if(s(r.task))$('#hw-task').value=s(r.task);
-    if(s(r.submit))$('#hw-submit').value=s(r.submit);
-    if(s(r.notes))$('#hw-notes').value=s(r.notes);
-    if(/^\d{4}-\d{2}-\d{2}$/.test(s(r.deadline)))$('#hw-date').value=s(r.deadline);
-    if(/^\d{2}:\d{2}$/.test(s(r.time)))$('#hw-time').value=s(r.time);
-    ui.manualOut=false;$('#out-reset').hidden=true;updateOutput();
-    st.textContent='Поля заповнено. Перевірте їх перед копіюванням.';
-  }catch(e){
-    st.textContent=(e&&e.code==='cancelled')?'Зупинено.':(AI_ERR[e&&e.code]||'Не вийшло. Спробуйте ще раз.');
-  }finally{ui.aiCtl=null;btn.textContent='Заповнити поля з Claude'}
-}
-function bindHomework(){
-  ['#hw-subject','#hw-teacher','#hw-task','#hw-date','#hw-time','#hw-submit','#hw-notes','#hw-emoji'].forEach(function(id){
-    $(id).addEventListener('input',updateOutput); $(id).addEventListener('change',updateOutput);
-  });
-  $('#hw-out').addEventListener('input',function(){ui.manualOut=true;$('#out-reset').hidden=false});
-  $('#out-reset').addEventListener('click',function(){ui.manualOut=false;$('#out-reset').hidden=true;updateOutput()});
-  $('#hw-copy').addEventListener('click',function(){
-    if(!ui.manualOut)updateOutput();
-    var v=$('#hw-out').value; if(!v.trim()){toast('Спочатку заповніть поля');return}
-    copyText(v,$('#hw-out'));
-  });
-  $('#hw-save').addEventListener('click',saveHw);
-  $('#hw-new').addEventListener('click',resetForm);
-  $('#hw-files').addEventListener('change',onFiles);
-  $('#hw-parse').addEventListener('click',parseWithClaude);
-}
-
-/* ---------- загальне ---------- */
-function renderAll(){
-  $('#demo-note').hidden=!state.demo;
-  $('#today').textContent=fmtLong(todayStr());
-  refreshSubjects();
-  if(ui.tab==='att')renderAttendance();
-  if(ui.tab==='jr')renderJournal();
-  if(ui.tab==='grp')renderGroup();
-  if(ui.tab==='hw')renderHwList();
-}
-async function cap(n){try{return window.claude&&window.claude.use?await window.claude.use(n):null}catch(e){return null}}
-async function connect(){
-  loadTimer=setTimeout(function(){setStatus('local')},10000);
-  var res=await Promise.all([cap('db'),cap('user'),cap('downloads'),cap('sample')]);
-  var dbm=res[0], user=res[1]; dl=res[2]; sm=res[3];
-  $('#xl-btn').hidden=!dl; $('#xl-note').hidden=!!dl;
-  $('#hw-parse').hidden=!sm; $('#hw-ai-status').hidden=!sm;
-  if(sm){try{imgLimits=await sm.limits()}catch(e){imgLimits=null}}
-  var canImg=!!(imgLimits&&imgLimits.images);
-  $('#hw-files').setAttribute('accept',canImg?'image/*,.txt,.md,.csv':'.txt,.md,.csv');
-  $('#hw-fhint').textContent=sm
-    ?(canImg?'Фото читає Claude. З файлів беру текст .txt, .md, .csv. Для PDF і Word скопіюйте текст у поле вище.':'Фото тут не читаються. З файлів беру текст .txt, .md, .csv; для PDF і Word скопіюйте текст у поле вище.')
-    :'Заповніть поля вручну або вставте текст у поле вище. З файлів беру текст .txt, .md, .csv.';
-  var id=null; try{id=user&&user.id?await user.id():null}catch(e){id=null}
-  if(!dbm||!id){clearTimeout(loadTimer);setStatus('local');return}
-  ref=dbm.doc('data/users/'+id+'/app');
-  ref.onSnapshot(function(snap){
-    if(!snap.metadata.fromCache)clearTimeout(loadTimer);
-    var d=snap.exists?snap.data():null;
-    var busy=!!saveTimer||saving;
-    if(d&&d.data&&typeof d.updatedAt==='number'&&!snap.metadata.hasPendingWrites&&!busy&&d.updatedAt>(state.updatedAt||0)){
-      state=normalize(d.data); state.updatedAt=d.updatedAt; lsSave();
-      if(!state.sessions.some(function(s){return s.id===ui.sessionId}))ui.sessionId=null;
-      renderAll();
+    function loadFromLocal() {
+      const raw = localStorage.getItem(`starosta_data_${syncCode}`);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          appState = { ...appState, ...parsed };
+        } catch (e) {
+          console.error('Помилка читання збережених даних', e);
+        }
+      }
     }
-    if(!snap.metadata.fromCache){
-      var remoteAt=d&&typeof d.updatedAt==='number'?d.updatedAt:0;
-      if(!state.demo&&hasContent()&&remoteAt<(state.updatedAt||0))scheduleSave(); else if(!busy)setStatus('saved');
-    }
-  },function(){setStatus('local')});
-}
-function init(){
-  $$('.tab').forEach(function(b){b.addEventListener('click',function(){showTab(b.getAttribute('data-tab'))})});
-  document.addEventListener('click',function(e){var g=e.target.closest&&e.target.closest('[data-go]');if(g)showTab(g.getAttribute('data-go'))});
-  armed($('#demo-clear'),'Точно очистити?',function(){
-    var n=emptyState(); state=n; ui.sessionId=null; commit(); resetForm(); renderAll(); showTab('grp'); toast('Починаємо з чистого журналу');
-  });
-  var d=$('#sf-date'); d.value=todayStr();
-  bindAttendance(); bindJournal(); bindGroup(); bindHomework();
-  if(state.demo&&state.homework[0])fillForm(state.homework[0],true); else updateOutput();
-  var tab='att'; try{tab=localStorage.getItem(TAB_KEY)||'att'}catch(e){}
-  if(['att','jr','grp','hw'].indexOf(tab)<0)tab='att';
-  $('#today').textContent=fmtLong(todayStr());
-  setStatus('connecting');
-  showTab(tab); renderAll();
-  connect();
-}
-init();
-})();
-</script>
 
-</body></html>
+    function saveData() {
+      localStorage.setItem(`starosta_data_${syncCode}`, JSON.stringify(appState));
+      showSyncStatus('Збережено');
+
+      if (window.cloudSyncEnabled && window.db && window.firestoreOps) {
+        const { doc, setDoc } = window.firestoreOps;
+        setDoc(doc(window.db, 'starosta_groups', syncCode), appState)
+          .then(() => showSyncStatus('Синхронізовано'))
+          .catch(() => showSyncStatus('Збережено локально'));
+      }
+    }
+
+    window.initCloudListener = function() {
+      if (!window.cloudSyncEnabled || !window.db || !window.firestoreOps) return;
+      if (unsubscribeSnapshot) unsubscribeSnapshot();
+
+      const { doc, onSnapshot } = window.firestoreOps;
+      unsubscribeSnapshot = onSnapshot(doc(window.db, 'starosta_groups', syncCode), (snap) => {
+        if (snap.exists()) {
+          appState = { ...appState, ...snap.data() };
+          localStorage.setItem(`starosta_data_${syncCode}`, JSON.stringify(appState));
+          refreshAllUI();
+          showSyncStatus('Синхронізовано');
+        }
+      });
+    };
+
+    function showSyncStatus(text) {
+      const el = document.getElementById('syncIndicator');
+      if (!el) return;
+      el.querySelector('span:last-child').textContent = text;
+    }
+
+    function refreshAllUI() {
+      document.getElementById('headerGroupName').textContent = appState.groupName || 'Моя група';
+      document.getElementById('groupNameInput').value = appState.groupName || '';
+      populateSubjectSelects();
+      renderJournal();
+      renderManageLists();
+      generateHwPreview();
+      renderSavedHomeworks();
+    }
+
+    // ==================== НАВІГАЦІЯ ВКЛАДОК ====================
+    function switchTab(tabName) {
+      ['journal', 'homework', 'manage'].forEach(name => {
+        document.getElementById(`view-${name}`).classList.toggle('hidden', name !== tabName);
+        const btn = document.getElementById(`tab-${name}`);
+        if (name === tabName) {
+          btn.classList.add('border-indigo-600', 'text-indigo-600', 'font-semibold');
+          btn.classList.remove('border-transparent', 'text-slate-600', 'font-medium');
+        } else {
+          btn.classList.remove('border-indigo-600', 'text-indigo-600', 'font-semibold');
+          btn.classList.add('border-transparent', 'text-slate-600', 'font-medium');
+        }
+      });
+      lucide.createIcons();
+    }
+
+    function populateSubjectSelects() {
+      const journalSel = document.getElementById('journalSubjectSelect');
+      const hwSel = document.getElementById('hwSubject');
+      const prevJ = journalSel.value;
+      const prevH = hwSel.value;
+
+      const subjects = appState.subjects.length ? appState.subjects : ['Загальний журнал'];
+      const optionsHtml = subjects.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+
+      journalSel.innerHTML = optionsHtml;
+      hwSel.innerHTML = optionsHtml;
+
+      if (subjects.includes(prevJ)) journalSel.value = prevJ;
+      if (subjects.includes(prevH)) hwSel.value = prevH;
+    }
+
+    // ==================== МІСЯЧНИЙ ЖУРНАЛ ВІДВІДУВАННЯ ====================
+    function getDaysInMonth(yearMonthStr) {
+      const [year, month] = yearMonthStr.split('-').map(Number);
+      const totalDays = new Date(year, month, 0).getDate();
+      const days = [];
+      for (let d = 1; d <= totalDays; d++) {
+        const dateObj = new Date(year, month - 1, d);
+        const dow = dateObj.getDay(); // 0 = Нд, 1 = Пн...
+        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        days.push({
+          day: d,
+          dateStr,
+          weekdayShort: WEEKDAYS_UA[dow],
+          isWeekend: dow === 0 || dow === 6
+        });
+      }
+      return days;
+    }
+
+    function getStatusBadgeStyle(val) {
+      switch (val) {
+        case '✓': return 'bg-emerald-100 text-emerald-800 border-emerald-200 font-bold';
+        case 'Н': return 'bg-rose-100 text-rose-800 border-rose-200 font-bold';
+        case 'ПП': return 'bg-amber-100 text-amber-800 border-amber-200 font-bold';
+        case 'ХВ': return 'bg-sky-100 text-sky-800 border-sky-200 font-bold';
+        case 'ЗВ': return 'bg-purple-100 text-purple-800 border-purple-200 font-bold';
+        default: return 'bg-white hover:bg-slate-50 text-slate-300 border-slate-200';
+      }
+    }
+
+    function renderJournal() {
+      const monthVal = document.getElementById('monthPicker').value;
+      const subject = document.getElementById('journalSubjectSelect').value;
+      const pair = document.getElementById('journalPairSelect').value;
+
+      const emptyState = document.getElementById('journalEmptyState');
+      const tableWrapper = document.getElementById('journalTableWrapper');
+
+      if (!appState.students.length) {
+        emptyState.classList.remove('hidden');
+        tableWrapper.classList.add('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      tableWrapper.classList.remove('hidden');
+
+      const days = getDaysInMonth(monthVal);
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      // Шапка таблиці (Дні тижня + Числа місяця)
+      let theadHtml = `
+        <tr class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+          <th class="sticky-header py-2.5 px-3 font-bold text-slate-800 min-w-[190px] sm:min-w-[230px] border-r border-slate-200">
+            № / Прізвище та Ім'я
+          </th>
+      `;
+
+      days.forEach(d => {
+        const isToday = d.dateStr === todayStr;
+        const headerBg = isToday
+          ? 'bg-indigo-600 text-white'
+          : d.isWeekend
+            ? 'bg-rose-50/80 text-rose-600'
+            : 'bg-slate-100 text-slate-700';
+
+        theadHtml += `
+          <th class="py-1.5 px-1 text-center min-w-[38px] border-r border-slate-200/80 ${headerBg}" title="${d.dateStr} (${d.weekdayShort})">
+            <div class="text-[10px] font-semibold uppercase opacity-80">${d.weekdayShort}</div>
+            <div class="text-xs font-bold">${d.day}</div>
+          </th>
+        `;
+      });
+
+      theadHtml += `
+          <th class="py-2 px-2.5 text-center font-bold text-slate-700 bg-slate-100 min-w-[65px] border-r border-slate-200" title="Присутній">✓</th>
+          <th class="py-2 px-2.5 text-center font-bold text-rose-700 bg-slate-100 min-w-[65px]" title="Пропуски (Н)">Н</th>
+        </tr>
+      `;
+      document.getElementById('journalThead').innerHTML = theadHtml;
+
+      // Тіло таблиці (Студенти та їх позначки)
+      let tbodyHtml = '';
+      appState.students.forEach((student, idx) => {
+        let presentCount = 0;
+        let absentNCount = 0;
+
+        let cellsHtml = '';
+        days.forEach(d => {
+          const key = `${d.dateStr}|${subject}|${pair}|${student.id}`;
+          const status = appState.attendance[key] || '';
+
+          if (status === '✓') presentCount++;
+          if (status === 'Н') absentNCount++;
+
+          const badgeClass = getStatusBadgeStyle(status);
+          const weekendBg = d.isWeekend && !status ? 'bg-slate-50/70' : '';
+
+          cellsHtml += `
+            <td class="p-1 text-center border-r border-slate-100 ${weekendBg}">
+              <button
+                onclick="openStatusModal('${student.id}', '${d.dateStr}', '${d.weekdayShort}')"
+                class="w-8 h-8 rounded-lg border text-xs flex items-center justify-center mx-auto transition active:scale-95 ${badgeClass}"
+              >
+                ${status || '·'}
+              </button>
+            </td>
+          `;
+        });
+
+        tbodyHtml += `
+          <tr class="hover:bg-slate-50/80 transition">
+            <td class="sticky-col py-2 px-3 font-medium text-slate-800 border-r border-slate-200 whitespace-nowrap">
+              <span class="text-xs text-slate-400 mr-1.5 font-mono">${idx + 1}.</span>
+              <span>${escapeHtml(student.name)}</span>
+            </td>
+            ${cellsHtml}
+            <td class="py-2 px-2 text-center font-bold text-emerald-700 bg-emerald-50/40 border-r border-slate-100">${presentCount}</td>
+            <td class="py-2 px-2 text-center font-bold text-rose-700 bg-rose-50/40">${absentNCount}</td>
+          </tr>
+        `;
+      });
+
+      document.getElementById('journalTbody').innerHTML = tbodyHtml;
+    }
+
+    // ==================== МОДАЛЬНЕ ВІКНО ЗМІНИ СТАТУСУ ====================
+    function openStatusModal(studentId, dateStr, weekdayShort) {
+      const student = appState.students.find(s => s.id === studentId);
+      const subject = document.getElementById('journalSubjectSelect').value;
+      const pair = document.getElementById('journalPairSelect').value;
+
+      activeCellContext = { studentId, dateStr, subject, pair };
+
+      document.getElementById('statusModalStudent').textContent = student ? student.name : '';
+      document.getElementById('statusModalDetails').textContent = `${dateStr} (${weekdayShort}) • ${subject} • ${pair}-ша пара`;
+      document.getElementById('statusModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeStatusModal(e) {
+      if (e && e.target !== e.currentTarget) return;
+      document.getElementById('statusModal').classList.add('hidden');
+      activeCellContext = null;
+    }
+
+    function setCellStatus(statusValue) {
+      if (!activeCellContext) return;
+      const { studentId, dateStr, subject, pair } = activeCellContext;
+      const key = `${dateStr}|${subject}|${pair}|${studentId}`;
+
+      if (statusValue) {
+        appState.attendance[key] = statusValue;
+      } else {
+        delete appState.attendance[key];
+      }
+
+      saveData();
+      renderJournal();
+      closeStatusModal();
+    }
+
+    // ==================== ШВИДКА ПЕРЕКЛИЧКА ====================
+    function openQuickRollCall() {
+      if (!appState.students.length) {
+        alert('Спочатку додайте одногрупників у вкладці "Група та Предмети".');
+        return;
+      }
+
+      const monthVal = document.getElementById('monthPicker').value;
+      const days = getDaysInMonth(monthVal);
+      const todayDay = new Date().getDate();
+
+      const daySelect = document.getElementById('rollCallDaySelect');
+      daySelect.innerHTML = days.map(d =>
+        `<option value="${d.dateStr}" ${d.day === todayDay ? 'selected' : ''}>${d.day} число (${d.weekdayShort})</option>`
+      ).join('');
+
+      const subject = document.getElementById('journalSubjectSelect').value;
+      const pair = document.getElementById('journalPairSelect').value;
+      document.getElementById('rollCallSubtitle').textContent = `${subject} • ${pair}-ша пара`;
+
+      renderRollCallList();
+      document.getElementById('rollCallModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeRollCallModal(e) {
+      if (e && e.target !== e.currentTarget) return;
+      document.getElementById('rollCallModal').classList.add('hidden');
+      renderJournal();
+    }
+
+    function renderRollCallList() {
+      const dateStr = document.getElementById('rollCallDaySelect').value;
+      const subject = document.getElementById('journalSubjectSelect').value;
+      const pair = document.getElementById('journalPairSelect').value;
+
+      const statuses = ['✓', 'Н', 'ПП', 'ХВ', 'ЗВ'];
+      const listHtml = appState.students.map((st, idx) => {
+        const key = `${dateStr}|${subject}|${pair}|${st.id}`;
+        const current = appState.attendance[key] || '';
+
+        const btns = statuses.map(s => {
+          const isSelected = current === s;
+          const activeStyle = isSelected
+            ? getStatusBadgeStyle(s) + ' ring-2 ring-offset-1 ring-slate-400'
+            : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-transparent';
+
+          return `<button onclick="setRollCallStudent('${st.id}', '${s}')" class="w-8 h-8 rounded-lg border text-xs font-bold transition ${activeStyle}">${s}</button>`;
+        }).join('');
+
+        return `
+          <div class="py-2.5 flex items-center justify-between gap-2">
+            <div class="text-sm font-medium text-slate-800 truncate">
+              <span class="text-xs text-slate-400 mr-1">${idx + 1}.</span>${escapeHtml(st.name)}
+            </div>
+            <div class="flex items-center gap-1 shrink-0">${btns}</div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('rollCallList').innerHTML = listHtml;
+    }
+
+    function setRollCallStudent(studentId, status) {
+      const dateStr = document.getElementById('rollCallDaySelect').value;
+      const subject = document.getElementById('journalSubjectSelect').value;
+      const pair = document.getElementById('journalPairSelect').value;
+      const key = `${dateStr}|${subject}|${pair}|${studentId}`;
+
+      if (appState.attendance[key] === status) {
+        delete appState.attendance[key];
+      } else {
+        appState.attendance[key] = status;
+      }
+      saveData();
+      renderRollCallList();
+    }
+
+    function markAllPresentInRollCall() {
+      const dateStr = document.getElementById('rollCallDaySelect').value;
+      const subject = document.getElementById('journalSubjectSelect').value;
+      const pair = document.getElementById('journalPairSelect').value;
+
+      appState.students.forEach(st => {
+        const key = `${dateStr}|${subject}|${pair}|${st.id}`;
+        if (!appState.attendance[key]) {
+          appState.attendance[key] = '✓';
+        }
+      });
+      saveData();
+      renderRollCallList();
+    }
+
+    // ==================== ЕКСПОРТ В EXCEL (.XLSX) ====================
+    function exportToExcel() {
+      if (!appState.students.length) {
+        alert('Немає даних для експорту!');
+        return;
+      }
+
+      const monthVal = document.getElementById('monthPicker').value;
+      const [year, month] = monthVal.split('-').map(Number);
+      const monthName = MONTHS_UA[month - 1];
+      const subject = document.getElementById('journalSubjectSelect').value;
+      const pair = document.getElementById('journalPairSelect').value;
+      const days = getDaysInMonth(monthVal);
+
+      // Формуємо масив рядків для Excel
+      const sheetData = [
+        [`Журнал відвідування групи: ${appState.groupName}`],
+        [`Предмет: ${subject} | Пара: ${pair}-ша | Період: ${monthName} ${year}`],
+        [],
+        ['№', 'Прізвище та Ім\'я', ...days.map(d => `${d.day} (${d.weekdayShort})`), 'Присутній (✓)', 'Пропуски (Н)', 'Поважна (ПП)', 'Хвороба (ХВ)', 'Звільнений (ЗВ)']
+      ];
+
+      appState.students.forEach((student, idx) => {
+        let cPresent = 0, cN = 0, cPP = 0, cHV = 0, cZV = 0;
+        const rowCells = days.map(d => {
+          const key = `${d.dateStr}|${subject}|${pair}|${student.id}`;
+          const st = appState.attendance[key] || '';
+          if (st === '✓') cPresent++;
+          if (st === 'Н') cN++;
+          if (st === 'ПП') cPP++;
+          if (st === 'ХВ') cHV++;
+          if (st === 'ЗВ') cZV++;
+          return st;
+        });
+
+        sheetData.push([
+          idx + 1,
+          student.name,
+          ...rowCells,
+          cPresent,
+          cN,
+          cPP,
+          cHV,
+          cZV
+        ]);
+      });
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(sheetData);
+
+      // Налаштовуємо ширину колонок
+      ws['!cols'] = [
+        { wch: 4 },
+        { wch: 28 },
+        ...days.map(() => ({ wch: 7 })),
+        { wch: 14 },
+        { wch: 14 },
+        { wch: 14 },
+        { wch: 14 },
+        { wch: 15 }
+      ];
+
+      XLSX.utils.book_append_sheet(wb, ws, 'Відвідування');
+      const safeFileName = `Журнал_${appState.groupName}_${subject}_${monthVal}.xlsx`.replace(/[/\\?%*:|"<>]/g, '_');
+      XLSX.writeFile(wb, safeFileName);
+    }
+
+    // ==================== КОНСТРУКТОР ДОМАШНЬОГО ЗАВДАННЯ ====================
+    function handleHwFiles(event) {
+      const files = Array.from(event.target.files);
+      files.forEach(f => {
+        const isImage = f.type.startsWith('image/');
+        attachedFilesMeta.push({
+          name: f.name,
+          type: isImage ? 'Фото/Скрін' : 'Файл'
+        });
+      });
+      renderAttachedFiles();
+      generateHwPreview();
+      event.target.value = '';
+    }
+
+    function removeAttachedFile(index) {
+      attachedFilesMeta.splice(index, 1);
+      renderAttachedFiles();
+      generateHwPreview();
+    }
+
+    function renderAttachedFiles() {
+      const container = document.getElementById('hwAttachedList');
+      container.innerHTML = attachedFilesMeta.map((f, idx) => `
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs font-medium">
+          <span>${f.type === 'Фото/Скрін' ? '🖼️' : '📄'} ${escapeHtml(f.name)}</span>
+          <button onclick="removeAttachedFile(${idx})" class="text-indigo-400 hover:text-rose-600 font-bold ml-1">×</button>
+        </span>
+      `).join('');
+    }
+
+    function generateHwPreview() {
+      const subject = document.getElementById('hwSubject').value || 'Предмет';
+      const type = document.getElementById('hwType').value;
+      const desc = document.getElementById('hwDescription').value.trim();
+      const deadlineVal = document.getElementById('hwDeadline').value;
+      const link = document.getElementById('hwLink').value.trim();
+
+      let deadlineFormatted = 'Не вказано';
+      const badge = document.getElementById('deadlineBadge');
+
+      if (deadlineVal) {
+        const dObj = new Date(deadlineVal);
+        const day = String(dObj.getDate()).padStart(2, '0');
+        const month = String(dObj.getMonth() + 1).padStart(2, '0');
+        const year = dObj.getFullYear();
+        const hours = String(dObj.getHours()).padStart(2, '0');
+        const mins = String(dObj.getMinutes()).padStart(2, '0');
+        const wd = WEEKDAYS_UA[dObj.getDay()];
+
+        const diffMs = dObj - new Date();
+        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+        let remainingText = '';
+        if (diffMs < 0) {
+          remainingText = 'термін минув';
+          badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-rose-100 text-rose-700';
+          badge.textContent = 'Термін минув';
+        } else if (diffDays === 0) {
+          remainingText = 'здача сьогодні!';
+          badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800';
+          badge.textContent = 'Сьогодні дедлайн';
+        } else {
+          remainingText = `залишилось ${diffDays} дн.`;
+          badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800';
+          badge.textContent = `Залишилось ${diffDays} дн.`;
+        }
+
+        deadlineFormatted = `${day}.${month}.${year} (${wd}) до ${hours}:${mins} [${remainingText}]`;
+      } else {
+        badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600';
+        badge.textContent = 'Без терміну';
+      }
+
+      let template = `📚 ПРЕДМЕТ: ${subject}\n`;
+      template += `📌 ТИП: ${type}\n`;
+      template += `━━━━━━━━━━━━━━━━━━━━\n`;
+      template += `📝 ЗАВДАННЯ:\n${desc || '(Впишіть опис завдання зліва...)'}\n`;
+
+      if (attachedFilesMeta.length > 0) {
+        template += `\n📎 МАТЕРІАЛИ ДО ПОВІДОМЛЕННЯ:\n`;
+        attachedFilesMeta.forEach(f => {
+          template += `  • ${f.name}\n`;
+        });
+      }
+
+      if (link) {
+        template += `\n🔗 ПОСИЛАННЯ:\n${link}\n`;
+      }
+
+      template += `━━━━━━━━━━━━━━━━━━━━\n`;
+      template += `⏰ КІНЕЦЬ ТЕРМІНУ (ДЕДЛАЙН):\n${deadlineFormatted}`;
+
+      document.getElementById('hwPreviewBox').value = template;
+    }
+
+    function copyHwTemplate() {
+      const box = document.getElementById('hwPreviewBox');
+      box.select();
+      navigator.clipboard.writeText(box.value).then(() => {
+        const btn = document.getElementById('copyHwBtn');
+        const origHtml = btn.innerHTML;
+        btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i><span>Скопійовано!</span>`;
+        btn.classList.replace('bg-indigo-600', 'bg-emerald-600');
+        lucide.createIcons();
+        setTimeout(() => {
+          btn.innerHTML = origHtml;
+          btn.classList.replace('bg-emerald-600', 'bg-indigo-600');
+          lucide.createIcons();
+        }, 2000);
+      });
+    }
+
+    function shareHwNative() {
+      const text = document.getElementById('hwPreviewBox').value;
+      if (navigator.share) {
+        navigator.share({ title: 'Домашнє завдання', text }).catch(() => {});
+      } else {
+        copyHwTemplate();
+      }
+    }
+
+    function clearHwForm() {
+      document.getElementById('hwDescription').value = '';
+      document.getElementById('hwLink').value = '';
+      attachedFilesMeta = [];
+      renderAttachedFiles();
+      generateHwPreview();
+    }
+
+    function saveHomeworkToArchive() {
+      const subject = document.getElementById('hwSubject').value;
+      const type = document.getElementById('hwType').value;
+      const deadlineVal = document.getElementById('hwDeadline').value;
+      const text = document.getElementById('hwPreviewBox').value;
+
+      appState.savedHomeworks.unshift({
+        id: 'hw_' + Date.now(),
+        subject,
+        type,
+        deadlineVal,
+        text
+      });
+
+      saveData();
+      renderSavedHomeworks();
+    }
+
+    function deleteSavedHw(id) {
+      appState.savedHomeworks = appState.savedHomeworks.filter(h => h.id !== id);
+      saveData();
+      renderSavedHomeworks();
+    }
+
+    function copySavedHwText(id) {
+      const hw = appState.savedHomeworks.find(h => h.id === id);
+      if (hw) {
+        navigator.clipboard.writeText(hw.text);
+        alert('Шаблон завдання скопійовано в буфер обміну!');
+      }
+    }
+
+    function renderSavedHomeworks() {
+      const container = document.getElementById('savedHwList');
+      if (!appState.savedHomeworks.length) {
+        container.innerHTML = `<p class="text-xs text-slate-400">Збережених завдань поки немає.</p>`;
+        return;
+      }
+
+      container.innerHTML = appState.savedHomeworks.map(hw => {
+        const dl = hw.deadlineVal ? hw.deadlineVal.replace('T', ' ') : 'Без дедлайну';
+        return `
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <div class="text-xs font-bold text-slate-800 truncate">${escapeHtml(hw.subject)} — ${escapeHtml(hw.type)}</div>
+              <div class="text-[11px] text-slate-500">Дедлайн: ${dl}</div>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button onclick="copySavedHwText('${hw.id}')" class="p-1.5 bg-white border border-slate-200 hover:bg-indigo-50 text-indigo-600 rounded-lg" title="Скопіювати">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              </button>
+              <button onclick="deleteSavedHw('${hw.id}')" class="p-1.5 bg-white border border-slate-200 hover:bg-rose-50 text-rose-600 rounded-lg" title="Видалити">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    // ==================== УПРАВЛІННЯ ГРУПОЮ ТА ПРЕДМЕТАМИ ====================
+    function saveGroupName() {
+      const val = document.getElementById('groupNameInput').value.trim();
+      appState.groupName = val || 'Моя група';
+      saveData();
+      refreshAllUI();
+    }
+
+    function addStudent(e) {
+      e.preventDefault();
+      const input = document.getElementById('newStudentName');
+      const name = input.value.trim();
+      if (!name) return;
+
+      appState.students.push({
+        id: 'st_' + Date.now() + '_' + Math.random().toString(36).substring(2, 5),
+        name
+      });
+      input.value = '';
+      saveData();
+      refreshAllUI();
+    }
+
+    function editStudentName(id) {
+      const student = appState.students.find(s => s.id === id);
+      if (!student) return;
+      const newName = prompt('Редагувати ПІБ студента:', student.name);
+      if (newName && newName.trim()) {
+        student.name = newName.trim();
+        saveData();
+        refreshAllUI();
+      }
+    }
+
+    function deleteStudent(id) {
+      if (!confirm('Видалити цього одногрупника зі списку?')) return;
+      appState.students = appState.students.filter(s => s.id !== id);
+      saveData();
+      refreshAllUI();
+    }
+
+    function sortStudentsAlpha() {
+      appState.students.sort((a, b) => a.name.localeCompare(b.name, 'uk'));
+      saveData();
+      refreshAllUI();
+    }
+
+    function openBulkAddModal() {
+      document.getElementById('bulkAddModal').classList.remove('hidden');
+    }
+
+    function closeBulkAddModal(e) {
+      if (e && e.target !== e.currentTarget) return;
+      document.getElementById('bulkAddModal').classList.add('hidden');
+    }
+
+    function processBulkAdd() {
+      const text = document.getElementById('bulkStudentsTextarea').value;
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+      lines.forEach((name, i) => {
+        appState.students.push({
+          id: 'st_' + Date.now() + '_' + i,
+          name
+        });
+      });
+      document.getElementById('bulkStudentsTextarea').value = '';
+      closeBulkAddModal();
+      saveData();
+      refreshAllUI();
+    }
+
+    function addSubject(e) {
+      e.preventDefault();
+      const input = document.getElementById('newSubjectName');
+      const name = input.value.trim();
+      if (!name || appState.subjects.includes(name)) return;
+
+      appState.subjects.push(name);
+      input.value = '';
+      saveData();
+      refreshAllUI();
+    }
+
+    function deleteSubject(name) {
+      if (appState.subjects.length <= 1) {
+        alert('Має залишитися хоча б один предмет.');
+        return;
+      }
+      if (!confirm(`Видалити предмет "${name}"?`)) return;
+      appState.subjects = appState.subjects.filter(s => s !== name);
+      saveData();
+      refreshAllUI();
+    }
+
+    function renderManageLists() {
+      document.getElementById('studentsCountBadge').textContent = appState.students.length;
+      document.getElementById('subjectsCountBadge').textContent = appState.subjects.length;
+
+      const stList = document.getElementById('studentsManageList');
+      if (!appState.students.length) {
+        stList.innerHTML = `<p class="text-xs text-slate-400 py-4 text-center">Список студентів порожній</p>`;
+      } else {
+        stList.innerHTML = appState.students.map((st, idx) => `
+          <div class="py-2.5 flex items-center justify-between gap-2">
+            <div class="text-sm font-medium text-slate-800">
+              <span class="text-xs text-slate-400 font-mono mr-2">${idx + 1}.</span>${escapeHtml(st.name)}
+            </div>
+            <div class="flex items-center gap-1">
+              <button onclick="editStudentName('${st.id}')" class="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg" title="Редагувати">
+                <i data-lucide="pencil" class="w-4 h-4"></i>
+              </button>
+              <button onclick="deleteStudent('${st.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg" title="Видалити">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      const subList = document.getElementById('subjectsManageList');
+      subList.innerHTML = appState.subjects.map(sub => `
+        <div class="py-2.5 flex items-center justify-between gap-2">
+          <span class="text-sm font-medium text-slate-800">${escapeHtml(sub)}</span>
+          <button onclick="deleteSubject('${escapeHtml(sub)}')" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg" title="Видалити">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    // ==================== СИНХРОНІЗАЦІЯ ТА РЕЗЕРВНА КОПІЯ ====================
+    function openSyncModal() {
+      document.getElementById('mySyncCodeDisplay').value = syncCode;
+      document.getElementById('syncModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeSyncModal(e) {
+      if (e && e.target !== e.currentTarget) return;
+      document.getElementById('syncModal').classList.add('hidden');
+    }
+
+    function copySyncCode() {
+      const inp = document.getElementById('mySyncCodeDisplay');
+      inp.select();
+      navigator.clipboard.writeText(inp.value);
+      alert('Код групи скопійовано!');
+    }
+
+    function connectWithSyncCode() {
+      const newCode = document.getElementById('connectSyncCodeInput').value.trim().toUpperCase();
+      if (!newCode) return;
+      syncCode = newCode;
+      localStorage.setItem('starosta_sync_code', syncCode);
+      loadFromLocal();
+      if (window.initCloudListener) window.initCloudListener();
+      refreshAllUI();
+      closeSyncModal();
+      alert(`Підключено до коду: ${syncCode}`);
+    }
+
+    function downloadBackupJson() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+      const dlAnchor = document.createElement('a');
+      dlAnchor.setAttribute("href", dataStr);
+      dlAnchor.setAttribute("download", `Журнал_резерв_${appState.groupName}.json`);
+      document.body.appendChild(dlAnchor);
+      dlAnchor.click();
+      dlAnchor.remove();
+    }
+
+    function restoreBackupJson(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported && Array.isArray(imported.students)) {
+            appState = { ...appState, ...imported };
+            saveData();
+            refreshAllUI();
+            closeSyncModal();
+            alert('Дані успішно відновлено з файлу!');
+          } else {
+            alert('Невірний формат файлу.');
+          }
+        } catch (err) {
+          alert('Помилка при читанні файлу.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>
