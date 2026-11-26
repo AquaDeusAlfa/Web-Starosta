@@ -81,13 +81,13 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <div id="syncIndicator" class="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+        <button onclick="pullFromFirebase(false)" id="syncIndicator" class="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition" title="Натисніть, щоб підтягнути свіжі дані з Firebase">
           <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
-          <span id="syncStatusText">Локально</span>
-        </div>
+          <span id="syncStatusText">Firebase</span>
+        </button>
 
         <button onclick="openSyncModal()" class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition" title="Синхронізація між телефоном і ноутбуком">
-          <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+          <i data-lucide="smartphone" class="w-4 h-4"></i>
           <span>Пристрої</span>
         </button>
       </div>
@@ -444,7 +444,7 @@
       </div>
 
       <p class="text-xs text-slate-600 leading-relaxed">
-        Скопіюйте ваш <b>Код групи</b> та введіть його на телефоні або іншому комп'ютері. Дані автоматично підтягнуться з хмари.
+        База підключена до <b>Firebase Realtime Database</b>. Введіть ваш <b>Код групи</b> на телефоні або іншому комп'ютері, щоб миттєво підтягнути журнал та списки.
       </p>
 
       <div class="p-3 bg-indigo-50 border border-indigo-100 rounded-xl space-y-2">
@@ -456,10 +456,10 @@
       </div>
 
       <div class="border-t border-slate-100 pt-3 space-y-2">
-        <span class="text-xs font-semibold text-slate-700">Ввести код з іншого пристрою:</span>
+        <span class="text-xs font-semibold text-slate-700">Підключитися за кодом з іншого пристрою:</span>
         <div class="flex gap-2">
           <input type="text" id="connectSyncCodeInput" placeholder="Наприклад: GRP-A1B2C3" class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-sm uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-          <button onclick="pullFromCloudNow(true)" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition">Завантажити</button>
+          <button onclick="pullFromFirebase(true)" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition">Завантажити</button>
         </div>
       </div>
 
@@ -484,9 +484,8 @@
       'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'
     ];
 
-    // Публічний ключ-сховище для синхронізації без власного сервера (npoint.io)
-    // Кожен код групи зберігає свій запис у localStorage + синхронізує через хмару
-    const CLOUD_API_BASE = 'https://api.npoint.io/bins';
+    // Ваше сховище Firebase Realtime Database
+    const FIREBASE_DB_URL = 'https://saint-dla-starist-default-rtdb.europe-west1.firebasedatabase.app';
 
     let appState = {
       groupName: 'Моя група',
@@ -504,7 +503,7 @@
       ],
       attendance: {},
       savedHomeworks: [],
-      updatedAt: Date.now()
+      updatedAt: 0
     };
 
     let syncCode = localStorage.getItem('starosta_sync_code');
@@ -530,7 +529,7 @@
       const tD = String(tomorrow.getDate()).padStart(2, '0');
       document.getElementById('hwDeadline').value = `${tY}-${tM}-${tD}T23:59`;
 
-      // Підтримка вставки фото / скріншотів через Ctrl+V / Cmd+V
+      // Вставка фото / скріншотів через Ctrl+V / Cmd+V
       document.addEventListener('paste', (e) => {
         const items = e.clipboardData?.items;
         if (!items) return;
@@ -553,9 +552,14 @@
       });
 
       refreshAllUI();
-      pullFromCloudNow(false);
+      pullFromFirebase(false);
       lucide.createIcons();
     });
+
+    function getFirebaseGroupUrl(code) {
+      const cleanCode = encodeURIComponent(String(code).trim().toUpperCase());
+      return `${FIREBASE_DB_URL}/groups/${cleanCode}.json`;
+    }
 
     function loadFromLocal() {
       const raw = localStorage.getItem(`starosta_data_${syncCode}`);
@@ -576,65 +580,90 @@
       label.textContent = text;
       dot.className = 'w-2 h-2 rounded-full ' + (
         mode === 'ok' ? 'bg-emerald-500' :
-        mode === 'sync' ? 'bg-amber-500 animate-ping' : 'bg-slate-400'
+        mode === 'sync' ? 'bg-amber-500 animate-ping' : 'bg-rose-500'
       );
     }
 
     async function saveData() {
       appState.updatedAt = Date.now();
       localStorage.setItem(`starosta_data_${syncCode}`, JSON.stringify(appState));
-      setSyncBadge('sync', 'Збереження...');
+      setSyncBadge('sync', 'Запис у Firebase...');
 
       try {
-        const res = await fetch(`${CLOUD_API_BASE}/${encodeURIComponent(syncCode)}`, {
-          method: 'POST',
+        const res = await fetch(getFirebaseGroupUrl(syncCode), {
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(appState)
         });
         if (res.ok) {
-          setSyncBadge('ok', 'Хмара OK');
+          setSyncBadge('ok', 'Firebase OK');
         } else {
-          setSyncBadge('local', 'Лише пристрій');
+          setSyncBadge('err', 'Правила БД / Помилка');
         }
       } catch (e) {
-        setSyncBadge('local', 'Лише пристрій');
+        setSyncBadge('err', 'Офлайн / Помилка');
       }
     }
 
-    async function pullFromCloudNow(fromModalInput) {
+    async function pullFromFirebase(fromModalInput) {
       const inputEl = document.getElementById('connectSyncCodeInput');
       const targetCode = fromModalInput && inputEl && inputEl.value.trim()
         ? inputEl.value.trim().toUpperCase()
         : syncCode;
 
-      setSyncBadge('sync', 'Завантаження...');
+      setSyncBadge('sync', 'Синхронізація...');
+
       try {
-        const res = await fetch(`${CLOUD_API_BASE}/${encodeURIComponent(targetCode)}`);
-        if (res.ok) {
-          const cloudData = await res.json();
-          if (cloudData && typeof cloudData === 'object' && Array.isArray(cloudData.students)) {
+        const res = await fetch(getFirebaseGroupUrl(targetCode));
+        if (!res.ok) {
+          setSyncBadge('err', 'Помилка доступу');
+          if (fromModalInput) {
+            alert('Firebase відхилив запит. Перевірте вкладку Rules у Firebase Realtime Database (чи дозволено .read та .write).');
+          }
+          return;
+        }
+
+        const cloudData = await res.json();
+        if (cloudData && typeof cloudData === 'object') {
+          const localUpdated = appState.updatedAt || 0;
+          const cloudUpdated = cloudData.updatedAt || 0;
+
+          if (fromModalInput || cloudUpdated >= localUpdated) {
             syncCode = targetCode;
             localStorage.setItem('starosta_sync_code', syncCode);
-            appState = { ...appState, ...cloudData };
+            appState = {
+              groupName: cloudData.groupName || 'Моя група',
+              students: Array.isArray(cloudData.students) ? cloudData.students : [],
+              subjects: Array.isArray(cloudData.subjects) && cloudData.subjects.length ? cloudData.subjects : ['Загальний предмет'],
+              attendance: cloudData.attendance && typeof cloudData.attendance === 'object' ? cloudData.attendance : {},
+              savedHomeworks: Array.isArray(cloudData.savedHomeworks) ? cloudData.savedHomeworks : [],
+              updatedAt: cloudUpdated
+            };
             localStorage.setItem(`starosta_data_${syncCode}`, JSON.stringify(appState));
             refreshAllUI();
-            setSyncBadge('ok', 'Хмара OK');
-            if (fromModalInput) {
-              closeSyncModal();
-              alert(`Дані успішно синхронізовано за кодом ${syncCode}!`);
-            }
-            return;
+          }
+
+          setSyncBadge('ok', 'Firebase OK');
+          if (fromModalInput) {
+            closeSyncModal();
+            alert(`Синхронізовано з Firebase за кодом ${syncCode}!`);
+          }
+        } else {
+          if (fromModalInput) {
+            syncCode = targetCode;
+            localStorage.setItem('starosta_sync_code', syncCode);
+            await saveData();
+            closeSyncModal();
+            alert(`Створено новий запис у Firebase для коду ${syncCode}.`);
+          } else {
+            setSyncBadge('ok', 'Firebase OK');
           }
         }
-        if (fromModalInput) {
-          alert('За цим кодом у хмарі ще немає збережених даних. Перевірте код або натисніть "Зберегти файл" на іншому пристрої.');
-        }
-        setSyncBadge('local', 'Лише пристрій');
       } catch (err) {
+        setSyncBadge('err', 'Немає зв’язку');
         if (fromModalInput) {
-          alert('Не вдалося з’єднатися з сервером синхронізації. Перевірте інтернет або скористайтеся кнопкою "Зберегти файл / Відновити файл".');
+          alert('Не вдалося з’єднатися з Firebase Realtime Database. Перевірте інтернет або посилання бази.');
         }
-        setSyncBadge('local', 'Лише пристрій');
       }
     }
 
