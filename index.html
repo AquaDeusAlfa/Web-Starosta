@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Кабінет Старости — Журнал та ДЗ</title>
-  
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
+
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  
+
   <!-- SheetJS для експорту в Excel (.xlsx) -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 
@@ -25,7 +25,6 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Кастомний скролбар для таблиці журналу */
     .journal-scroll::-webkit-scrollbar {
       height: 8px;
       width: 8px;
@@ -42,7 +41,6 @@
       background: #94a3b8;
     }
 
-    /* Закріплена колонка зі списком студентів */
     .sticky-col {
       position: sticky;
       left: 0;
@@ -58,7 +56,6 @@
       box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.08);
     }
 
-    /* Анімація появи модальних вікон */
     @keyframes fadeIn {
       from { opacity: 0; transform: scale(0.97); }
       to { opacity: 1; transform: scale(1); }
@@ -70,7 +67,7 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <!-- ВЕРХНЯ ПАНЕЛЬ (ШАПКА) -->
+  <!-- ВЕРХНЯ ПАНЕЛЬ -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
       <div class="flex items-center gap-2.5">
@@ -83,23 +80,22 @@
         </div>
       </div>
 
-      <!-- Статус синхронізації та кнопка пристроїв -->
       <div class="flex items-center gap-2">
-        <div id="syncIndicator" class="hidden sm:flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>Збережено</span>
+        <div id="syncIndicator" class="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span id="syncStatusText">Локально</span>
         </div>
 
-        <button onclick="openSyncModal()" class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition" title="Синхронізація між телефоном і ноутбуком">
-          <i data-lucide="smartphone" class="w-4 h-4 text-indigo-600"></i>
-          <span class="hidden md:inline">Синхронізація</span>
+        <button onclick="openSyncModal()" class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition" title="Синхронізація між телефоном і ноутбуком">
+          <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+          <span>Пристрої</span>
         </button>
       </div>
     </div>
 
-    <!-- НАВІГАЦІЙНІ ВКЛАДКИ -->
+    <!-- ВКЛАДКИ -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 flex gap-1 overflow-x-auto border-t border-slate-100 bg-slate-50/70">
-      <button onclick="switchTab('journal')" id="tab-journal" class="nav-tab active flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap transition">
+      <button onclick="switchTab('journal')" id="tab-journal" class="nav-tab flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap transition">
         <i data-lucide="calendar-days" class="w-4 h-4"></i>
         <span>Журнал відвідування</span>
       </button>
@@ -117,27 +113,20 @@
   <!-- ОСНОВНИЙ КОНТЕНТ -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-5">
 
-    <!-- ==================== ВКЛАДКА 1: ЖУРНАЛ ==================== -->
+    <!-- ВКЛАДКА 1: ЖУРНАЛ -->
     <section id="view-journal" class="space-y-4">
-      
-      <!-- Панель керування журналом -->
       <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          
-          <!-- Вибір місяця -->
           <div>
             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Місяць та рік</label>
             <input type="month" id="monthPicker" onchange="renderJournal()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500" />
           </div>
 
-          <!-- Вибір предмета -->
           <div>
-            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Предмет (Дисципліна)</label>
-            <select id="journalSubjectSelect" onchange="renderJournal()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            </select>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Предмет</label>
+            <select id="journalSubjectSelect" onchange="renderJournal()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
           </div>
 
-          <!-- Вибір пари -->
           <div>
             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Номер пари</label>
             <select id="journalPairSelect" onchange="renderJournal()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -150,20 +139,18 @@
             </select>
           </div>
 
-          <!-- Кнопки дій -->
           <div class="flex items-end gap-2">
             <button onclick="openQuickRollCall()" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
               <i data-lucide="check-square" class="w-4 h-4"></i>
               <span>Перекличка</span>
             </button>
-            <button onclick="exportToExcel()" class="flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition" title="Завантажити Excel таблицю">
+            <button onclick="exportToExcel()" class="flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
               <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
               <span>Excel</span>
             </button>
           </div>
         </div>
 
-        <!-- Легенда позначок -->
         <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100 text-xs">
           <div class="flex flex-wrap items-center gap-2">
             <span class="text-slate-500 font-medium">Позначки:</span>
@@ -173,11 +160,10 @@
             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-100 text-sky-800 font-bold">ХВ <span class="font-normal">Хвороба</span></span>
             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 font-bold">ЗВ <span class="font-normal">Звільнений</span></span>
           </div>
-          <span class="text-slate-400">Натисніть на клітинку, щоб змінити статус</span>
+          <span class="text-slate-400">Натисніть на клітинку для вибору статусу</span>
         </div>
       </div>
 
-      <!-- Таблиця місячного журналу -->
       <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div id="journalEmptyState" class="hidden p-10 text-center">
           <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
@@ -199,11 +185,10 @@
       </div>
     </section>
 
-    <!-- ==================== ВКЛАДКА 2: ПІДГОТОВКА ДЗ ==================== -->
+    <!-- ВКЛАДКА 2: ПІДГОТОВКА ДЗ -->
     <section id="view-homework" class="hidden space-y-5">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        
-        <!-- Ліва колонка: Форма створення ДЗ -->
+
         <div class="lg:col-span-6 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -216,11 +201,11 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Предмет</label>
-              <select id="hwSubject" oninput="generateHwPreview()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+              <select id="hwSubject" onchange="generateHwPreview()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Тип завдання</label>
-              <select id="hwType" oninput="generateHwPreview()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <select id="hwType" onchange="generateHwPreview()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <option value="Домашнє завдання">Домашнє завдання</option>
                 <option value="Практична робота">Практична робота</option>
                 <option value="Лабораторна робота">Лабораторна робота</option>
@@ -232,73 +217,75 @@
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Що потрібно зробити (опис, номери, тема)</label>
-            <textarea id="hwDescription" rows="4" oninput="generateHwPreview()" placeholder="Наприклад: Виконати задачі №1-5 зі сторінки 42. Оформити у Word та скинути викладачу на пошту..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Опис завдання / умови</label>
+            <textarea id="hwDescription" rows="4" oninput="generateHwPreview()" placeholder="Наприклад: Виконати задачі №1-5 зі сторінки 42. Прикріплені фото/файли додаються нижче..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Кінцевий термін (Дедлайн)</label>
-              <input type="datetime-local" id="hwDeadline" oninput="generateHwPreview()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <input type="datetime-local" id="hwDeadline" onchange="generateHwPreview()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Посилання (матеріали / здача)</label>
-              <input type="url" id="hwLink" oninput="generateHwPreview()" placeholder="https://classroom.google.com/..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Посилання на матеріали / здачу</label>
+              <input type="url" id="hwLink" oninput="generateHwPreview()" placeholder="https://..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
           </div>
 
           <!-- Прикріплення файлів та фото -->
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Прикріпити фото або файли (документи, скріни)</label>
-            <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100 transition">
-              <div class="flex flex-col items-center justify-center pt-2 pb-2">
-                <i data-lucide="paperclip" class="w-5 h-5 text-slate-400 mb-1"></i>
-                <p class="text-xs text-slate-600 font-medium">Натисніть, щоб обрати фото або файли</p>
-                <p class="text-[11px] text-slate-400">Назви файлів автоматично додадуться у шаблон</p>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-semibold text-slate-600">Прикріпити фото або файли</label>
+              <button type="button" onclick="addManualAttachmentPrompt()" class="text-xs font-semibold text-indigo-600 hover:underline">+ Вписати назву вручну</button>
+            </div>
+
+            <label id="hwDropZone" class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer bg-slate-50 hover:bg-indigo-50/40 hover:border-indigo-300 transition">
+              <div class="flex flex-col items-center justify-center pt-2 pb-2 text-center px-2">
+                <i data-lucide="paperclip" class="w-5 h-5 text-indigo-500 mb-1"></i>
+                <p class="text-xs text-slate-700 font-medium">Натисніть, щоб обрати фото або файли</p>
+                <p class="text-[11px] text-slate-400">Або натисніть Ctrl+V / Cmd+V, щоб вставити скріншот</p>
               </div>
-              <input id="hwFilesInput" type="file" multiple class="hidden" onchange="handleHwFiles(event)" />
+              <input id="hwFilesInput" type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar" class="hidden" onchange="handleHwFiles(event)" />
             </label>
-            <div id="hwAttachedList" class="mt-2 flex flex-wrap gap-2"></div>
+
+            <div id="hwAttachedList" class="flex flex-wrap gap-2"></div>
           </div>
 
           <button onclick="saveHomeworkToArchive()" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2">
             <i data-lucide="bookmark-plus" class="w-4 h-4"></i>
-            <span>Зберегти завдання в список актуальних ДЗ</span>
+            <span>Зберегти завдання в список</span>
           </button>
         </div>
 
-        <!-- Права колонка: Готовий шаблон для групи -->
+        <!-- Права колонка: Готовий шаблон -->
         <div class="lg:col-span-6 space-y-4">
           <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
             <div class="flex items-center justify-between">
               <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
                 <i data-lucide="send" class="w-4 h-4 text-indigo-600"></i>
-                <span>Готовий шаблон для чату групи</span>
+                <span>Готовий шаблон для групи</span>
               </h2>
               <span id="deadlineBadge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">Без терміну</span>
             </div>
 
-            <div class="relative">
-              <textarea id="hwPreviewBox" rows="12" readonly class="w-full p-4 bg-slate-900 text-slate-100 font-mono text-xs sm:text-sm rounded-xl leading-relaxed focus:outline-none"></textarea>
-            </div>
+            <textarea id="hwPreviewBox" rows="13" readonly class="w-full p-4 bg-slate-900 text-slate-100 font-mono text-xs sm:text-sm rounded-xl leading-relaxed focus:outline-none"></textarea>
 
             <div class="flex flex-wrap gap-2">
               <button onclick="copyHwTemplate()" id="copyHwBtn" class="flex-1 py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition flex items-center justify-center gap-2">
                 <i data-lucide="copy" class="w-4 h-4"></i>
-                <span>Скопіювати текст для групи</span>
+                <span>Скопіювати шаблон</span>
               </button>
-              <button onclick="shareHwNative()" class="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2" title="Поділитися через Telegram / Viber">
+              <button onclick="shareHwNative()" class="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2">
                 <i data-lucide="share-2" class="w-4 h-4"></i>
                 <span>Надіслати</span>
               </button>
             </div>
           </div>
 
-          <!-- Збережені актуальні ДЗ -->
           <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
             <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
               <i data-lucide="clock" class="w-4 h-4 text-amber-500"></i>
-              <span>Збережені завдання групи</span>
+              <span>Збережені завдання</span>
             </h3>
             <div id="savedHwList" class="space-y-2.5"></div>
           </div>
@@ -307,10 +294,8 @@
       </div>
     </section>
 
-    <!-- ==================== ВКЛАДКА 3: ГРУПА ТА ПРЕДМЕТИ ==================== -->
+    <!-- ВКЛАДКА 3: ГРУПА ТА ПРЕДМЕТИ -->
     <section id="view-manage" class="hidden space-y-5">
-      
-      <!-- Назва групи -->
       <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 class="text-base font-bold text-slate-900">Назва навчальної групи</h2>
@@ -323,8 +308,6 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        
-        <!-- Управління одногрупниками -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <div class="flex items-center justify-between">
             <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -332,16 +315,11 @@
               <span>Одногрупники (<span id="studentsCountBadge">0</span>)</span>
             </h2>
             <div class="flex gap-1.5">
-              <button onclick="sortStudentsAlpha()" class="px-2.5 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition" title="Відсортувати за алфавітом">
-                А-Я
-              </button>
-              <button onclick="openBulkAddModal()" class="px-2.5 py-1.5 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition">
-                + Додати списком
-              </button>
+              <button onclick="sortStudentsAlpha()" class="px-2.5 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition">А-Я</button>
+              <button onclick="openBulkAddModal()" class="px-2.5 py-1.5 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition">+ Додати списком</button>
             </div>
           </div>
 
-          <!-- Форма додавання одного студента -->
           <form onsubmit="addStudent(event)" class="flex gap-2">
             <input type="text" id="newStudentName" required placeholder="Прізвище та Ім'я студента..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition flex items-center gap-1">
@@ -350,21 +328,17 @@
             </button>
           </form>
 
-          <!-- Список студентів -->
           <div id="studentsManageList" class="divide-y divide-slate-100 max-h-[420px] overflow-y-auto pr-1"></div>
         </div>
 
-        <!-- Управління предметами -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <div class="flex items-center justify-between">
-            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
-              <i data-lucide="book-marked" class="w-5 h-5 text-indigo-600"></i>
-              <span>Предмети (<span id="subjectsCountBadge">0</span>)</span>
-            </h2>
-          </div>
+          <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <i data-lucide="book-marked" class="w-5 h-5 text-indigo-600"></i>
+            <span>Предмети (<span id="subjectsCountBadge">0</span>)</span>
+          </h2>
 
           <form onsubmit="addSubject(event)" class="flex gap-2">
-            <input type="text" id="newSubjectName" required placeholder="Назва предмета (напр. Логістика)..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <input type="text" id="newSubjectName" required placeholder="Назва предмета..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition flex items-center gap-1">
               <i data-lucide="plus" class="w-4 h-4"></i>
               <span>Додати</span>
@@ -373,14 +347,13 @@
 
           <div id="subjectsManageList" class="divide-y divide-slate-100 max-h-[420px] overflow-y-auto pr-1"></div>
         </div>
-
       </div>
     </section>
 
   </main>
 
-  <!-- ==================== МОДАЛЬНЕ ВІКНО: ВИБІР СТАТУСУ КЛІТИНКИ ==================== -->
-  <div id="statusModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4" onclick="closeStatusModal(event)">
+  <!-- МОДАЛЬНЕ ВІКНО: СТАТУС КЛІТИНКИ -->
+  <div id="statusModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" onclick="closeStatusModal(event)">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl modal-animate" onclick="event.stopPropagation()">
       <div class="flex items-center justify-between mb-1">
         <h3 id="statusModalStudent" class="font-bold text-base text-slate-900">Студент</h3>
@@ -388,23 +361,23 @@
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
-      <p id="statusModalDetails" class="text-xs text-slate-500 mb-4">Дата та пара</p>
+      <p id="statusModalDetails" class="text-xs text-slate-500 mb-4"></p>
 
       <div class="grid grid-cols-1 gap-2">
-        <button onclick="setCellStatus('✓')" class="flex items-center justify-between px-4 py-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 font-semibold text-sm transition">
-          <span class="flex items-center gap-2.5"><span class="w-7 h-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold">✓</span> Присутній на парі</span>
+        <button onclick="setCellStatus('✓')" class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 font-semibold text-sm transition">
+          <span class="w-7 h-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold">✓</span> Присутній на парі
         </button>
-        <button onclick="setCellStatus('Н')" class="flex items-center justify-between px-4 py-3 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-900 font-semibold text-sm transition">
-          <span class="flex items-center gap-2.5"><span class="w-7 h-7 rounded-lg bg-rose-500 text-white flex items-center justify-center font-bold">Н</span> Відсутній (без причини)</span>
+        <button onclick="setCellStatus('Н')" class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-900 font-semibold text-sm transition">
+          <span class="w-7 h-7 rounded-lg bg-rose-500 text-white flex items-center justify-center font-bold">Н</span> Відсутній (без причини)
         </button>
-        <button onclick="setCellStatus('ПП')" class="flex items-center justify-between px-4 py-3 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 font-semibold text-sm transition">
-          <span class="flex items-center gap-2.5"><span class="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold">ПП</span> Поважна причина</span>
+        <button onclick="setCellStatus('ПП')" class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 font-semibold text-sm transition">
+          <span class="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold">ПП</span> Поважна причина
         </button>
-        <button onclick="setCellStatus('ХВ')" class="flex items-center justify-between px-4 py-3 rounded-xl bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-900 font-semibold text-sm transition">
-          <span class="flex items-center gap-2.5"><span class="w-7 h-7 rounded-lg bg-sky-500 text-white flex items-center justify-center font-bold">ХВ</span> Хвороба (довідка)</span>
+        <button onclick="setCellStatus('ХВ')" class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-900 font-semibold text-sm transition">
+          <span class="w-7 h-7 rounded-lg bg-sky-500 text-white flex items-center justify-center font-bold">ХВ</span> Хвороба (довідка)
         </button>
-        <button onclick="setCellStatus('ЗВ')" class="flex items-center justify-between px-4 py-3 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-900 font-semibold text-sm transition">
-          <span class="flex items-center gap-2.5"><span class="w-7 h-7 rounded-lg bg-purple-500 text-white flex items-center justify-center font-bold">ЗВ</span> Звільнений / Захід</span>
+        <button onclick="setCellStatus('ЗВ')" class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-900 font-semibold text-sm transition">
+          <span class="w-7 h-7 rounded-lg bg-purple-500 text-white flex items-center justify-center font-bold">ЗВ</span> Звільнений / Захід
         </button>
         <button onclick="setCellStatus('')" class="flex items-center justify-center px-4 py-2.5 mt-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium text-xs transition">
           Очистити клітинку
@@ -413,13 +386,13 @@
     </div>
   </div>
 
-  <!-- ==================== МОДАЛЬНЕ ВІКНО: ШВИДКА ПЕРЕКЛИЧКА ==================== -->
-  <div id="rollCallModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4" onclick="closeRollCallModal(event)">
+  <!-- МОДАЛЬНЕ ВІКНО: ПЕРЕКЛИЧКА -->
+  <div id="rollCallModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-3 sm:p-4" onclick="closeRollCallModal(event)">
     <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-xl modal-animate" onclick="event.stopPropagation()">
       <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
         <div>
           <h3 class="font-bold text-base text-slate-900">Швидка перекличка на парі</h3>
-          <p id="rollCallSubtitle" class="text-xs text-slate-500">Оберіть дату для відмітки</p>
+          <p id="rollCallSubtitle" class="text-xs text-slate-500"></p>
         </div>
         <button onclick="closeRollCallModal()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg">
           <i data-lucide="x" class="w-5 h-5"></i>
@@ -439,18 +412,16 @@
       <div id="rollCallList" class="flex-1 overflow-y-auto p-4 divide-y divide-slate-100"></div>
 
       <div class="p-4 border-t border-slate-100 flex justify-end">
-        <button onclick="closeRollCallModal()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition">
-          Готово
-        </button>
+        <button onclick="closeRollCallModal()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition">Готово</button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== МОДАЛЬНЕ ВІКНО: ДОДАТИ СПИСКОМ ==================== -->
-  <div id="bulkAddModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4" onclick="closeBulkAddModal(event)">
+  <!-- МОДАЛЬНЕ ВІКНО: ДОДАТИ СПИСКОМ -->
+  <div id="bulkAddModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" onclick="closeBulkAddModal(event)">
     <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl modal-animate" onclick="event.stopPropagation()">
       <h3 class="font-bold text-base text-slate-900 mb-1">Додати одногрупників списком</h3>
-      <p class="text-xs text-slate-500 mb-3">Вставте список студентів — кожен з нового рядка:</p>
+      <p class="text-xs text-slate-500 mb-3">Кожен студент — з нового рядка:</p>
       <textarea id="bulkStudentsTextarea" rows="7" placeholder="Іваненко Іван&#10;Петренко Марія&#10;Коваленко Олександр" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"></textarea>
       <div class="flex justify-end gap-2">
         <button onclick="closeBulkAddModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl">Скасувати</button>
@@ -459,12 +430,12 @@
     </div>
   </div>
 
-  <!-- ==================== МОДАЛЬНЕ ВІКНО: СИНХРОНІЗАЦІЯ ПРИСТРОЇВ ==================== -->
-  <div id="syncModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4" onclick="closeSyncModal(event)">
+  <!-- МОДАЛЬНЕ ВІКНО: СИНХРОНІЗАЦІЯ ПРИСТРОЇВ -->
+  <div id="syncModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" onclick="closeSyncModal(event)">
     <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl modal-animate space-y-4" onclick="event.stopPropagation()">
       <div class="flex items-center justify-between">
         <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
-          <i data-lucide="cloud" class="w-5 h-5 text-indigo-600"></i>
+          <i data-lucide="smartphone" class="w-5 h-5 text-indigo-600"></i>
           <span>Синхронізація між пристроями</span>
         </h3>
         <button onclick="closeSyncModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
@@ -473,77 +444,50 @@
       </div>
 
       <p class="text-xs text-slate-600 leading-relaxed">
-        Щоб відкрити цей самий журнал на телефоні або іншому ноутбуці, скопіюйте <b>Код групи</b> та введіть його на іншому пристрої (або скористайтеся резервним файлом).
+        Скопіюйте ваш <b>Код групи</b> та введіть його на телефоні або іншому комп'ютері. Дані автоматично підтягнуться з хмари.
       </p>
 
       <div class="p-3 bg-indigo-50 border border-indigo-100 rounded-xl space-y-2">
-        <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-700">Ваш Код групи для входу:</span>
+        <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-700">Ваш Код групи:</span>
         <div class="flex items-center gap-2">
           <input type="text" id="mySyncCodeDisplay" readonly class="flex-1 px-3 py-2 bg-white border border-indigo-200 rounded-lg font-mono text-sm font-bold text-slate-800" />
-          <button onclick="copySyncCode()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition">
-            Копіювати
-          </button>
+          <button onclick="copySyncCode()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition">Копіювати</button>
         </div>
       </div>
 
       <div class="border-t border-slate-100 pt-3 space-y-2">
-        <span class="text-xs font-semibold text-slate-700">Підключитися до існуючої групи з іншого пристрою:</span>
+        <span class="text-xs font-semibold text-slate-700">Ввести код з іншого пристрою:</span>
         <div class="flex gap-2">
-          <input type="text" id="connectSyncCodeInput" placeholder="Вставте код групи..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-          <button onclick="connectWithSyncCode()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition">
-            Увійти
-          </button>
+          <input type="text" id="connectSyncCodeInput" placeholder="Наприклад: GRP-A1B2C3" class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-sm uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <button onclick="pullFromCloudNow(true)" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition">Завантажити</button>
         </div>
       </div>
 
       <div class="border-t border-slate-100 pt-3 flex items-center justify-between gap-2">
         <button onclick="downloadBackupJson()" class="flex-1 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition flex items-center justify-center gap-1.5">
           <i data-lucide="download" class="w-3.5 h-3.5"></i>
-          <span>Зберегти копію</span>
+          <span>Зберегти файл</span>
         </button>
         <label class="flex-1 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer">
           <i data-lucide="upload" class="w-3.5 h-3.5"></i>
-          <span>Відновити з файлу</span>
+          <span>Відновити файл</span>
           <input type="file" accept=".json" class="hidden" onchange="restoreBackupJson(event)" />
         </label>
       </div>
     </div>
   </div>
 
-  <!-- Firebase SDK (для хмарного збереження між пристроями) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-    // Конфігурація хмарного сховища (опціонально: вставте свій Firebase config для крос-девайс синхронізації,
-    // без нього застосунок автоматично працює через локальне сховище браузера)
-    const firebaseConfig = window.__FIREBASE_CONFIG__ || null;
-    window.cloudSyncEnabled = false;
-    window.db = null;
-
-    if (firebaseConfig && firebaseConfig.apiKey) {
-      try {
-        const app = initializeApp(firebaseConfig);
-        window.db = getFirestore(app);
-        window.cloudSyncEnabled = true;
-        window.firestoreOps = { doc, setDoc, onSnapshot };
-        window.initCloudListener();
-      } catch (e) {
-        console.warn("Хмарна синхронізація недоступна, працює локальний режим:", e);
-      }
-    }
-  </script>
-
-  <!-- ОСНОВНА ЛОГІКА ЗАСТОСУНКУ -->
   <script>
-    // Дні тижня українською
     const WEEKDAYS_UA = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
     const MONTHS_UA = [
       'Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень',
       'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'
     ];
 
-    // Початковий стан
+    // Публічний ключ-сховище для синхронізації без власного сервера (npoint.io)
+    // Кожен код групи зберігає свій запис у localStorage + синхронізує через хмару
+    const CLOUD_API_BASE = 'https://api.npoint.io/bins';
+
     let appState = {
       groupName: 'Моя група',
       students: [
@@ -558,9 +502,9 @@
         'Основи логістики',
         'Інформаційні технології'
       ],
-      // Ключ формату: "YYYY-MM-DD|subject|pair|studentId" -> "✓" | "Н" | "ПП" | "ХВ" | "ЗВ"
       attendance: {},
-      savedHomeworks: []
+      savedHomeworks: [],
+      updatedAt: Date.now()
     };
 
     let syncCode = localStorage.getItem('starosta_sync_code');
@@ -571,26 +515,45 @@
 
     let attachedFilesMeta = [];
     let activeCellContext = null;
-    let unsubscribeSnapshot = null;
 
-    // ==================== ІНІЦІАЛІЗАЦІЯ ====================
     document.addEventListener('DOMContentLoaded', () => {
       loadFromLocal();
 
-      // Встановлюємо поточний місяць
       const now = new Date();
       const yyyy = now.getFullYear();
       const mm = String(now.getMonth() + 1).padStart(2, '0');
       document.getElementById('monthPicker').value = `${yyyy}-${mm}`;
 
-      // Дедлайн за замовчуванням: завтра о 23:59
       const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
       const tY = tomorrow.getFullYear();
       const tM = String(tomorrow.getMonth() + 1).padStart(2, '0');
       const tD = String(tomorrow.getDate()).padStart(2, '0');
       document.getElementById('hwDeadline').value = `${tY}-${tM}-${tD}T23:59`;
 
+      // Підтримка вставки фото / скріншотів через Ctrl+V / Cmd+V
+      document.addEventListener('paste', (e) => {
+        const items = e.clipboardData?.items;
+        if (!items) return;
+        for (const item of items) {
+          if (item.kind === 'file') {
+            const file = item.getAsFile();
+            if (file) {
+              const name = file.name && file.name !== 'image.png'
+                ? file.name
+                : `Скріншот_${new Date().toLocaleTimeString('uk-UA').replace(/:/g, '-')}.png`;
+              attachedFilesMeta.push({
+                name,
+                type: file.type.startsWith('image/') ? 'Фото/Скрін' : 'Файл'
+              });
+              renderAttachedFiles();
+              generateHwPreview();
+            }
+          }
+        }
+      });
+
       refreshAllUI();
+      pullFromCloudNow(false);
       lucide.createIcons();
     });
 
@@ -601,42 +564,78 @@
           const parsed = JSON.parse(raw);
           appState = { ...appState, ...parsed };
         } catch (e) {
-          console.error('Помилка читання збережених даних', e);
+          console.error('Помилка читання локальних даних:', e);
         }
       }
     }
 
-    function saveData() {
+    function setSyncBadge(mode, text) {
+      const dot = document.getElementById('syncDot');
+      const label = document.getElementById('syncStatusText');
+      if (!dot || !label) return;
+      label.textContent = text;
+      dot.className = 'w-2 h-2 rounded-full ' + (
+        mode === 'ok' ? 'bg-emerald-500' :
+        mode === 'sync' ? 'bg-amber-500 animate-ping' : 'bg-slate-400'
+      );
+    }
+
+    async function saveData() {
+      appState.updatedAt = Date.now();
       localStorage.setItem(`starosta_data_${syncCode}`, JSON.stringify(appState));
-      showSyncStatus('Збережено');
+      setSyncBadge('sync', 'Збереження...');
 
-      if (window.cloudSyncEnabled && window.db && window.firestoreOps) {
-        const { doc, setDoc } = window.firestoreOps;
-        setDoc(doc(window.db, 'starosta_groups', syncCode), appState)
-          .then(() => showSyncStatus('Синхронізовано'))
-          .catch(() => showSyncStatus('Збережено локально'));
+      try {
+        const res = await fetch(`${CLOUD_API_BASE}/${encodeURIComponent(syncCode)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(appState)
+        });
+        if (res.ok) {
+          setSyncBadge('ok', 'Хмара OK');
+        } else {
+          setSyncBadge('local', 'Лише пристрій');
+        }
+      } catch (e) {
+        setSyncBadge('local', 'Лише пристрій');
       }
     }
 
-    window.initCloudListener = function() {
-      if (!window.cloudSyncEnabled || !window.db || !window.firestoreOps) return;
-      if (unsubscribeSnapshot) unsubscribeSnapshot();
+    async function pullFromCloudNow(fromModalInput) {
+      const inputEl = document.getElementById('connectSyncCodeInput');
+      const targetCode = fromModalInput && inputEl && inputEl.value.trim()
+        ? inputEl.value.trim().toUpperCase()
+        : syncCode;
 
-      const { doc, onSnapshot } = window.firestoreOps;
-      unsubscribeSnapshot = onSnapshot(doc(window.db, 'starosta_groups', syncCode), (snap) => {
-        if (snap.exists()) {
-          appState = { ...appState, ...snap.data() };
-          localStorage.setItem(`starosta_data_${syncCode}`, JSON.stringify(appState));
-          refreshAllUI();
-          showSyncStatus('Синхронізовано');
+      setSyncBadge('sync', 'Завантаження...');
+      try {
+        const res = await fetch(`${CLOUD_API_BASE}/${encodeURIComponent(targetCode)}`);
+        if (res.ok) {
+          const cloudData = await res.json();
+          if (cloudData && typeof cloudData === 'object' && Array.isArray(cloudData.students)) {
+            syncCode = targetCode;
+            localStorage.setItem('starosta_sync_code', syncCode);
+            appState = { ...appState, ...cloudData };
+            localStorage.setItem(`starosta_data_${syncCode}`, JSON.stringify(appState));
+            refreshAllUI();
+            setSyncBadge('ok', 'Хмара OK');
+            if (fromModalInput) {
+              closeSyncModal();
+              alert(`Дані успішно синхронізовано за кодом ${syncCode}!`);
+            }
+            return;
+          }
         }
-      });
-    };
-
-    function showSyncStatus(text) {
-      const el = document.getElementById('syncIndicator');
-      if (!el) return;
-      el.querySelector('span:last-child').textContent = text;
+        if (fromModalInput) {
+          alert('За цим кодом у хмарі ще немає збережених даних. Перевірте код або натисніть "Зберегти файл" на іншому пристрої.');
+        }
+        setSyncBadge('local', 'Лише пристрій');
+      } catch (err) {
+        if (fromModalInput) {
+          alert('Не вдалося з’єднатися з сервером синхронізації. Перевірте інтернет або скористайтеся кнопкою "Зберегти файл / Відновити файл".');
+        }
+        setSyncBadge('local', 'Лише пристрій');
+      }
     }
 
     function refreshAllUI() {
@@ -649,7 +648,6 @@
       renderSavedHomeworks();
     }
 
-    // ==================== НАВІГАЦІЯ ВКЛАДОК ====================
     function switchTab(tabName) {
       ['journal', 'homework', 'manage'].forEach(name => {
         document.getElementById(`view-${name}`).classList.toggle('hidden', name !== tabName);
@@ -681,14 +679,13 @@
       if (subjects.includes(prevH)) hwSel.value = prevH;
     }
 
-    // ==================== МІСЯЧНИЙ ЖУРНАЛ ВІДВІДУВАННЯ ====================
     function getDaysInMonth(yearMonthStr) {
       const [year, month] = yearMonthStr.split('-').map(Number);
       const totalDays = new Date(year, month, 0).getDate();
       const days = [];
       for (let d = 1; d <= totalDays; d++) {
         const dateObj = new Date(year, month - 1, d);
-        const dow = dateObj.getDay(); // 0 = Нд, 1 = Пн...
+        const dow = dateObj.getDay();
         const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         days.push({
           day: d,
@@ -731,7 +728,6 @@
       const days = getDaysInMonth(monthVal);
       const todayStr = new Date().toISOString().split('T')[0];
 
-      // Шапка таблиці (Дні тижня + Числа місяця)
       let theadHtml = `
         <tr class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
           <th class="sticky-header py-2.5 px-3 font-bold text-slate-800 min-w-[190px] sm:min-w-[230px] border-r border-slate-200">
@@ -756,13 +752,12 @@
       });
 
       theadHtml += `
-          <th class="py-2 px-2.5 text-center font-bold text-slate-700 bg-slate-100 min-w-[65px] border-r border-slate-200" title="Присутній">✓</th>
-          <th class="py-2 px-2.5 text-center font-bold text-rose-700 bg-slate-100 min-w-[65px]" title="Пропуски (Н)">Н</th>
+          <th class="py-2 px-2.5 text-center font-bold text-slate-700 bg-slate-100 min-w-[65px] border-r border-slate-200">✓</th>
+          <th class="py-2 px-2.5 text-center font-bold text-rose-700 bg-slate-100 min-w-[65px]">Н</th>
         </tr>
       `;
       document.getElementById('journalThead').innerHTML = theadHtml;
 
-      // Тіло таблиці (Студенти та їх позначки)
       let tbodyHtml = '';
       appState.students.forEach((student, idx) => {
         let presentCount = 0;
@@ -807,14 +802,12 @@
       document.getElementById('journalTbody').innerHTML = tbodyHtml;
     }
 
-    // ==================== МОДАЛЬНЕ ВІКНО ЗМІНИ СТАТУСУ ====================
     function openStatusModal(studentId, dateStr, weekdayShort) {
       const student = appState.students.find(s => s.id === studentId);
       const subject = document.getElementById('journalSubjectSelect').value;
       const pair = document.getElementById('journalPairSelect').value;
 
       activeCellContext = { studentId, dateStr, subject, pair };
-
       document.getElementById('statusModalStudent').textContent = student ? student.name : '';
       document.getElementById('statusModalDetails').textContent = `${dateStr} (${weekdayShort}) • ${subject} • ${pair}-ша пара`;
       document.getElementById('statusModal').classList.remove('hidden');
@@ -843,13 +836,11 @@
       closeStatusModal();
     }
 
-    // ==================== ШВИДКА ПЕРЕКЛИЧКА ====================
     function openQuickRollCall() {
       if (!appState.students.length) {
         alert('Спочатку додайте одногрупників у вкладці "Група та Предмети".');
         return;
       }
-
       const monthVal = document.getElementById('monthPicker').value;
       const days = getDaysInMonth(monthVal);
       const todayDay = new Date().getDate();
@@ -936,7 +927,6 @@
       renderRollCallList();
     }
 
-    // ==================== ЕКСПОРТ В EXCEL (.XLSX) ====================
     function exportToExcel() {
       if (!appState.students.length) {
         alert('Немає даних для експорту!');
@@ -950,7 +940,6 @@
       const pair = document.getElementById('journalPairSelect').value;
       const days = getDaysInMonth(monthVal);
 
-      // Формуємо масив рядків для Excel
       const sheetData = [
         [`Журнал відвідування групи: ${appState.groupName}`],
         [`Предмет: ${subject} | Пара: ${pair}-ша | Період: ${monthName} ${year}`],
@@ -971,31 +960,16 @@
           return st;
         });
 
-        sheetData.push([
-          idx + 1,
-          student.name,
-          ...rowCells,
-          cPresent,
-          cN,
-          cPP,
-          cHV,
-          cZV
-        ]);
+        sheetData.push([idx + 1, student.name, ...rowCells, cPresent, cN, cPP, cHV, cZV]);
       });
 
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(sheetData);
-
-      // Налаштовуємо ширину колонок
       ws['!cols'] = [
         { wch: 4 },
         { wch: 28 },
         ...days.map(() => ({ wch: 7 })),
-        { wch: 14 },
-        { wch: 14 },
-        { wch: 14 },
-        { wch: 14 },
-        { wch: 15 }
+        { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 15 }
       ];
 
       XLSX.utils.book_append_sheet(wb, ws, 'Відвідування');
@@ -1003,11 +977,11 @@
       XLSX.writeFile(wb, safeFileName);
     }
 
-    // ==================== КОНСТРУКТОР ДОМАШНЬОГО ЗАВДАННЯ ====================
+    // ==================== ПРИКРІПЛЕННЯ ФАЙЛІВ ТА ШАБЛОН ДЗ ====================
     function handleHwFiles(event) {
-      const files = Array.from(event.target.files);
+      const files = Array.from(event.target.files || []);
       files.forEach(f => {
-        const isImage = f.type.startsWith('image/');
+        const isImage = f.type.startsWith('image/') || /\.(png|jpe?g|gif|webp)$/i.test(f.name);
         attachedFilesMeta.push({
           name: f.name,
           type: isImage ? 'Фото/Скрін' : 'Файл'
@@ -1018,6 +992,20 @@
       event.target.value = '';
     }
 
+    function addManualAttachmentPrompt() {
+      const name = prompt('Введіть назву файлу або фото (наприклад: методичка.pdf або фото_дошки.jpg):');
+      if (name && name.trim()) {
+        const clean = name.trim();
+        const isImage = /\.(png|jpe?g|gif|webp)$/i.test(clean);
+        attachedFilesMeta.push({
+          name: clean,
+          type: isImage ? 'Фото/Скрін' : 'Файл'
+        });
+        renderAttachedFiles();
+        generateHwPreview();
+      }
+    }
+
     function removeAttachedFile(index) {
       attachedFilesMeta.splice(index, 1);
       renderAttachedFiles();
@@ -1026,10 +1014,14 @@
 
     function renderAttachedFiles() {
       const container = document.getElementById('hwAttachedList');
+      if (!attachedFilesMeta.length) {
+        container.innerHTML = '';
+        return;
+      }
       container.innerHTML = attachedFilesMeta.map((f, idx) => `
         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs font-medium">
           <span>${f.type === 'Фото/Скрін' ? '🖼️' : '📄'} ${escapeHtml(f.name)}</span>
-          <button onclick="removeAttachedFile(${idx})" class="text-indigo-400 hover:text-rose-600 font-bold ml-1">×</button>
+          <button type="button" onclick="removeAttachedFile(${idx})" class="text-indigo-400 hover:text-rose-600 font-bold ml-1">×</button>
         </span>
       `).join('');
     }
@@ -1083,9 +1075,10 @@
       template += `📝 ЗАВДАННЯ:\n${desc || '(Впишіть опис завдання зліва...)'}\n`;
 
       if (attachedFilesMeta.length > 0) {
-        template += `\n📎 МАТЕРІАЛИ ДО ПОВІДОМЛЕННЯ:\n`;
-        attachedFilesMeta.forEach(f => {
-          template += `  • ${f.name}\n`;
+        template += `\n📎 ПРИКРІПЛЕНІ ФАЙЛИ ТА ФОТО:\n`;
+        attachedFilesMeta.forEach((f, i) => {
+          const tag = f.type === 'Фото/Скрін' ? 'ФОТО' : 'ФАЙЛ';
+          template += `  ${i + 1}. [${tag}] ${f.name}\n`;
         });
       }
 
@@ -1094,26 +1087,38 @@
       }
 
       template += `━━━━━━━━━━━━━━━━━━━━\n`;
-      template += `⏰ КІНЕЦЬ ТЕРМІНУ (ДЕДЛАЙН):\n${deadlineFormatted}`;
+      template += `⏰ КІНЕЦЬ ТЕРМІНУ:\n${deadlineFormatted}`;
 
       document.getElementById('hwPreviewBox').value = template;
     }
 
     function copyHwTemplate() {
       const box = document.getElementById('hwPreviewBox');
-      box.select();
-      navigator.clipboard.writeText(box.value).then(() => {
-        const btn = document.getElementById('copyHwBtn');
-        const origHtml = btn.innerHTML;
-        btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i><span>Скопійовано!</span>`;
-        btn.classList.replace('bg-indigo-600', 'bg-emerald-600');
+      const text = box.value;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).catch(() => fallbackCopy(box));
+      } else {
+        fallbackCopy(box);
+      }
+
+      const btn = document.getElementById('copyHwBtn');
+      const origHtml = btn.innerHTML;
+      btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i><span>Скопійовано!</span>`;
+      btn.classList.replace('bg-indigo-600', 'bg-emerald-600');
+      lucide.createIcons();
+      setTimeout(() => {
+        btn.innerHTML = origHtml;
+        btn.classList.replace('bg-emerald-600', 'bg-indigo-600');
         lucide.createIcons();
-        setTimeout(() => {
-          btn.innerHTML = origHtml;
-          btn.classList.replace('bg-emerald-600', 'bg-indigo-600');
-          lucide.createIcons();
-        }, 2000);
-      });
+      }, 2000);
+    }
+
+    function fallbackCopy(textarea) {
+      textarea.focus();
+      textarea.select();
+      try {
+        document.execCommand('copy');
+      } catch (e) {}
     }
 
     function shareHwNative() {
@@ -1144,11 +1149,23 @@
         subject,
         type,
         deadlineVal,
+        files: [...attachedFilesMeta],
         text
       });
 
       saveData();
       renderSavedHomeworks();
+    }
+
+    function loadSavedHwToEditor(id) {
+      const hw = appState.savedHomeworks.find(h => h.id === id);
+      if (!hw) return;
+      document.getElementById('hwSubject').value = hw.subject;
+      document.getElementById('hwType').value = hw.type;
+      if (hw.deadlineVal) document.getElementById('hwDeadline').value = hw.deadlineVal;
+      attachedFilesMeta = Array.isArray(hw.files) ? [...hw.files] : [];
+      renderAttachedFiles();
+      document.getElementById('hwPreviewBox').value = hw.text;
     }
 
     function deleteSavedHw(id) {
@@ -1160,8 +1177,8 @@
     function copySavedHwText(id) {
       const hw = appState.savedHomeworks.find(h => h.id === id);
       if (hw) {
-        navigator.clipboard.writeText(hw.text);
-        alert('Шаблон завдання скопійовано в буфер обміну!');
+        navigator.clipboard?.writeText(hw.text).catch(() => {});
+        alert('Шаблон завдання скопійовано!');
       }
     }
 
@@ -1174,11 +1191,12 @@
 
       container.innerHTML = appState.savedHomeworks.map(hw => {
         const dl = hw.deadlineVal ? hw.deadlineVal.replace('T', ' ') : 'Без дедлайну';
+        const filesCount = Array.isArray(hw.files) && hw.files.length ? ` • Файлів: ${hw.files.length}` : '';
         return `
           <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
-            <div class="min-w-0">
+            <div class="min-w-0 cursor-pointer" onclick="loadSavedHwToEditor('${hw.id}')">
               <div class="text-xs font-bold text-slate-800 truncate">${escapeHtml(hw.subject)} — ${escapeHtml(hw.type)}</div>
-              <div class="text-[11px] text-slate-500">Дедлайн: ${dl}</div>
+              <div class="text-[11px] text-slate-500">Дедлайн: ${dl}${filesCount}</div>
             </div>
             <div class="flex items-center gap-1 shrink-0">
               <button onclick="copySavedHwText('${hw.id}')" class="p-1.5 bg-white border border-slate-200 hover:bg-indigo-50 text-indigo-600 rounded-lg" title="Скопіювати">
@@ -1194,7 +1212,7 @@
       lucide.createIcons();
     }
 
-    // ==================== УПРАВЛІННЯ ГРУПОЮ ТА ПРЕДМЕТАМИ ====================
+    // ==================== ГРУПА ТА ПРЕДМЕТИ ====================
     function saveGroupName() {
       const val = document.getElementById('groupNameInput').value.trim();
       appState.groupName = val || 'Моя група';
@@ -1326,9 +1344,10 @@
       lucide.createIcons();
     }
 
-    // ==================== СИНХРОНІЗАЦІЯ ТА РЕЗЕРВНА КОПІЯ ====================
+    // ==================== СИНХРОНІЗАЦІЯ ТА ФАЙЛИ ====================
     function openSyncModal() {
       document.getElementById('mySyncCodeDisplay').value = syncCode;
+      document.getElementById('connectSyncCodeInput').value = syncCode;
       document.getElementById('syncModal').classList.remove('hidden');
       lucide.createIcons();
     }
@@ -1341,27 +1360,15 @@
     function copySyncCode() {
       const inp = document.getElementById('mySyncCodeDisplay');
       inp.select();
-      navigator.clipboard.writeText(inp.value);
+      navigator.clipboard?.writeText(inp.value).catch(() => {});
       alert('Код групи скопійовано!');
-    }
-
-    function connectWithSyncCode() {
-      const newCode = document.getElementById('connectSyncCodeInput').value.trim().toUpperCase();
-      if (!newCode) return;
-      syncCode = newCode;
-      localStorage.setItem('starosta_sync_code', syncCode);
-      loadFromLocal();
-      if (window.initCloudListener) window.initCloudListener();
-      refreshAllUI();
-      closeSyncModal();
-      alert(`Підключено до коду: ${syncCode}`);
     }
 
     function downloadBackupJson() {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
       const dlAnchor = document.createElement('a');
       dlAnchor.setAttribute("href", dataStr);
-      dlAnchor.setAttribute("download", `Журнал_резерв_${appState.groupName}.json`);
+      dlAnchor.setAttribute("download", `Журнал_${appState.groupName}_${syncCode}.json`);
       document.body.appendChild(dlAnchor);
       dlAnchor.click();
       dlAnchor.remove();
