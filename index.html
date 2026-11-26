@@ -11,7 +11,7 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- SheetJS для експорту в Excel (.xlsx) -->
+  <!-- SheetJS для читання та експорту Excel (.xlsx, .csv, .xls) -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 
   <!-- Google Fonts -->
@@ -70,7 +70,6 @@
   <!-- ВЕРХНЯ ПАНЕЛЬ -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 min-h-[4rem] py-2 flex flex-wrap items-center justify-between gap-2">
-      <!-- Інформація про групу та активний акаунт -->
       <div class="flex items-center gap-2.5 min-w-0">
         <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm shrink-0">
           <i data-lucide="clipboard-check" class="w-5 h-5"></i>
@@ -84,7 +83,6 @@
         </div>
       </div>
 
-      <!-- Статус бази та кнопка акаунту -->
       <div class="flex items-center gap-2">
         <button onclick="pullFromFirebase(false)" id="syncIndicator" class="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition" title="Оновити дані з Firebase">
           <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
@@ -175,7 +173,7 @@
             <i data-lucide="user-plus" class="w-6 h-6"></i>
           </div>
           <h3 class="text-base font-semibold text-slate-800">Список групи порожній</h3>
-          <p class="text-sm text-slate-500 mt-1 mb-4">Додайте людей до списку, щоб вести журнал відвідування.</p>
+          <p class="text-sm text-slate-500 mt-1 mb-4">Завантажте файл або додайте людей до списку, щоб вести журнал.</p>
           <button onclick="switchTab('manage')" class="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition">
             Перейти до списку групи
           </button>
@@ -237,7 +235,6 @@
             </div>
           </div>
 
-          <!-- Прикріплення файлів та фото -->
           <div class="space-y-2">
             <div class="flex items-center justify-between">
               <label class="block text-xs font-semibold text-slate-600">Прикріпити фото або файли</label>
@@ -262,7 +259,6 @@
           </button>
         </div>
 
-        <!-- Права колонка: Готовий шаблон -->
         <div class="lg:col-span-6 space-y-4">
           <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
             <div class="flex items-center justify-between">
@@ -302,7 +298,6 @@
     <!-- ВКЛАДКА 3: ГРУПА, РОЛІ ТА ПРЕДМЕТИ -->
     <section id="view-manage" class="hidden space-y-5">
 
-      <!-- Картка інформації про групу та власника -->
       <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div class="space-y-1">
           <div class="flex items-center gap-2 flex-wrap">
@@ -320,20 +315,25 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
-        <!-- Список людей та їх ролей (7 колонок) -->
+        <!-- Список людей, автозавантаження файлу та ролі (7 колонок) -->
         <div class="lg:col-span-7 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
               <i data-lucide="users" class="w-5 h-5 text-indigo-600"></i>
               <span>Учасники списку та ролі (<span id="studentsCountBadge">0</span>)</span>
             </h2>
-            <div class="flex gap-1.5">
+            <div class="flex flex-wrap gap-1.5">
+              <label class="px-2.5 py-1.5 text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg transition cursor-pointer flex items-center gap-1" title="Завантажити список з Excel (.xlsx, .csv) або TXT">
+                <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
+                <span>Завантажити файл</span>
+                <input type="file" id="rosterFileInput" accept=".xlsx,.xls,.csv,.txt" class="hidden" onchange="handleRosterFileUpload(event)" />
+              </label>
               <button onclick="sortStudentsAlpha()" class="px-2.5 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition">А-Я</button>
-              <button onclick="openBulkAddModal()" class="px-2.5 py-1.5 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition">+ Додати списком</button>
+              <button onclick="openBulkAddModal()" class="px-2.5 py-1.5 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition">+ Вставити текстом</button>
             </div>
           </div>
 
-          <!-- Форма додавання людини з вибором ролі -->
+          <!-- Форма додавання однієї людини -->
           <form onsubmit="addStudent(event)" class="flex flex-col sm:flex-row gap-2">
             <input type="text" id="newStudentName" required placeholder="Прізвище та Ім'я людини..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             <select id="newStudentRole" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -443,11 +443,11 @@
   <!-- МОДАЛЬНЕ ВІКНО: ДОДАТИ СПИСКОМ -->
   <div id="bulkAddModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" onclick="closeBulkAddModal(event)">
     <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl modal-animate" onclick="event.stopPropagation()">
-      <h3 class="font-bold text-base text-slate-900 mb-1">Додати людей списком</h3>
-      <p class="text-xs text-slate-500 mb-2">Кожен рядок — окрема людина:</p>
-      <textarea id="bulkStudentsTextarea" rows="6" placeholder="Іваненко Іван&#10;Петренко Марія&#10;Коваленко Олександр" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"></textarea>
+      <h3 class="font-bold text-base text-slate-900 mb-1">Автододавання людей зі списку</h3>
+      <p class="text-xs text-slate-500 mb-2">Вставте ПІБ (кожен з нового рядка). Можна також вказати роль через дефіс: <code>Іваненко Іван - Замстарости</code></p>
+      <textarea id="bulkStudentsTextarea" rows="6" placeholder="Іваненко Іван - Староста&#10;Петренко Марія - Замстарости&#10;Коваленко Олександр" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"></textarea>
       <div class="mb-3">
-        <label class="block text-xs font-semibold text-slate-600 mb-1">Роль для доданих:</label>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Роль за замовчуванням:</label>
         <select id="bulkRoleSelect" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium">
           <option value="Студент">Студент</option>
           <option value="Помічник старости">Помічник старости</option>
@@ -457,7 +457,7 @@
       </div>
       <div class="flex justify-end gap-2">
         <button onclick="closeBulkAddModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl">Скасувати</button>
-        <button onclick="processBulkAdd()" class="px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl">Додати всіх</button>
+        <button onclick="processBulkAdd()" class="px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl">Додати автоматично</button>
       </div>
     </div>
   </div>
@@ -475,7 +475,6 @@
         </button>
       </div>
 
-      <!-- Блок поточного залогіненого акаунту -->
       <div id="activeAccountCard" class="hidden p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 space-y-2">
         <div class="flex items-center justify-between gap-2">
           <div>
@@ -491,13 +490,11 @@
         </div>
       </div>
 
-      <!-- Перемикач Вхід / Реєстрація -->
       <div class="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
         <button onclick="switchAuthMode('login')" id="authTabLogin" class="py-2 rounded-lg bg-white text-slate-900 shadow-xs transition">Вхід в акаунт</button>
         <button onclick="switchAuthMode('register')" id="authTabRegister" class="py-2 rounded-lg text-slate-600 hover:text-slate-900 transition">Створити акаунт</button>
       </div>
 
-      <!-- Форма ВХОДУ -->
       <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-3">
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Логін</label>
@@ -512,7 +509,6 @@
         </button>
       </form>
 
-      <!-- Форма РЕЄСТРАЦІЇ -->
       <form id="registerForm" onsubmit="handleRegister(event)" class="hidden space-y-3">
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Ваше Прізвище та Ім'я</label>
@@ -544,7 +540,7 @@
           </div>
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Код групи (залиште порожнім для нового або введіть існуючий)</label>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Код групи (необов'язково)</label>
           <input type="text" id="regGroupCode" placeholder="Наприклад: GRP-TL26008" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
@@ -552,7 +548,6 @@
         </button>
       </form>
 
-      <!-- Резервне збереження / відновлення файлу -->
       <div class="border-t border-slate-100 pt-3 flex items-center justify-between gap-2">
         <button onclick="downloadBackupJson()" class="flex-1 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition flex items-center justify-center gap-1.5">
           <i data-lucide="download" class="w-3.5 h-3.5"></i>
@@ -575,10 +570,9 @@
     ];
     const ROLES_LIST = ['Староста', 'Замстарости', 'Помічник старости', 'Студент'];
 
-    // Ваше сховище Firebase Realtime Database
     const FIREBASE_DB_URL = 'https://saint-dla-starist-default-rtdb.europe-west1.firebasedatabase.app';
 
-    let currentAccount = null; // { username, fullName, role, groupCode, groupName }
+    let currentAccount = null;
     let syncCode = localStorage.getItem('starosta_sync_code') || 'GRP-DEFAULT';
 
     let appState = {
@@ -604,10 +598,9 @@
     let attachedFilesMeta = [];
     let activeCellContext = null;
 
-    // ==================== ПРАВА РОЛЕЙ ====================
     function getActiveRole() {
       if (currentAccount && currentAccount.role) return currentAccount.role;
-      return 'Староста'; // Гостьовий локальний режим до входу
+      return 'Староста';
     }
 
     function canEditJournal() {
@@ -631,7 +624,6 @@
       }
     }
 
-    // ==================== ІНІЦІАЛІЗАЦІЯ ====================
     document.addEventListener('DOMContentLoaded', () => {
       const savedAcc = localStorage.getItem('starosta_active_account');
       if (savedAcc) {
@@ -656,7 +648,6 @@
       const tD = String(tomorrow.getDate()).padStart(2, '0');
       document.getElementById('hwDeadline').value = `${tY}-${tM}-${tD}T23:59`;
 
-      // Швидка вставка скріншотів через Ctrl+V / Cmd+V
       document.addEventListener('paste', (e) => {
         const items = e.clipboardData?.items;
         if (!items) return;
@@ -777,7 +768,6 @@
       }
     }
 
-    // ==================== АКАУНТИ (ВХІД / РЕЄСТРАЦІЯ / ВИХІД) ====================
     function openAccountModal() {
       updateAccountModalUI();
       document.getElementById('accountModal').classList.remove('hidden');
@@ -827,14 +817,7 @@
         groupCode = 'GRP-' + Math.random().toString(36).substring(2, 8).toUpperCase();
       }
 
-      const accountObj = {
-        username,
-        password,
-        fullName,
-        role,
-        groupName,
-        groupCode
-      };
+      const accountObj = { username, password, fullName, role, groupName, groupCode };
 
       try {
         await fetch(getFirebaseAccountUrl(username), {
@@ -852,13 +835,8 @@
       appState.groupName = groupName;
       appState.ownerName = `${fullName} (${role})`;
 
-      // Додаємо власника акаунту у список учасників, якщо його ще там немає
       if (!appState.students.some(s => s.name.toLowerCase() === fullName.toLowerCase())) {
-        appState.students.unshift({
-          id: 'st_' + Date.now(),
-          name: fullName,
-          role
-        });
+        appState.students.unshift({ id: 'st_' + Date.now(), name: fullName, role });
       }
 
       await saveData();
@@ -876,7 +854,7 @@
       try {
         const res = await fetch(getFirebaseAccountUrl(username));
         if (!res.ok) {
-          alert('Помилка доступу до бази акаунтів. Перевірте правила Firebase.');
+          alert('Помилка доступу до бази акаунтів.');
           setSyncBadge('err', 'Правила БД');
           return;
         }
@@ -899,7 +877,7 @@
         alert(`Вітаємо, ${currentAccount.fullName}! Роль: ${currentAccount.role}`);
       } catch (err) {
         setSyncBadge('err', 'Офлайн');
-        alert('Не вдалося перевірити акаунт через мережу.');
+        alert('Не вдалося перевірити акаунт.');
       }
     }
 
@@ -910,7 +888,6 @@
       refreshAllUI();
     }
 
-    // ==================== ОНОВЛЕННЯ ІНТЕРФЕЙСУ ====================
     function refreshAllUI() {
       document.getElementById('headerGroupName').textContent = appState.groupName || 'Моя група';
       document.getElementById('headerGroupCode').textContent = syncCode;
@@ -969,7 +946,6 @@
       if (subjects.includes(prevH)) hwSel.value = prevH;
     }
 
-    // ==================== МІСЯЧНИЙ ЖУРНАЛ ====================
     function getDaysInMonth(yearMonthStr) {
       const [year, month] = yearMonthStr.split('-').map(Number);
       const totalDays = new Date(year, month, 0).getDate();
@@ -1141,7 +1117,7 @@
         return;
       }
       if (!appState.students.length) {
-        alert('Спочатку додайте людей до списку у вкладці "Група, Ролі та Предмети".');
+        alert('Спочатку додайте людей до списку.');
         return;
       }
       const monthVal = document.getElementById('monthPicker').value;
@@ -1269,9 +1245,7 @@
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(sheetData);
       ws['!cols'] = [
-        { wch: 4 },
-        { wch: 28 },
-        { wch: 18 },
+        { wch: 4 }, { wch: 28 }, { wch: 18 },
         ...days.map(() => ({ wch: 7 })),
         { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 15 }
       ];
@@ -1281,7 +1255,6 @@
       XLSX.writeFile(wb, safeFileName);
     }
 
-    // ==================== ПРИКРІПЛЕННЯ ФАЙЛІВ ТА ШАБЛОН ДЗ ====================
     function handleHwFiles(event) {
       const files = Array.from(event.target.files || []);
       files.forEach(f => {
@@ -1420,9 +1393,7 @@
     function fallbackCopy(textarea) {
       textarea.focus();
       textarea.select();
-      try {
-        document.execCommand('copy');
-      } catch (e) {}
+      try { document.execCommand('copy'); } catch (e) {}
     }
 
     function shareHwNative() {
@@ -1521,6 +1492,132 @@
       lucide.createIcons();
     }
 
+    // ==================== АВТОДОДАВАННЯ З ФАЙЛУ ТА ТЕКСТУ ====================
+    function parseRoleFromString(str, fallbackRole) {
+      if (!str) return fallbackRole;
+      const lower = str.toLowerCase();
+      for (const r of ROLES_LIST) {
+        if (lower.includes(r.toLowerCase())) return r;
+      }
+      if (lower.includes('зам')) return 'Замстарости';
+      if (lower.includes('поміч')) return 'Помічник старости';
+      if (lower.includes('старост')) return 'Староста';
+      return fallbackRole;
+    }
+
+    function cleanPersonName(rawName) {
+      return String(rawName || '')
+        .replace(/^\s*\d+\s*[\.\)\-:]\s*/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function appendParsedEntries(entries, defaultRole) {
+      const existingNames = new Set(appState.students.map(s => s.name.toLowerCase().trim()));
+      let addedCount = 0;
+
+      entries.forEach((item, idx) => {
+        const cleaned = cleanPersonName(item.name);
+        if (!cleaned || cleaned.length < 2) return;
+        const key = cleaned.toLowerCase();
+        if (existingNames.has(key)) return;
+
+        existingNames.add(key);
+        appState.students.push({
+          id: 'st_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substring(2, 5),
+          name: cleaned,
+          role: item.role || defaultRole || 'Студент'
+        });
+        addedCount++;
+      });
+
+      if (addedCount > 0) {
+        saveData();
+        refreshAllUI();
+      }
+      return addedCount;
+    }
+
+    function handleRosterFileUpload(event) {
+      if (!canAddPeople()) {
+        alert(`Ваша роль (${getActiveRole()}) не дозволяє додавати людей до списку.`);
+        event.target.value = '';
+        return;
+      }
+
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const defaultRole = document.getElementById('newStudentRole')?.value || 'Студент';
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+          const parsed = [];
+          rows.forEach(row => {
+            if (!Array.isArray(row) || !row.length) return;
+            // Шукаємо першу непорожню клітинку з текстом (не просто номер)
+            let nameCell = '';
+            let roleCell = '';
+
+            for (let i = 0; i < row.length; i++) {
+              const val = String(row[i] ?? '').trim();
+              if (!val) continue;
+              if (!nameCell && !/^\d+$/.test(val)) {
+                nameCell = val;
+              } else if (nameCell && !roleCell) {
+                roleCell = val;
+              }
+            }
+
+            if (!nameCell) return;
+            const lowerName = nameCell.toLowerCase();
+            if (['прізвище', 'піб', 'студент', 'ім\'я', '№', 'номер', 'список'].includes(lowerName)) return;
+
+            // Якщо в одній клітинці написано "Іваненко Іван - Замстарости"
+            const splitParts = nameCell.split(/\s+[-—|]\s+/);
+            const finalName = splitParts[0];
+            const finalRole = parseRoleFromString(roleCell || splitParts[1] || '', defaultRole);
+
+            parsed.push({ name: finalName, role: finalRole });
+          });
+
+          const added = appendParsedEntries(parsed, defaultRole);
+          alert(`Файл оброблено! Автоматично додано учасників: ${added}.`);
+        } catch (err) {
+          alert('Не вдалося прочитати файл. Перевірте формат (.xlsx, .csv або .txt).');
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+      event.target.value = '';
+    }
+
+    function processBulkAdd() {
+      const text = document.getElementById('bulkStudentsTextarea').value;
+      const defaultRole = document.getElementById('bulkRoleSelect').value || 'Студент';
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+
+      const parsed = lines.map(line => {
+        const parts = line.split(/\s+[-—|]\s+/);
+        return {
+          name: parts[0],
+          role: parseRoleFromString(parts[1] || '', defaultRole)
+        };
+      });
+
+      const added = appendParsedEntries(parsed, defaultRole);
+      document.getElementById('bulkStudentsTextarea').value = '';
+      closeBulkAddModal();
+      alert(`Додано учасників: ${added}`);
+    }
+
     // ==================== ГРУПА, РОЛІ ТА ПРЕДМЕТИ ====================
     function saveGroupName() {
       if (!canManageRolesAndDelete()) {
@@ -1610,23 +1707,6 @@
       document.getElementById('bulkAddModal').classList.add('hidden');
     }
 
-    function processBulkAdd() {
-      const text = document.getElementById('bulkStudentsTextarea').value;
-      const role = document.getElementById('bulkRoleSelect').value || 'Студент';
-      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-      lines.forEach((name, i) => {
-        appState.students.push({
-          id: 'st_' + Date.now() + '_' + i,
-          name,
-          role
-        });
-      });
-      document.getElementById('bulkStudentsTextarea').value = '';
-      closeBulkAddModal();
-      saveData();
-      refreshAllUI();
-    }
-
     function addSubject(e) {
       e.preventDefault();
       if (!canEditJournal()) {
@@ -1707,7 +1787,6 @@
       lucide.createIcons();
     }
 
-    // ==================== РЕЗЕРВНІ ФАЙЛИ ====================
     function downloadBackupJson() {
       const payload = { account: currentAccount, groupCode: syncCode, state: appState };
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
