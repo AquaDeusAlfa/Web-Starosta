@@ -388,18 +388,22 @@
               <span>Список групи та ролі (<span id="studentsCountBadge">0</span>)</span>
             </h2>
             <div class="flex flex-wrap gap-1.5">
+              <button type="button" onclick="toggleStudentsListCollapse()" id="toggleRosterCollapseBtn" class="px-2.5 py-1.5 text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg transition flex items-center gap-1" title="Згорнути або розгорнути список ПІБ">
+                <i id="toggleRosterCollapseIcon" data-lucide="chevron-up" class="w-3.5 h-3.5"></i>
+                <span id="toggleRosterCollapseLabel">Згорнути список</span>
+              </button>
               <label class="px-2.5 py-1.5 text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg transition cursor-pointer flex items-center gap-1" title="Завантажити список з Excel (.xlsx, .csv) або TXT">
                 <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
                 <span>Завантажити файл</span>
                 <input type="file" id="rosterFileInput" accept=".xlsx,.xls,.csv,.txt" class="hidden" onchange="handleRosterFileUpload(event)" />
               </label>
-              <button onclick="sortStudentsAlpha()" class="px-2.5 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition">А-Я</button>
-              <button onclick="openBulkAddModal()" class="px-2.5 py-1.5 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition">+ Вставити текстом</button>
+              <button type="button" onclick="sortStudentsAlpha()" class="px-2.5 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition">А-Я</button>
+              <button type="button" onclick="openBulkAddModal()" class="px-2.5 py-1.5 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition">+ Вставити текстом</button>
             </div>
           </div>
 
           <form onsubmit="addStudent(event)" class="flex flex-col sm:flex-row gap-2">
-            <input type="text" id="newStudentName" required placeholder="Прізвище та Ім'я людини..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <input type="text" id="newStudentName" required placeholder="Прізвище, Ім'я, По батькові..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             <select id="newStudentRole" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
               <option value="Студент">Студент</option>
               <option value="Помічник старости">Помічник старости</option>
@@ -411,6 +415,13 @@
               <span>Додати</span>
             </button>
           </form>
+
+          <div id="studentsCollapsedNotice" class="hidden py-3 px-4 rounded-xl bg-slate-50 border border-dashed border-slate-300 flex items-center justify-between gap-2 text-xs text-slate-600">
+            <span>Список ПІБ згорнуто (<b id="collapsedStudentsCount">0</b> осіб)</span>
+            <button type="button" onclick="toggleStudentsListCollapse()" class="font-semibold text-indigo-600 hover:underline shrink-0">
+              Повернути список
+            </button>
+          </div>
 
           <div id="studentsManageList" class="divide-y divide-slate-100 max-h-[440px] overflow-y-auto pr-1"></div>
         </div>
@@ -507,8 +518,8 @@
   <div id="bulkAddModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" onclick="closeBulkAddModal(event)">
     <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl modal-animate" onclick="event.stopPropagation()">
       <h3 class="font-bold text-base text-slate-900 mb-1">Автододавання людей зі списку</h3>
-      <p class="text-xs text-slate-500 mb-2">Вставте ПІБ (кожен з нового рядка). Можна також вказати роль через дефіс: <code>Іваненко Іван - Замстарости</code></p>
-      <textarea id="bulkStudentsTextarea" rows="6" placeholder="Іваненко Іван - Староста&#10;Петренко Марія - Замстарости&#10;Коваленко Олександр" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"></textarea>
+      <p class="text-xs text-slate-500 mb-2">Вставте ПІБ (кожен з нового рядка). Можна також вказати роль через дефіс: <code>Іваненко Іван Іванович - Замстарости</code></p>
+      <textarea id="bulkStudentsTextarea" rows="6" placeholder="Іваненко Іван Іванович - Староста&#10;Петренко Марія Сергіївна - Замстарости&#10;Коваленко Олександр Петрович" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"></textarea>
       <div class="mb-3">
         <label class="block text-xs font-semibold text-slate-600 mb-1">Роль за замовчуванням:</label>
         <select id="bulkRoleSelect" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium">
@@ -606,6 +617,7 @@
     let currentAccount = null;
     let syncCode = 'TL-26008';
     let lastCreatedCredentialsText = '';
+    let isStudentsListCollapsed = false;
 
     let appState = {
       groupName: 'ТЛ-26008',
@@ -631,6 +643,43 @@
 
     let attachedFilesMeta = [];
     let activeCellContext = null;
+
+    function getCollapseStorageKey() {
+      return `tl26008_roster_collapsed_${syncCode}`;
+    }
+
+    function applyStudentsListCollapseUI() {
+      const listEl = document.getElementById('studentsManageList');
+      const noticeEl = document.getElementById('studentsCollapsedNotice');
+      const labelEl = document.getElementById('toggleRosterCollapseLabel');
+      const iconEl = document.getElementById('toggleRosterCollapseIcon');
+      const countEl = document.getElementById('collapsedStudentsCount');
+
+      if (!listEl || !noticeEl || !labelEl) return;
+
+      if (countEl) {
+        countEl.textContent = appState.students.length;
+      }
+
+      if (isStudentsListCollapsed) {
+        listEl.classList.add('hidden');
+        noticeEl.classList.remove('hidden');
+        labelEl.textContent = 'Повернути список';
+        if (iconEl) iconEl.setAttribute('data-lucide', 'chevron-down');
+      } else {
+        listEl.classList.remove('hidden');
+        noticeEl.classList.add('hidden');
+        labelEl.textContent = 'Згорнути список';
+        if (iconEl) iconEl.setAttribute('data-lucide', 'chevron-up');
+      }
+      lucide.createIcons();
+    }
+
+    function toggleStudentsListCollapse() {
+      isStudentsListCollapsed = !isStudentsListCollapsed;
+      localStorage.setItem(getCollapseStorageKey(), isStudentsListCollapsed ? '1' : '0');
+      applyStudentsListCollapseUI();
+    }
 
     function persistCurrentSession() {
       if (currentAccount) {
@@ -684,6 +733,7 @@
       sessionStorage.removeItem('tl26008_active_session');
 
       loadFromLocal();
+      isStudentsListCollapsed = localStorage.getItem(getCollapseStorageKey()) === '1';
 
       const savedSessionRaw = localStorage.getItem(PERSISTENT_SESSION_KEY);
       if (savedSessionRaw) {
@@ -691,7 +741,10 @@
           const parsedSession = JSON.parse(savedSessionRaw);
           if (parsedSession && parsedSession.username) {
             currentAccount = parsedSession;
-            if (currentAccount.groupCode) syncCode = currentAccount.groupCode;
+            if (currentAccount.groupCode) {
+              syncCode = currentAccount.groupCode;
+              isStudentsListCollapsed = localStorage.getItem(getCollapseStorageKey()) === '1';
+            }
           }
         } catch (e) {}
       }
@@ -1264,7 +1317,7 @@
       let theadHtml = `
         <tr class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
           <th class="sticky-header py-2.5 px-3 font-bold text-slate-800 min-w-[200px] sm:min-w-[240px] border-r border-slate-200">
-            № / Прізвище та Ім'я
+            № / Прізвище, Ім'я, По батькові
           </th>
       `;
 
@@ -1489,7 +1542,7 @@
         [`Журнал відвідування групи: ${appState.groupName} (${syncCode})`],
         [`Предмет: ${subject} | Пара: ${pair}-ша | Період: ${monthName} ${year}`],
         [],
-        ['№', 'Прізвище та Ім\'я', 'Роль', ...days.map(d => `${d.day} (${d.weekdayShort})`), 'Присутній (✓)', 'Пропуски (Н)', 'Поважна (ПП)', 'Хвороба (ХВ)', 'Звільнений (ЗВ)']
+        ['№', 'Прізвище, Ім\'я, По батькові', 'Роль', ...days.map(d => `${d.day} (${d.weekdayShort})`), 'Присутній (✓)', 'Пропуски (Н)', 'Поважна (ПП)', 'Хвороба (ХВ)', 'Звільнений (ЗВ)']
       ];
 
       appState.students.forEach((student, idx) => {
@@ -1511,7 +1564,7 @@
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(sheetData);
       ws['!cols'] = [
-        { wch: 4 }, { wch: 28 }, { wch: 18 },
+        { wch: 4 }, { wch: 32 }, { wch: 18 },
         ...days.map(() => ({ wch: 7 })),
         { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 15 }
       ];
@@ -2053,6 +2106,7 @@
         </div>
       `).join('');
 
+      applyStudentsListCollapseUI();
       lucide.createIcons();
     }
 
