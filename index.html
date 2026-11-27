@@ -77,7 +77,7 @@
         <div class="min-w-0">
           <div class="flex items-center gap-2 flex-wrap">
             <h1 id="headerGroupName" class="font-bold text-sm sm:text-base leading-tight text-slate-900 truncate">ТЛ-26008</h1>
-            <span id="headerGroupCode" class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">TL-26008</span>
+            <span id="headerGroupCode" class="hidden text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">TL-26008</span>
           </div>
           <p id="headerAccountInfo" class="text-xs text-slate-500 font-medium truncate">Акаунт: Гість</p>
         </div>
@@ -113,7 +113,7 @@
     </div>
   </header>
 
-  <!-- АКТИВНІ УЧАСНИКИ НА САЙТІ -->
+  <!-- АКТИВНІ УЧАСНИКИ ТА СПИСОК ВІДМІТОК З РОЗКЛАДУ -->
   <div class="max-w-7xl w-full mx-auto px-3 sm:px-6 pt-3 space-y-2">
     <div id="activeUsersBar" class="bg-white px-3.5 py-2.5 rounded-xl border border-slate-200 shadow-2xs flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2 flex-wrap">
@@ -125,14 +125,20 @@
           <span class="text-slate-400">Оновлення...</span>
         </div>
       </div>
-      <span class="text-[11px] text-slate-400">Автосинхронізація з «Розкладом» (2 сек)</span>
+      <div class="flex items-center gap-2">
+        <button id="openIncomingMarksBtn" onclick="openIncomingMarksModal()" class="hidden items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-xs font-bold transition">
+          <i data-lucide="list-checks" class="w-3.5 h-3.5"></i>
+          <span>Отримані відмітки (<span id="pendingMarksBadge">0</span>)</span>
+        </button>
+        <span class="text-[11px] text-slate-400">Автосинхронізація з «Розкладом» (2 сек)</span>
+      </div>
     </div>
 
-    <!-- Сповіщення про нові відмітки з «Розкладу» -->
+    <!-- Сповіщення про вхідні відмітки з «Розкладу» -->
     <div id="syncAlertBanner" class="hidden bg-indigo-50 border border-indigo-200 text-indigo-950 px-4 py-2.5 rounded-xl text-xs flex flex-wrap items-center justify-between gap-2">
       <span id="syncAlertText" class="font-medium"></span>
       <div class="flex items-center gap-2">
-        <button id="syncAlertJumpBtn" type="button" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition">Перейти до відмітки</button>
+        <button id="syncAlertJumpBtn" type="button" onclick="openIncomingMarksModal()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition">Відкрити список відміток</button>
         <button type="button" onclick="document.getElementById('syncAlertBanner').classList.add('hidden')" class="px-2 py-1 text-indigo-600 hover:underline font-semibold">Сховати</button>
       </div>
     </div>
@@ -320,7 +326,7 @@
       </div>
     </section>
 
-    <!-- ВКЛАДКА 3: ГРУПА, РОЛІ ТА АКАУНТИ -->
+    <!-- ВКЛАДКА 3: ГРУПА, РОЛІ ТА АКАУНТИ (ТІЛЬКИ ДЛЯ АВТОРИЗОВАНИХ) -->
     <section id="view-manage" class="hidden space-y-5">
 
       <!-- НАЗВА ГРУПИ ТА РОЛЬ -->
@@ -330,7 +336,7 @@
             <h2 class="text-base font-bold text-slate-900">Управління групою та доступом</h2>
             <span id="manageRoleBadge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700">Гість</span>
           </div>
-          <p id="manageOwnerInfo" class="text-xs text-slate-500">Активний акаунт: Гість • Група: ТЛ-26008 (TL-26008)</p>
+          <p id="manageOwnerInfo" class="text-xs text-slate-500">Активний акаунт: Гість</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
@@ -461,6 +467,33 @@
 
   </main>
 
+  <!-- МОДАЛЬНЕ ВІКНО: СПИСОК ВІДМІТОК З «РОЗКЛАДУ» -->
+  <div id="incomingMarksModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-3 sm:p-4" onclick="closeIncomingMarksModal(event)">
+    <div class="bg-white rounded-2xl max-w-xl w-full max-h-[85vh] flex flex-col shadow-xl modal-animate" onclick="event.stopPropagation()">
+      <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between gap-2">
+        <div>
+          <h3 class="font-bold text-base text-slate-900">Отримані відмітки з «Розкладу»</h3>
+          <p class="text-xs text-slate-500">Натисніть «Додати все», щоб перенести всі відмітки до журналу одним натисканням.</p>
+        </div>
+        <button onclick="closeIncomingMarksModal()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div id="incomingMarksList" class="flex-1 overflow-y-auto p-4 divide-y divide-slate-100"></div>
+
+      <div class="p-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+        <button type="button" onclick="clearPendingMarks()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">
+          Очистити список
+        </button>
+        <button type="button" onclick="applyAllPendingMarks()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-sm transition flex items-center gap-1.5">
+          <i data-lucide="check-check" class="w-4 h-4"></i>
+          <span>Додати все</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- МОДАЛЬНЕ ВІКНО: СТАТУС КЛІТИНКИ -->
   <div id="statusModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" onclick="closeStatusModal(event)">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl modal-animate" onclick="event.stopPropagation()">
@@ -561,6 +594,10 @@
         </button>
       </div>
 
+      <p class="text-xs text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-200">
+        Увійдіть у свій акаунт для редагування та керування. Без входу доступний лише перегляд.
+      </p>
+
       <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-3">
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Логін</label>
@@ -633,6 +670,8 @@
     let syncCode = 'TL-26008';
     let lastCreatedCredentialsText = '';
     let processedIncomingIds = new Set();
+    let pendingIncomingMarks = [];
+    let lastAlertedSignature = '';
 
     let appState = {
       groupName: 'ТЛ-26008',
@@ -662,6 +701,15 @@
     function getActiveRole() {
       if (!currentAccount) return 'Гість';
       return currentAccount.role || 'Студент';
+    }
+
+    function isAuthorizedUser() {
+      return Boolean(currentAccount);
+    }
+
+    function canSeeAdminTools() {
+      return Boolean(currentAccount) &&
+        ['Головний адміністратор', 'Староста', 'Замстарости'].includes(getActiveRole());
     }
 
     function isMainAdmin() {
@@ -932,7 +980,7 @@
       } catch (_) {}
     }
 
-    // ==================== СИНХРОНІЗАЦІЯ ПРЕДМЕТІВ ТА ВІДМІТОК З «РОЗКЛАДУ» ====================
+    // ==================== СИНХРОНІЗАЦІЯ ПРЕДМЕТІВ ТА СПИСОК ВІДМІТОК З «РОЗКЛАДУ» ====================
     async function syncSubjectsFromSchedule() {
       try {
         const res = await fetch(`${SCHEDULE_DB_URL}/portalData.json`);
@@ -958,7 +1006,6 @@
         const nextSubjects = [];
         const seenNext = new Set();
 
-        // Зберігаємо лише ті предмети, які є в розкладі (а якщо розклад порожній — лишаємо базовий)
         appState.subjects.forEach(sub => {
           const key = String(sub).toLowerCase().trim();
           if (scheduleSet.has(key) && !seenNext.has(key)) {
@@ -996,25 +1043,106 @@
       }
     }
 
-    function showSyncAlert(message, targetMonth, targetSubject, targetPair) {
+    function updatePendingMarksUI() {
+      const btn = document.getElementById('openIncomingMarksBtn');
+      const badge = document.getElementById('pendingMarksBadge');
       const banner = document.getElementById('syncAlertBanner');
       const textEl = document.getElementById('syncAlertText');
-      const jumpBtn = document.getElementById('syncAlertJumpBtn');
 
-      textEl.textContent = message;
-      jumpBtn.onclick = () => {
-        if (targetMonth) document.getElementById('monthPicker').value = targetMonth.slice(0, 7);
-        if (targetSubject) {
-          const resolvedSub = ensureSubjectExists(targetSubject);
-          const sel = document.getElementById('journalSubjectSelect');
-          sel.value = resolvedSub;
-        }
-        if (targetPair) document.getElementById('journalPairSelect').value = String(targetPair);
-        switchTab('journal');
-        renderJournal();
+      if (!canEditJournal() || !pendingIncomingMarks.length) {
+        btn.classList.add('hidden');
+        btn.classList.remove('inline-flex');
         banner.classList.add('hidden');
-      };
-      banner.classList.remove('hidden');
+        return;
+      }
+
+      badge.textContent = pendingIncomingMarks.length;
+      btn.classList.remove('hidden');
+      btn.classList.add('inline-flex');
+
+      const sig = pendingIncomingMarks.map(m => m.recordId).join(',');
+      if (sig && sig !== lastAlertedSignature) {
+        lastAlertedSignature = sig;
+        const first = pendingIncomingMarks[0];
+        textEl.textContent = pendingIncomingMarks.length === 1
+          ? `Отримано відмітку з «Розкладу»: ${first.studentName} (${first.subject}, ${first.pair}-ша пара, ${first.dateStr})`
+          : `Отримано відміток з «Розкладу»: ${pendingIncomingMarks.length} (наприклад, ${first.studentName} — ${first.subject})`;
+        banner.classList.remove('hidden');
+      }
+    }
+
+    function openIncomingMarksModal() {
+      if (!canEditJournal()) {
+        alert('Додавати відмітки може лише авторизований користувач з правами журналу.');
+        return;
+      }
+      renderIncomingMarksModalList();
+      document.getElementById('incomingMarksModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeIncomingMarksModal(e) {
+      if (e && e.target !== e.currentTarget) return;
+      document.getElementById('incomingMarksModal').classList.add('hidden');
+    }
+
+    function renderIncomingMarksModalList() {
+      const container = document.getElementById('incomingMarksList');
+      if (!pendingIncomingMarks.length) {
+        container.innerHTML = `<p class="text-xs text-slate-400 py-6 text-center">Немає нових відміток для додавання.</p>`;
+        return;
+      }
+
+      container.innerHTML = pendingIncomingMarks.map((m, idx) => `
+        <div class="py-3 flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <div class="text-sm font-bold text-slate-900 truncate">${escapeHtml(m.studentName)}</div>
+            <div class="text-xs text-slate-500">${escapeHtml(m.subject)} • ${escapeHtml(String(m.pair))}-ша пара • ${escapeHtml(m.dateStr)}</div>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-xs font-bold">${escapeHtml(m.status)}</span>
+            <button type="button" onclick="applySinglePendingMark(${idx})" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition">Додати</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function applySinglePendingMark(index) {
+      const item = pendingIncomingMarks[index];
+      if (!item) return;
+      const resolvedSub = ensureSubjectExists(item.subject);
+      const attKey = `${item.dateStr}|${resolvedSub}|${item.pair}|${item.studentId}`;
+      appState.attendance[attKey] = item.status || '✓';
+      pendingIncomingMarks.splice(index, 1);
+      await saveData();
+      renderJournal();
+      updatePendingMarksUI();
+      renderIncomingMarksModalList();
+    }
+
+    async function applyAllPendingMarks() {
+      if (!pendingIncomingMarks.length) return;
+      let applied = 0;
+      for (const item of pendingIncomingMarks) {
+        const resolvedSub = ensureSubjectExists(item.subject);
+        const attKey = `${item.dateStr}|${resolvedSub}|${item.pair}|${item.studentId}`;
+        appState.attendance[attKey] = item.status || '✓';
+        applied++;
+      }
+      pendingIncomingMarks = [];
+      await saveData();
+      renderJournal();
+      updatePendingMarksUI();
+      closeIncomingMarksModal();
+      if (applied > 0) {
+        alert(`Додано відміток у журнал: ${applied}`);
+      }
+    }
+
+    function clearPendingMarks() {
+      pendingIncomingMarks = [];
+      updatePendingMarksUI();
+      renderIncomingMarksModalList();
     }
 
     async function pollScheduleAttendanceSync() {
@@ -1024,15 +1152,15 @@
         const incomingObj = await res.json();
         if (!incomingObj || typeof incomingObj !== 'object') {
           if (subjectsChanged) await saveData();
+          updatePendingMarksUI();
           return;
         }
 
-        let changed = subjectsChanged;
-        let newlyAppliedInfo = null;
+        let addedToQueue = false;
 
         for (const [key, item] of Object.entries(incomingObj)) {
           if (!item || typeof item !== 'object') continue;
-          const recordId = item.id || key;
+          const recordId = String(item.id || key);
           if (processedIncomingIds.has(recordId)) continue;
 
           if (item.token !== JOURNAL_SYNC_TOKEN) {
@@ -1049,15 +1177,18 @@
             const pair = String((typeof item.lessonIndex === 'number' ? item.lessonIndex + 1 : item.lessonIndex) || 1);
             const attKey = `${dateStr}|${subject}|${pair}|${matchResult.student.id}`;
 
-            if (!appState.attendance[attKey]) {
-              appState.attendance[attKey] = '✓';
-              changed = true;
-              newlyAppliedInfo = {
+            if (!appState.attendance[attKey] && !pendingIncomingMarks.some(p => p.attKey === attKey)) {
+              pendingIncomingMarks.push({
+                recordId,
+                attKey,
+                studentId: matchResult.student.id,
                 studentName: matchResult.student.name,
                 dateStr,
                 subject,
-                pair
-              };
+                pair,
+                status: '✓'
+              });
+              addedToQueue = true;
             }
             processedIncomingIds.add(recordId);
           } else if (matchResult.status === 'ambiguous') {
@@ -1076,28 +1207,11 @@
           }
         }
 
-        if (changed) {
+        if (subjectsChanged) {
           await saveData();
-          renderJournal();
         }
-
-        if (newlyAppliedInfo) {
-          const curSubject = document.getElementById('journalSubjectSelect')?.value;
-          const curPair = document.getElementById('journalPairSelect')?.value;
-          const curMonth = document.getElementById('monthPicker')?.value;
-
-          if (
-            curSubject !== newlyAppliedInfo.subject ||
-            curPair !== String(newlyAppliedInfo.pair) ||
-            curMonth !== newlyAppliedInfo.dateStr.slice(0, 7)
-          ) {
-            showSyncAlert(
-              `Отримано відмітку з «Розкладу»: ${newlyAppliedInfo.studentName} (${newlyAppliedInfo.subject}, ${newlyAppliedInfo.pair}-ша пара, ${newlyAppliedInfo.dateStr})`,
-              newlyAppliedInfo.dateStr,
-              newlyAppliedInfo.subject,
-              newlyAppliedInfo.pair
-            );
-          }
+        if (addedToQueue) {
+          updatePendingMarksUI();
         }
       } catch (_) {}
     }
@@ -1167,6 +1281,10 @@
       await pollScheduleAttendanceSync();
       await refreshActiveUsersPresence();
 
+      if (!currentAccount) {
+        openAuthModal();
+      }
+
       setInterval(pollScheduleAttendanceSync, 2000);
       setInterval(refreshActiveUsersPresence, 8000);
       lucide.createIcons();
@@ -1231,6 +1349,7 @@
     }
 
     async function saveData() {
+      if (!canEditJournal()) return;
       appState.updatedAt = Date.now();
       appState.ownerName = MAIN_ADMIN_ACCOUNT.fullName;
       localStorage.setItem(`starosta_data_${syncCode}`, JSON.stringify(appState));
@@ -1428,8 +1547,10 @@
       currentAccount = null;
       sessionStorage.removeItem(SESSION_STORAGE_KEY);
       closeProfileModal();
+      switchTab('journal');
       refreshAllUI();
       await refreshActiveUsersPresence();
+      openAuthModal();
     }
 
     function openProfileModal() {
@@ -1450,7 +1571,7 @@
           </div>
           <div class="flex justify-between items-center gap-2">
             <span class="text-slate-500 text-xs">Група:</span>
-            <span class="font-bold text-slate-900">${escapeHtml(groupName)} (${escapeHtml(syncCode)})</span>
+            <span class="font-bold text-slate-900">${escapeHtml(groupName)}</span>
           </div>
           <div class="flex justify-between items-center gap-2">
             <span class="text-slate-500 text-xs">Роль:</span>
@@ -1534,7 +1655,7 @@
       await saveData();
 
       lastCreatedCredentialsText =
-        `ПІБ: ${fullName}\nРоль: ${role}\nГрупа: ${appState.groupName} (${syncCode})\nЛогін: ${username}\nПароль: ${password}`;
+        `ПІБ: ${fullName}\nРоль: ${role}\nГрупа: ${appState.groupName}\nЛогін: ${username}\nПароль: ${password}`;
 
       document.getElementById('createdAccSummaryText').innerHTML =
         `<b>ПІБ:</b> ${escapeHtml(fullName)} • <b>Роль:</b> ${escapeHtml(role)} • <b>Група:</b> ${escapeHtml(appState.groupName)}<br>` +
@@ -1593,18 +1714,25 @@
 
     function refreshAllUI() {
       document.getElementById('headerGroupName').textContent = appState.groupName || 'ТЛ-26008';
-      document.getElementById('headerGroupCode').textContent = syncCode;
       document.getElementById('groupNameInput').value = appState.groupName || '';
+
+      const authorized = isAuthorizedUser();
+      const manageTabBtn = document.getElementById('tab-manage');
+      manageTabBtn.classList.toggle('hidden', !authorized);
+
+      if (!authorized && !document.getElementById('view-manage').classList.contains('hidden')) {
+        switchTab('journal');
+      }
 
       const role = getActiveRole();
       if (currentAccount) {
         document.getElementById('headerAccountInfo').textContent = `${currentAccount.fullName} • ${role}`;
         document.getElementById('accountBtnLabel').textContent = currentAccount.fullName;
-        document.getElementById('manageOwnerInfo').textContent = `Активний акаунт: ${currentAccount.fullName} (${currentAccount.username}) • Група: ${appState.groupName} (${syncCode})`;
+        document.getElementById('manageOwnerInfo').textContent = `Активний акаунт: ${currentAccount.fullName} (${currentAccount.username}) • ${appState.groupName}`;
       } else {
-        document.getElementById('headerAccountInfo').textContent = `Акаунт: Гість • Група: ${appState.groupName}`;
+        document.getElementById('headerAccountInfo').textContent = `Акаунт: Гість (режим перегляду)`;
         document.getElementById('accountBtnLabel').textContent = 'Увійти';
-        document.getElementById('manageOwnerInfo').textContent = `Акаунт: Гість (натисніть «Увійти» для входу в акаунт) • Група: ${appState.groupName} (${syncCode})`;
+        document.getElementById('manageOwnerInfo').textContent = `Акаунт: Гість`;
       }
 
       const roleBadge = document.getElementById('manageRoleBadge');
@@ -1617,10 +1745,16 @@
       renderManageLists();
       generateHwPreview();
       renderSavedHomeworks();
+      updatePendingMarksUI();
       lucide.createIcons();
     }
 
     function switchTab(tabName) {
+      if (tabName === 'manage' && !isAuthorizedUser()) {
+        openAuthModal();
+        return;
+      }
+
       ['journal', 'homework', 'manage'].forEach(name => {
         document.getElementById(`view-${name}`).classList.toggle('hidden', name !== tabName);
         const btn = document.getElementById(`tab-${name}`);
@@ -1783,7 +1917,7 @@
 
     function openStatusModal(studentId, dateStr, weekdayShort) {
       if (!canEditJournal()) {
-        alert(`Ваша роль (${getActiveRole()}) дозволяє лише перегляд журналу.`);
+        openAuthModal();
         return;
       }
       const student = appState.students.find(s => s.id === studentId);
@@ -1804,7 +1938,7 @@
     }
 
     function setCellStatus(statusValue) {
-      if (!activeCellContext) return;
+      if (!activeCellContext || !canEditJournal()) return;
       const { studentId, dateStr, subject, pair } = activeCellContext;
       const key = `${dateStr}|${subject}|${pair}|${studentId}`;
 
@@ -1821,7 +1955,7 @@
 
     function openQuickRollCall() {
       if (!canEditJournal()) {
-        alert(`Ваша роль (${getActiveRole()}) дозволяє лише перегляд журналу.`);
+        openAuthModal();
         return;
       }
       if (!appState.students.length) {
@@ -1885,6 +2019,7 @@
     }
 
     function setRollCallStudent(studentId, status) {
+      if (!canEditJournal()) return;
       const dateStr = document.getElementById('rollCallDaySelect').value;
       const subject = document.getElementById('journalSubjectSelect').value;
       const pair = document.getElementById('journalPairSelect').value;
@@ -1900,6 +2035,7 @@
     }
 
     function markAllPresentInRollCall() {
+      if (!canEditJournal()) return;
       const dateStr = document.getElementById('rollCallDaySelect').value;
       const subject = document.getElementById('journalSubjectSelect').value;
       const pair = document.getElementById('journalPairSelect').value;
@@ -1928,7 +2064,7 @@
       const days = getDaysInMonth(monthVal);
 
       const sheetData = [
-        [`Журнал відвідування групи: ${appState.groupName} (${syncCode})`],
+        [`Журнал відвідування групи: ${appState.groupName}`],
         [`Предмет: ${subject} | Пара: ${pair}-ша | Період: ${monthName} ${year}`],
         [],
         ['№', 'Прізвище та Ім\'я', 'Роль', ...days.map(d => `${d.day} (${d.weekdayShort})`), 'Присутній (✓)', 'Пропуски (Н)', 'Поважна (ПП)', 'Хвороба (ХВ)', 'Звільнений (ЗВ)']
@@ -2123,7 +2259,7 @@
 
     function saveHomeworkToArchive() {
       if (!canEditJournal()) {
-        alert(`Ваша роль (${getActiveRole()}) дозволяє лише перегляд.`);
+        openAuthModal();
         return;
       }
       const subject = document.getElementById('hwSubject').value;
@@ -2398,6 +2534,7 @@
     }
 
     function sortStudentsAlpha() {
+      if (!canEditJournal()) return;
       appState.students.sort((a, b) => a.name.localeCompare(b.name, 'uk'));
       saveData();
       refreshAllUI();
@@ -2448,6 +2585,8 @@
     }
 
     function renderManageLists() {
+      if (!isAuthorizedUser()) return;
+
       document.getElementById('studentsCountBadge').textContent = appState.students.length;
       document.getElementById('subjectsCountBadge').textContent = appState.subjects.length;
 
@@ -2497,11 +2636,11 @@
     }
 
     function downloadBackupJson() {
-      const payload = { account: currentAccount, groupCode: syncCode, state: sanitizeStateForSync(appState) };
+      const payload = { account: currentAccount, state: sanitizeStateForSync(appState) };
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
       const dlAnchor = document.createElement('a');
       dlAnchor.setAttribute("href", dataStr);
-      dlAnchor.setAttribute("download", `Журнал_${appState.groupName}_${syncCode}.json`);
+      dlAnchor.setAttribute("download", `Журнал_${appState.groupName}.json`);
       document.body.appendChild(dlAnchor);
       dlAnchor.click();
       dlAnchor.remove();
