@@ -84,7 +84,7 @@
       </div>
 
       <div class="flex items-center gap-2 flex-wrap">
-        <button onclick="pullFromFirebase(false)" id="syncIndicator" class="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition" title="Оновити синхронізацію">
+        <button onclick="forceFullSync()" id="syncIndicator" class="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition" title="Оновити синхронізацію">
           <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
           <span id="syncStatusText">Синхронізація</span>
         </button>
@@ -114,7 +114,7 @@
   </header>
 
   <!-- АКТИВНІ УЧАСНИКИ НА САЙТІ -->
-  <div class="max-w-7xl w-full mx-auto px-3 sm:px-6 pt-3">
+  <div class="max-w-7xl w-full mx-auto px-3 sm:px-6 pt-3 space-y-2">
     <div id="activeUsersBar" class="bg-white px-3.5 py-2.5 rounded-xl border border-slate-200 shadow-2xs flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2 flex-wrap">
         <span class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700">
@@ -125,7 +125,16 @@
           <span class="text-slate-400">Оновлення...</span>
         </div>
       </div>
-      <span class="text-[11px] text-slate-400">Синхронізація з «Розкладом» активна</span>
+      <span class="text-[11px] text-slate-400">Автосинхронізація з «Розкладом» (2 сек)</span>
+    </div>
+
+    <!-- Сповіщення про нові відмітки з «Розкладу» -->
+    <div id="syncAlertBanner" class="hidden bg-indigo-50 border border-indigo-200 text-indigo-950 px-4 py-2.5 rounded-xl text-xs flex flex-wrap items-center justify-between gap-2">
+      <span id="syncAlertText" class="font-medium"></span>
+      <div class="flex items-center gap-2">
+        <button id="syncAlertJumpBtn" type="button" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition">Перейти до відмітки</button>
+        <button type="button" onclick="document.getElementById('syncAlertBanner').classList.add('hidden')" class="px-2 py-1 text-indigo-600 hover:underline font-semibold">Сховати</button>
+      </div>
     </div>
   </div>
 
@@ -438,7 +447,7 @@
 
           <form onsubmit="addSubject(event)" class="flex gap-2">
             <input type="text" id="newSubjectName" required placeholder="Назва предмета..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition flex items-center gap-1 shrink-0">
+            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition flex items-center justify-center gap-1 shrink-0">
               <i data-lucide="plus" class="w-4 h-4"></i>
               <span>Додати</span>
             </button>
@@ -751,7 +760,7 @@
       if (!t1 || !t2) return 0;
       if (t1 === t2) return 1;
       if ((t1.length >= 2 && t2.startsWith(t1)) || (t2.length >= 2 && t1.startsWith(t2))) {
-        return 0.86;
+        return 0.88;
       }
       const maxLen = Math.max(t1.length, t2.length);
       const dist = levenshteinDistance(t1, t2);
@@ -767,7 +776,6 @@
       const qTokens = qNorm.split(' ').filter(Boolean);
       const sTokens = sNorm.split(' ').filter(Boolean);
 
-      // Перевірка незалежно від порядку слів («Іван Петренко» / «Петренко Іван») та скорочень
       const pairScores = qTokens.map(qt => {
         let best = 0;
         for (const st of sTokens) {
@@ -780,9 +788,9 @@
 
       const maxLen = Math.max(qNorm.length, sNorm.length);
       const fullSim = Math.max(0, 1 - levenshteinDistance(qNorm, sNorm) / maxLen);
-
       const includesBonus = (sNorm.includes(qNorm) || qNorm.includes(sNorm)) ? 0.12 : 0;
-      return Math.min(1, avgTokenScore * 0.65 + fullSim * 0.35 + includesBonus);
+
+      return Math.min(1, avgTokenScore * 0.72 + fullSim * 0.28 + includesBonus);
     }
 
     function findStudentSmart(queryName, selectedStudentId = null) {
@@ -793,7 +801,7 @@
 
       const scored = appState.students
         .map(st => ({ student: st, score: scoreStudentMatch(queryName, st.name) }))
-        .filter(item => item.score >= 0.52)
+        .filter(item => item.score >= 0.5)
         .sort((a, b) => b.score - a.score);
 
       if (!scored.length) {
@@ -802,10 +810,10 @@
 
       const top = scored[0];
       const closeAlternatives = scored.filter(
-        item => item.student.id !== top.student.id && (top.score - item.score) <= 0.14
+        item => item.student.id !== top.student.id && (top.score - item.score) <= 0.1
       );
 
-      if (top.score >= 0.85 && closeAlternatives.length === 0) {
+      if (top.score >= 0.74 && closeAlternatives.length === 0) {
         return { status: 'matched', student: top.student, candidates: scored.slice(0, 4).map(x => x.student) };
       }
 
@@ -834,21 +842,43 @@
       return bestScore >= 0.55 ? best : (appState.subjects[0] || incomingSubject);
     }
 
-    // ==================== АКТИВНІ УЧАСНИКИ НА САЙТІ ====================
+    // ==================== АКТИВНІ УЧАСНИКИ НА САЙТІ (БЕЗ ДУБЛІВ ПРИ ОНОВЛЕННІ) ====================
+    function getPresenceIdentityKey() {
+      if (currentAccount && currentAccount.username) {
+        return 'acc_' + currentAccount.username.toLowerCase().trim();
+      }
+      if (currentAccount && currentAccount.fullName) {
+        return 'name_' + normalizeForMatch(currentAccount.fullName);
+      }
+      return 'guest_' + PRESENCE_SESSION_ID;
+    }
+
     async function sendPresenceHeartbeat() {
       const displayName = currentAccount
         ? `${currentAccount.fullName} (${getActiveRole()})`
         : 'Гість';
+      const identityKey = getPresenceIdentityKey();
       try {
-        await fetch(`${SCHEDULE_DB_URL}/journalPresence/${PRESENCE_SESSION_ID}.json`, {
+        await fetch(`${SCHEDULE_DB_URL}/journalPresence/${encodeURIComponent(identityKey)}.json`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            identityKey,
             sessionId: PRESENCE_SESSION_ID,
             name: displayName,
             role: getActiveRole(),
             lastSeen: Date.now()
           })
+        });
+      } catch (_) {}
+    }
+
+    async function removeMyPresence() {
+      const identityKey = getPresenceIdentityKey();
+      try {
+        await fetch(`${SCHEDULE_DB_URL}/journalPresence/${encodeURIComponent(identityKey)}.json`, {
+          method: 'DELETE',
+          keepalive: true
         });
       } catch (_) {}
     }
@@ -859,9 +889,21 @@
         const res = await fetch(`${SCHEDULE_DB_URL}/journalPresence.json`);
         const data = await res.json() || {};
         const now = Date.now();
-        const activeList = Object.values(data)
-          .filter(item => item && item.name && (now - (item.lastSeen || 0)) <= 45000)
-          .sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0));
+        const myKey = getPresenceIdentityKey();
+
+        // Дедуплікація по нормалізованому імені та ключу користувача (лишаємо найсвіжіший запис)
+        const dedupMap = new Map();
+        for (const [key, item] of Object.entries(data)) {
+          if (!item || !item.name || (now - (item.lastSeen || 0)) > 20000) continue;
+          const cleanNameKey = normalizeForMatch(String(item.name).replace(/\(.*?\)/g, ''));
+          const dedupKey = cleanNameKey || item.identityKey || key;
+          const prev = dedupMap.get(dedupKey);
+          if (!prev || (item.lastSeen || 0) > (prev.lastSeen || 0)) {
+            dedupMap.set(dedupKey, { ...item, _key: key, _dedupKey: dedupKey });
+          }
+        }
+
+        const activeList = Array.from(dedupMap.values()).sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0));
 
         document.getElementById('activeUsersCount').textContent = activeList.length;
         const chipsEl = document.getElementById('activeUsersChips');
@@ -869,7 +911,7 @@
           chipsEl.innerHTML = `<span class="text-slate-400">Немає активних користувачів</span>`;
         } else {
           chipsEl.innerHTML = activeList.map(u => {
-            const isMe = u.sessionId === PRESENCE_SESSION_ID;
+            const isMe = u.identityKey === myKey || u.sessionId === PRESENCE_SESSION_ID;
             return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${
               isMe
                 ? 'bg-indigo-50 text-indigo-800 border-indigo-200 font-semibold'
@@ -880,20 +922,76 @@
       } catch (_) {}
     }
 
-    // ==================== ПРИЙОМ ВІДМІТОК З САЙТУ 1 («РОЗКЛАД») ====================
+    // ==================== СИНХРОНІЗАЦІЯ ПРЕДМЕТІВ ТА ВІДМІТОК З «РОЗКЛАДУ» ====================
+    async function syncSubjectsFromSchedule() {
+      try {
+        const res = await fetch(`${SCHEDULE_DB_URL}/portalData.json`);
+        const portalData = await res.json();
+        if (!portalData || !portalData.schedule) return false;
+
+        let subjectsAdded = false;
+        const existingSet = new Set(appState.subjects.map(s => s.toLowerCase().trim()));
+
+        Object.values(portalData.schedule).forEach(dayLessons => {
+          (dayLessons || []).forEach(lesson => {
+            if (lesson && lesson.name) {
+              const cleanSub = String(lesson.name).trim();
+              if (cleanSub && !existingSet.has(cleanSub.toLowerCase())) {
+                existingSet.add(cleanSub.toLowerCase());
+                appState.subjects.push(cleanSub);
+                subjectsAdded = true;
+              }
+            }
+          });
+        });
+
+        if (subjectsAdded) {
+          populateSubjectSelects();
+          await saveData();
+        }
+        return subjectsAdded;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function showSyncAlert(message, targetMonth, targetSubject, targetPair) {
+      const banner = document.getElementById('syncAlertBanner');
+      const textEl = document.getElementById('syncAlertText');
+      const jumpBtn = document.getElementById('syncAlertJumpBtn');
+
+      textEl.textContent = message;
+      jumpBtn.onclick = () => {
+        if (targetMonth) document.getElementById('monthPicker').value = targetMonth.slice(0, 7);
+        if (targetSubject) {
+          const sel = document.getElementById('journalSubjectSelect');
+          if (Array.from(sel.options).some(o => o.value === targetSubject)) {
+            sel.value = targetSubject;
+          }
+        }
+        if (targetPair) document.getElementById('journalPairSelect').value = String(targetPair);
+        switchTab('journal');
+        renderJournal();
+        banner.classList.add('hidden');
+      };
+      banner.classList.remove('hidden');
+    }
+
     async function pollScheduleAttendanceSync() {
+      await syncSubjectsFromSchedule();
       try {
         const res = await fetch(`${SCHEDULE_DB_URL}/journalSync/incoming.json`);
         const incomingObj = await res.json();
         if (!incomingObj || typeof incomingObj !== 'object') return;
 
         let changed = false;
+        let lastMatchedInfo = null;
+
         for (const [key, item] of Object.entries(incomingObj)) {
           if (!item || typeof item !== 'object') continue;
           const recordId = item.id || key;
           if (processedIncomingIds.has(recordId)) continue;
 
-          // Захист за ключем/токеном
           if (item.token !== JOURNAL_SYNC_TOKEN) {
             processedIncomingIds.add(recordId);
             continue;
@@ -908,14 +1006,18 @@
             const pair = String((typeof item.lessonIndex === 'number' ? item.lessonIndex + 1 : item.lessonIndex) || 1);
             const attKey = `${dateStr}|${subject}|${pair}|${matchResult.student.id}`;
 
-            // Захист від дублів: не перезаписуємо існуючу відмітку і не плодимо дублікати
             if (!appState.attendance[attKey]) {
               appState.attendance[attKey] = '✓';
               changed = true;
             }
+            lastMatchedInfo = {
+              studentName: matchResult.student.name,
+              dateStr,
+              subject,
+              pair
+            };
             processedIncomingIds.add(recordId);
           } else if (matchResult.status === 'ambiguous') {
-            // Записуємо статус для ручної перевірки/уточнення та публікуємо кандидатів
             await fetch(`${SCHEDULE_DB_URL}/journalSync/ambiguous/${recordId}.json`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
@@ -935,8 +1037,37 @@
           await saveData();
           renderJournal();
         }
+
+        if (lastMatchedInfo) {
+          const curSubject = document.getElementById('journalSubjectSelect')?.value;
+          const curPair = document.getElementById('journalPairSelect')?.value;
+          const curMonth = document.getElementById('monthPicker')?.value;
+
+          if (
+            curSubject !== lastMatchedInfo.subject ||
+            curPair !== String(lastMatchedInfo.pair) ||
+            curMonth !== lastMatchedInfo.dateStr.slice(0, 7)
+          ) {
+            showSyncAlert(
+              `Отримано відмітку з «Розкладу»: ${lastMatchedInfo.studentName} (${lastMatchedInfo.subject}, ${lastMatchedInfo.pair}-ша пара, ${lastMatchedInfo.dateStr})`,
+              lastMatchedInfo.dateStr,
+              lastMatchedInfo.subject,
+              lastMatchedInfo.pair
+            );
+          }
+        }
       } catch (_) {}
     }
+
+    async function forceFullSync() {
+      await pullFromFirebase(false);
+      await pollScheduleAttendanceSync();
+      await refreshActiveUsersPresence();
+    }
+
+    window.addEventListener('beforeunload', () => {
+      removeMyPresence();
+    });
 
     document.addEventListener('DOMContentLoaded', async () => {
       localStorage.removeItem('starosta_active_account');
@@ -993,8 +1124,8 @@
       await pollScheduleAttendanceSync();
       await refreshActiveUsersPresence();
 
-      setInterval(pollScheduleAttendanceSync, 5000);
-      setInterval(refreshActiveUsersPresence, 15000);
+      setInterval(pollScheduleAttendanceSync, 2000);
+      setInterval(refreshActiveUsersPresence, 8000);
       lucide.createIcons();
     });
 
@@ -1245,6 +1376,7 @@
     }
 
     async function logoutAccount() {
+      await removeMyPresence();
       currentAccount = null;
       sessionStorage.removeItem(SESSION_STORAGE_KEY);
       closeProfileModal();
