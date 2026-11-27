@@ -70,7 +70,6 @@
         <div class="min-w-0">
           <div class="flex items-center gap-2 flex-wrap">
             <h1 id="headerGroupName" class="font-bold text-sm sm:text-base leading-tight text-slate-900 truncate">ТЛ-26008</h1>
-            <span id="headerGroupCode" class="hidden text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">TL-26008</span>
           </div>
           <p id="headerAccountInfo" class="text-xs text-slate-500 font-medium truncate">Акаунт: Гість</p>
         </div>
@@ -79,7 +78,7 @@
       <div class="flex items-center gap-2 flex-wrap">
         <button onclick="forceFullSync()" id="syncIndicator" class="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition" title="Оновити синхронізацію">
           <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
-          <span id="syncStatusText">Синхронізація</span>
+          <span id="syncStatusText">Синхронізовано</span>
         </button>
 
         <button onclick="handleAccountButtonClick()" class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition">
@@ -93,7 +92,11 @@
     <div class="max-w-7xl mx-auto px-3 sm:px-6 flex gap-1 overflow-x-auto border-t border-slate-100 bg-slate-50/70">
       <button onclick="switchTab('journal')" id="tab-journal" class="nav-tab flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap transition">
         <i data-lucide="calendar-days" class="w-4 h-4"></i>
-        <span>Журнал відвідування</span>
+        <span>Журнал та Історія</span>
+      </button>
+      <button onclick="switchTab('database')" id="tab-database" class="nav-tab flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-slate-900 whitespace-nowrap transition">
+        <i data-lucide="database" class="w-4 h-4"></i>
+        <span>База даних</span>
       </button>
       <button onclick="switchTab('homework')" id="tab-homework" class="nav-tab flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-slate-900 whitespace-nowrap transition">
         <i data-lucide="book-open-check" class="w-4 h-4"></i>
@@ -123,14 +126,14 @@
           <i data-lucide="list-checks" class="w-3.5 h-3.5"></i>
           <span>Отримані відмітки (<span id="pendingMarksBadge">0</span>)</span>
         </button>
-        <span class="text-[11px] text-slate-400">Автосинхронізація з «Розкладом»</span>
+        <span class="text-[11px] text-slate-400">Автосинхронізація активна</span>
       </div>
     </div>
 
     <div id="syncAlertBanner" class="hidden bg-indigo-50 border border-indigo-200 text-indigo-950 px-4 py-2.5 rounded-xl text-xs flex flex-wrap items-center justify-between gap-2">
       <span id="syncAlertText" class="font-medium"></span>
       <div class="flex items-center gap-2">
-        <button id="syncAlertJumpBtn" type="button" onclick="openIncomingMarksModal()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition">Відкрити список відміток</button>
+        <button type="button" onclick="openIncomingMarksModal()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition">Відкрити список відміток</button>
         <button type="button" onclick="document.getElementById('syncAlertBanner').classList.add('hidden')" class="px-2 py-1 text-indigo-600 hover:underline font-semibold">Сховати</button>
       </div>
     </div>
@@ -139,7 +142,7 @@
   <!-- ОСНОВНИЙ КОНТЕНТ -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4">
 
-    <!-- ВКЛАДКА 1: ЖУРНАЛ -->
+    <!-- ВКЛАДКА 1: ЖУРНАЛ ТА ІСТОРІЯ УРОКІВ -->
     <section id="view-journal" class="space-y-4">
       <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -186,7 +189,7 @@
             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-100 text-sky-800 font-bold">ХВ <span class="font-normal">Хвороба</span></span>
             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 font-bold">ЗВ <span class="font-normal">Звільнений</span></span>
           </div>
-          <span class="text-slate-400">Натисніть на клітинку для вибору статусу</span>
+          <span class="text-slate-400">Пари з «тест» у назві автоматично виключаються</span>
         </div>
       </div>
 
@@ -196,7 +199,7 @@
             <i data-lucide="user-plus" class="w-6 h-6"></i>
           </div>
           <h3 class="text-base font-semibold text-slate-800">Список групи порожній</h3>
-          <p class="text-sm text-slate-500 mt-1 mb-4">Завантажте файл або додайте людей до списку, щоб вести журнал.</p>
+          <p class="text-sm text-slate-500 mt-1 mb-4">Додайте людей до списку, щоб вести журнал.</p>
           <button onclick="switchTab('manage')" class="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition">
             Перейти до списку групи
           </button>
@@ -209,12 +212,82 @@
           </table>
         </div>
       </div>
+
+      <!-- ІСТОРІЯ ПРОВЕДЕНИХ УРОКІВ -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div>
+            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="history" class="w-5 h-5 text-indigo-600"></i>
+              <span>Історія уроків (<span id="lessonsHistoryCount">0</span>)</span>
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Усі проведені уроки зберігаються тут — навіть якщо курс згодом видалено (окрім тестових пар зі словом «тест»).</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="text" id="historyFilterInput" oninput="renderLessonHistory()" placeholder="Пошук уроку або дати..." class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+        </div>
+
+        <div id="lessonsHistoryList" class="divide-y divide-slate-100 max-h-[420px] overflow-y-auto"></div>
+      </div>
     </section>
 
-    <!-- ВКЛАДКА 2: ПІДГОТОВКА ДЗ -->
+    <!-- ВКЛАДКА 2: БАЗА ДАНИХ (ВКЛЮЧАЮЧИ ВИДАЛЕНІ ПАРИ/КУРСИ, КРІМ ТЕСТОВИХ) -->
+    <section id="view-database" class="hidden space-y-4">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          <div>
+            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="database" class="w-5 h-5 text-indigo-600"></i>
+              <span>База даних уроків та відвідуваності</span>
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Містить записи з усіх реальних уроків, включно з уже видаленими парами/курсами. Тестові пари («тест») відсутні.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="text" id="dbSearchInput" oninput="renderDatabaseTab()" placeholder="Фільтр за предметом, датою або студентом..." class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <div class="text-[11px] text-slate-500 font-medium">Усього уроків у базі</div>
+            <div id="dbStatLessons" class="text-lg font-bold text-slate-900">0</div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <div class="text-[11px] text-slate-500 font-medium">З видалених предметів</div>
+            <div id="dbStatDeletedSubjects" class="text-lg font-bold text-amber-700">0</div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <div class="text-[11px] text-slate-500 font-medium">Записів відміток</div>
+            <div id="dbStatMarks" class="text-lg font-bold text-indigo-700">0</div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <div class="text-[11px] text-slate-500 font-medium">Учасників у групі</div>
+            <div id="dbStatStudents" class="text-lg font-bold text-emerald-700">0</div>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead class="bg-slate-100 text-slate-700 border-b border-slate-200">
+              <tr>
+                <th class="py-2.5 px-3 font-bold">Дата</th>
+                <th class="py-2.5 px-3 font-bold">Пара</th>
+                <th class="py-2.5 px-3 font-bold">Предмет / Курс</th>
+                <th class="py-2.5 px-3 font-bold">Статус курсу</th>
+                <th class="py-2.5 px-3 font-bold">Присутні (✓)</th>
+                <th class="py-2.5 px-3 font-bold">Відсутні (Н)</th>
+              </tr>
+            </thead>
+            <tbody id="databaseRecordsTbody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ВКЛАДКА 3: ПІДГОТОВКА ДЗ -->
     <section id="view-homework" class="hidden space-y-5">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-
         <div class="lg:col-span-6 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -258,24 +331,6 @@
             </div>
           </div>
 
-          <div class="space-y-2">
-            <div class="flex items-center justify-between">
-              <label class="block text-xs font-semibold text-slate-600">Прикріпити фото або файли</label>
-              <button type="button" onclick="addManualAttachmentPrompt()" class="text-xs font-semibold text-indigo-600 hover:underline">+ Вписати назву вручну</button>
-            </div>
-
-            <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer bg-slate-50 hover:bg-indigo-50/40 hover:border-indigo-300 transition">
-              <div class="flex flex-col items-center justify-center pt-2 pb-2 text-center px-2">
-                <i data-lucide="paperclip" class="w-5 h-5 text-indigo-500 mb-1"></i>
-                <p class="text-xs text-slate-700 font-medium">Натисніть, щоб обрати фото або файли</p>
-                <p class="text-[11px] text-slate-400">Або натисніть Ctrl+V / Cmd+V, щоб вставити скріншот</p>
-              </div>
-              <input id="hwFilesInput" type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar" class="hidden" onchange="handleHwFiles(event)" />
-            </label>
-
-            <div id="hwAttachedList" class="flex flex-wrap gap-2"></div>
-          </div>
-
           <button onclick="saveHomeworkToArchive()" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2">
             <i data-lucide="bookmark-plus" class="w-4 h-4"></i>
             <span>Зберегти завдання в список</span>
@@ -299,10 +354,6 @@
                 <i data-lucide="copy" class="w-4 h-4"></i>
                 <span>Скопіювати шаблон</span>
               </button>
-              <button onclick="shareHwNative()" class="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2">
-                <i data-lucide="share-2" class="w-4 h-4"></i>
-                <span>Надіслати</span>
-              </button>
             </div>
           </div>
 
@@ -314,13 +365,11 @@
             <div id="savedHwList" class="space-y-2.5"></div>
           </div>
         </div>
-
       </div>
     </section>
 
-    <!-- ВКЛАДКА 3: ГРУПА, РОЛІ ТА АКАУНТИ -->
+    <!-- ВКЛАДКА 4: ГРУПА, РОЛІ ТА АКАУНТИ -->
     <section id="view-manage" class="hidden space-y-5">
-
       <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div class="space-y-1">
           <div class="flex items-center gap-2 flex-wrap">
@@ -353,27 +402,23 @@
             <label class="block text-xs font-semibold text-slate-600 mb-1">ПІБ людини</label>
             <input type="text" id="newAccFullName" required placeholder="Наприклад: Олена Коваль" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
           </div>
-
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Для кого створюєте (Роль)</label>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Роль</label>
             <select id="newAccRole" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              <option value="Староста">Для старости</option>
-              <option value="Замстарости">Для замстарости</option>
-              <option value="Помічник старости">Для помічника старости</option>
-              <option value="Студент">Для студента</option>
+              <option value="Староста">Староста</option>
+              <option value="Замстарости">Замстарости</option>
+              <option value="Помічник старости">Помічник старости</option>
+              <option value="Студент">Студент</option>
             </select>
           </div>
-
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Логін</label>
-            <input type="text" id="newAccUsername" required placeholder="Наприклад: starosta_tl" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <input type="text" id="newAccUsername" required placeholder="Логін" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500" />
           </div>
-
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Пароль</label>
-            <input type="text" id="newAccPassword" required minlength="4" placeholder="Придумайте пароль" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <input type="text" id="newAccPassword" required minlength="4" placeholder="Пароль" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500" />
           </div>
-
           <button type="submit" class="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 h-[38px]">
             <i data-lucide="user-plus" class="w-4 h-4"></i>
             <span>Створити акаунт</span>
@@ -382,12 +427,11 @@
 
         <div id="createdAccountCredentialsBox" class="hidden p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="space-y-1 text-xs text-emerald-950">
-            <div class="font-bold text-sm text-emerald-900">Акаунт створено — передайте ці дані користувачу:</div>
+            <div class="font-bold text-sm text-emerald-900">Акаунт створено:</div>
             <div id="createdAccSummaryText" class="font-mono text-xs leading-relaxed"></div>
           </div>
-          <button type="button" onclick="copyCreatedAccountCredentials()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition shrink-0 flex items-center gap-1.5">
-            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-            <span>Скопіювати дані</span>
+          <button type="button" onclick="copyCreatedAccountCredentials()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition shrink-0">
+            Скопіювати дані
           </button>
         </div>
 
@@ -405,13 +449,7 @@
               <span>Список групи та ролі (<span id="studentsCountBadge">0</span>)</span>
             </h2>
             <div class="flex flex-wrap gap-1.5">
-              <label class="px-2.5 py-1.5 text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg transition cursor-pointer flex items-center gap-1">
-                <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
-                <span>Завантажити файл</span>
-                <input type="file" id="rosterFileInput" accept=".xlsx,.xls,.csv,.txt" class="hidden" onchange="handleRosterFileUpload(event)" />
-              </label>
               <button onclick="sortStudentsAlpha()" class="px-2.5 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition">А-Я</button>
-              <button onclick="openBulkAddModal()" class="px-2.5 py-1.5 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition">+ Вставити текстом</button>
             </div>
           </div>
 
@@ -439,7 +477,7 @@
           </h2>
 
           <form onsubmit="addSubject(event)" class="flex gap-2">
-            <input type="text" id="newSubjectName" required placeholder="Назва предмета..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <input type="text" id="newSubjectName" required placeholder="Назва предмета (без «тест»)..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition flex items-center gap-1 shrink-0">
               <i data-lucide="plus" class="w-4 h-4"></i>
               <span>Додати</span>
@@ -465,13 +503,9 @@
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
-
       <div id="incomingMarksList" class="flex-1 overflow-y-auto p-4 divide-y divide-slate-100"></div>
-
       <div class="p-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
-        <button type="button" onclick="clearPendingMarks()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">
-          Очистити список
-        </button>
+        <button type="button" onclick="clearPendingMarks()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">Очистити</button>
         <button type="button" onclick="applyAllPendingMarks()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-sm transition flex items-center gap-1.5">
           <i data-lucide="check-check" class="w-4 h-4"></i>
           <span>Додати все</span>
@@ -489,7 +523,6 @@
         </button>
       </div>
       <p id="statusModalDetails" class="text-xs text-slate-500 mb-4"></p>
-
       <div class="grid grid-cols-1 gap-2">
         <button onclick="setCellStatus('✓')" class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 font-semibold text-sm transition">
           <span class="w-7 h-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold">✓</span> Присутній на парі
@@ -524,42 +557,16 @@
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
-
       <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-2">
           <label class="text-xs font-semibold text-slate-600">Число місяця:</label>
           <select id="rollCallDaySelect" onchange="renderRollCallList()" class="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-sm font-semibold"></select>
         </div>
-        <button onclick="markAllPresentInRollCall()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition">
-          ✓ Усі присутні
-        </button>
+        <button onclick="markAllPresentInRollCall()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition">✓ Усі присутні</button>
       </div>
-
       <div id="rollCallList" class="flex-1 overflow-y-auto p-4 divide-y divide-slate-100"></div>
-
       <div class="p-4 border-t border-slate-100 flex justify-end">
         <button onclick="closeRollCallModal()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition">Готово</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="bulkAddModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" onclick="closeBulkAddModal(event)">
-    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl modal-animate" onclick="event.stopPropagation()">
-      <h3 class="font-bold text-base text-slate-900 mb-1">Автододавання людей зі списку</h3>
-      <p class="text-xs text-slate-500 mb-2">Вставте ПІБ (кожен з нового рядка). Можна також вказати роль через дефіс: <code>Іваненко Іван - Замстарости</code></p>
-      <textarea id="bulkStudentsTextarea" rows="6" placeholder="Іваненко Іван - Староста&#10;Петренко Марія - Замстарости&#10;Коваленко Олександр" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"></textarea>
-      <div class="mb-3">
-        <label class="block text-xs font-semibold text-slate-600 mb-1">Роль за замовчуванням:</label>
-        <select id="bulkRoleSelect" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium">
-          <option value="Студент">Студент</option>
-          <option value="Помічник старости">Помічник старости</option>
-          <option value="Замстарости">Замстарости</option>
-          <option value="Староста">Староста</option>
-        </select>
-      </div>
-      <div class="flex justify-end gap-2">
-        <button onclick="closeBulkAddModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl">Скасувати</button>
-        <button onclick="processBulkAdd()" class="px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl">Додати автоматично</button>
       </div>
     </div>
   </div>
@@ -575,11 +582,9 @@
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
-
       <p class="text-xs text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-200">
         Увійдіть у свій акаунт для редагування та керування. Без входу доступний лише перегляд.
       </p>
-
       <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-3">
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Логін</label>
@@ -589,9 +594,7 @@
           <label class="block text-xs font-semibold text-slate-600 mb-1">Пароль</label>
           <input type="password" id="loginPassword" required autocomplete="new-password" placeholder="Введіть пароль" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
-        <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
-          Увійти
-        </button>
+        <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">Увійти</button>
       </form>
     </div>
   </div>
@@ -607,18 +610,10 @@
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
-
       <div id="profileDetailsBody" class="space-y-2.5 text-sm"></div>
-
       <div class="border-t border-slate-100 pt-3 flex items-center justify-between gap-2">
-        <button onclick="downloadBackupJson()" class="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition flex items-center gap-1.5">
-          <i data-lucide="download" class="w-3.5 h-3.5"></i>
-          <span>Бекап</span>
-        </button>
-        <button onclick="logoutAccount()" class="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl transition flex items-center justify-center gap-1.5">
-          <i data-lucide="log-out" class="w-4 h-4"></i>
-          <span>Вийти</span>
-        </button>
+        <button onclick="downloadBackupJson()" class="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">Бекап</button>
+        <button onclick="logoutAccount()" class="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl transition">Вийти</button>
       </div>
     </div>
   </div>
@@ -658,6 +653,7 @@
 
     const PRESENCE_TAB_ID = getStableTabId();
     let lastHeartbeatSentAt = 0;
+    let isSyncRunning = false;
 
     let currentAccount = null;
     let syncCode = 'TL-26008';
@@ -684,16 +680,21 @@
       ],
       managedAccounts: [],
       attendance: {},
+      // База історії уроків: зберігає кожен реальний урок (навіть після видалення предмета/курсу, крім тестових)
+      lessonHistory: {},
       savedHomeworks: [],
       updatedAt: 0
     };
 
-    let attachedFilesMeta = [];
     let activeCellContext = null;
 
+    function isTestLessonOrSubject(name) {
+      return /(?:^|[\s_\-/.,:])тест(?:$|[\s_\-/.,:])/i.test(String(name || '').trim()) ||
+        String(name || '').trim().toLowerCase() === 'тест';
+    }
+
     function getActiveRole() {
-      if (!currentAccount) return 'Гість';
-      return currentAccount.role || 'Студент';
+      return currentAccount ? (currentAccount.role || 'Студент') : 'Гість';
     }
 
     function isAuthorizedUser() {
@@ -712,8 +713,7 @@
     }
 
     function canAddPeople() {
-      return Boolean(currentAccount) &&
-        ['Головний адміністратор', 'Староста', 'Замстарости', 'Помічник старости'].includes(getActiveRole());
+      return canEditJournal();
     }
 
     function canManageRolesAndDelete() {
@@ -732,163 +732,66 @@
       }
     }
 
-    const CYR_TO_LAT_MAP = {
-      'а': 'a', 'б': 'b', 'в': 'v', 'г': 'h', 'ґ': 'g', 'д': 'd', 'е': 'e', 'є': 'ye',
-      'ж': 'zh', 'з': 'z', 'и': 'y', 'і': 'i', 'ї': 'yi', 'й': 'y', 'к': 'k', 'л': 'l',
-      'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
-      'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'shch', 'ь': '',
-      'ю': 'yu', 'я': 'ya', 'ы': 'y', 'э': 'e', 'ё': 'yo', 'ъ': ''
-    };
-
-    const LAYOUT_EN_TO_UA = {
-      'q': 'й', 'w': 'ц', 'e': 'у', 'r': 'к', 't': 'е', 'y': 'н', 'u': 'г', 'i': 'ш',
-      'o': 'щ', 'p': 'з', '[': 'х', ']': 'ї', 'a': 'ф', 's': 'і', 'd': 'в', 'f': 'а',
-      'g': 'п', 'h': 'р', 'j': 'о', 'k': 'л', 'l': 'д', ';': 'ж', "'": 'є', 'z': 'я',
-      'x': 'ч', 'c': 'с', 'v': 'м', 'b': 'и', 'n': 'т', 'm': 'ь', ',': 'б', '.': 'ю'
-    };
-
-    function remapLayoutIfNeeded(str) {
-      const lower = str.toLowerCase();
-      const latinChars = (lower.match(/[a-z\[\];',.]/g) || []).length;
-      const cyrChars = (lower.match(/[а-яіїєґ]/g) || []).length;
-      if (latinChars > 0 && cyrChars === 0) {
-        return lower.split('').map(ch => LAYOUT_EN_TO_UA[ch] ?? ch).join('');
-      }
-      return lower;
-    }
-
-    function transliterateToLatin(str) {
-      return str.toLowerCase().split('').map(ch => CYR_TO_LAT_MAP[ch] ?? ch).join('');
-    }
-
-    function normalizeForMatch(raw) {
-      const cleaned = String(raw || '')
-        .toLowerCase()
-        .replace(/ё/g, 'е')
-        .replace(/['’`´]/g, '')
-        .replace(/[^a-zа-яіїєґ0-9\s]+/gi, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-      const fromLayout = remapLayoutIfNeeded(cleaned);
-      return transliterateToLatin(fromLayout).replace(/\s+/g, ' ').trim();
-    }
-
-    function levenshteinDistance(a, b) {
-      if (a === b) return 0;
-      if (!a.length) return b.length;
-      if (!b.length) return a.length;
-      const prev = Array.from({ length: b.length + 1 }, (_, j) => j);
-      for (let i = 1; i <= a.length; i++) {
-        let diag = prev[0];
-        prev[0] = i;
-        for (let j = 1; j <= b.length; j++) {
-          const temp = prev[j];
-          const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-          prev[j] = Math.min(prev[j] + 1, prev[j - 1] + 1, diag + cost);
-          diag = temp;
+    // ==================== ОЧИЩЕННЯ ТЕСТОВИХ ПАР ТА НЕІСНУЮЧИХ ПРЕДМЕТІВ ====================
+    function pruneInvalidSubjectsAndTestLessons() {
+      const validSubjects = [];
+      const seen = new Set();
+      (appState.subjects || []).forEach(sub => {
+        const clean = String(sub || '').trim();
+        if (!clean || isTestLessonOrSubject(clean)) return;
+        const k = clean.toLowerCase();
+        if (!seen.has(k)) {
+          seen.add(k);
+          validSubjects.push(clean);
         }
-      }
-      return prev[b.length];
-    }
-
-    function tokenSimilarity(t1, t2) {
-      if (!t1 || !t2) return 0;
-      if (t1 === t2) return 1;
-      if ((t1.length >= 2 && t2.startsWith(t1)) || (t2.length >= 2 && t1.startsWith(t2))) {
-        return 0.88;
-      }
-      const maxLen = Math.max(t1.length, t2.length);
-      const dist = levenshteinDistance(t1, t2);
-      return Math.max(0, 1 - dist / maxLen);
-    }
-
-    function scoreStudentMatch(queryRaw, studentNameRaw) {
-      const qNorm = normalizeForMatch(queryRaw);
-      const sNorm = normalizeForMatch(studentNameRaw);
-      if (!qNorm || !sNorm) return 0;
-      if (qNorm === sNorm) return 1;
-
-      const qTokens = qNorm.split(' ').filter(Boolean);
-      const sTokens = sNorm.split(' ').filter(Boolean);
-
-      const pairScores = qTokens.map(qt => {
-        let best = 0;
-        for (const st of sTokens) {
-          const sc = tokenSimilarity(qt, st);
-          if (sc > best) best = sc;
-        }
-        return best;
       });
-      const avgTokenScore = pairScores.reduce((a, b) => a + b, 0) / pairScores.length;
+      appState.subjects = validSubjects.length ? validSubjects : ['Загальний журнал'];
 
-      const maxLen = Math.max(qNorm.length, sNorm.length);
-      const fullSim = Math.max(0, 1 - levenshteinDistance(qNorm, sNorm) / maxLen);
-      const includesBonus = (sNorm.includes(qNorm) || qNorm.includes(sNorm)) ? 0.12 : 0;
+      const allowedLower = new Set(appState.subjects.map(s => s.toLowerCase()));
 
-      return Math.min(1, avgTokenScore * 0.72 + fullSim * 0.28 + includesBonus);
+      // Чистимо поточні відмітки: прибираємо тестові та ті, чий предмет вже видалений з актуального списку
+      const nextAttendance = {};
+      for (const [key, val] of Object.entries(appState.attendance || {})) {
+        const parts = key.split('|');
+        if (parts.length < 4) continue;
+        const [, subj, , studentId] = parts;
+        if (!subj || isTestLessonOrSubject(subj)) continue;
+        if (!allowedLower.has(String(subj).toLowerCase())) continue;
+        nextAttendance[key] = val;
+      }
+      appState.attendance = nextAttendance;
+
+      // Чистимо історію уроків: тестові видаляємо повністю, а звичайні лишаємо (навіть якщо курс пізніше видалили)
+      const nextHistory = {};
+      for (const [hKey, entry] of Object.entries(appState.lessonHistory || {})) {
+        if (!entry || isTestLessonOrSubject(entry.subject)) continue;
+        nextHistory[hKey] = entry;
+      }
+      appState.lessonHistory = nextHistory;
     }
 
-    function findStudentSmart(queryName, selectedStudentId = null) {
-      if (selectedStudentId) {
-        const direct = appState.students.find(s => s.id === selectedStudentId);
-        if (direct) return { status: 'matched', student: direct, candidates: [direct] };
+    function recordLessonToHistory(dateStr, subject, pair, studentId, status) {
+      if (!subject || isTestLessonOrSubject(subject)) return;
+      const lessonKey = `${dateStr}|${subject}|${pair}`;
+      if (!appState.lessonHistory[lessonKey]) {
+        appState.lessonHistory[lessonKey] = {
+          id: lessonKey,
+          dateStr,
+          subject,
+          pair: String(pair || '1'),
+          marks: {},
+          updatedAt: Date.now()
+        };
       }
-
-      const scored = appState.students
-        .map(st => ({ student: st, score: scoreStudentMatch(queryName, st.name) }))
-        .filter(item => item.score >= 0.5)
-        .sort((a, b) => b.score - a.score);
-
-      if (!scored.length) {
-        return { status: 'not_found', student: null, candidates: [] };
+      if (status) {
+        appState.lessonHistory[lessonKey].marks[studentId] = status;
+      } else {
+        delete appState.lessonHistory[lessonKey].marks[studentId];
       }
-
-      const top = scored[0];
-      const closeAlternatives = scored.filter(
-        item => item.student.id !== top.student.id && (top.score - item.score) <= 0.1
-      );
-
-      if (top.score >= 0.74 && closeAlternatives.length === 0) {
-        return { status: 'matched', student: top.student, candidates: scored.slice(0, 4).map(x => x.student) };
-      }
-
-      const candidates = [top, ...closeAlternatives].slice(0, 5).map(x => ({
-        id: x.student.id,
-        fullName: x.student.name,
-        score: Number(x.score.toFixed(2))
-      }));
-
-      return { status: 'ambiguous', student: null, candidates };
+      appState.lessonHistory[lessonKey].updatedAt = Date.now();
     }
 
-    function ensureSubjectExists(subjectName) {
-      const clean = String(subjectName || '').trim();
-      if (!clean) return appState.subjects[0] || 'Загальний журнал';
-      const exact = appState.subjects.find(s => s.toLowerCase() === clean.toLowerCase());
-      if (exact) return exact;
-
-      let best = null;
-      let bestScore = 0;
-      for (const sub of appState.subjects) {
-        const sc = scoreStudentMatch(clean, sub);
-        if (sc > bestScore) {
-          bestScore = sc;
-          best = sub;
-        }
-      }
-      if (bestScore >= 0.85 && best) return best;
-
-      appState.subjects.push(clean);
-      populateSubjectSelects();
-      return clean;
-    }
-
-    function resolveSubjectName(incomingSubject) {
-      if (!incomingSubject) return appState.subjects[0] || 'Загальний журнал';
-      return ensureSubjectExists(incomingSubject);
-    }
-
-    // ==================== ЧИСТИЙ PRESENCE БЕЗ НАКОПИЧЕННЯ СМІТТЯ ====================
+    // ==================== PRESENCE ТА СИНХРОНІЗАЦІЯ ====================
     function getPresenceKey() {
       if (currentAccount && currentAccount.username) {
         return 'user_' + encodeURIComponent(currentAccount.username.toLowerCase().trim());
@@ -898,7 +801,7 @@
 
     async function sendPresenceHeartbeat(force = false) {
       const now = Date.now();
-      if (!force && (now - lastHeartbeatSentAt) < 14000) return;
+      if (!force && (now - lastHeartbeatSentAt) < 15000) return;
       lastHeartbeatSentAt = now;
 
       const key = getPresenceKey();
@@ -910,11 +813,7 @@
         await fetch(`${SCHEDULE_DB_URL}/journalPresence/${key}.json`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: displayName,
-            role: getActiveRole(),
-            lastSeen: now
-          })
+          body: JSON.stringify({ name: displayName, role: getActiveRole(), lastSeen: now })
         });
       } catch (_) {}
     }
@@ -922,10 +821,7 @@
     async function removeMyPresence() {
       const key = getPresenceKey();
       try {
-        await fetch(`${SCHEDULE_DB_URL}/journalPresence/${key}.json`, {
-          method: 'DELETE',
-          keepalive: true
-        });
+        await fetch(`${SCHEDULE_DB_URL}/journalPresence/${key}.json`, { method: 'DELETE', keepalive: true });
       } catch (_) {}
     }
 
@@ -933,11 +829,12 @@
       await sendPresenceHeartbeat(forceSend);
       try {
         const res = await fetch(`${SCHEDULE_DB_URL}/journalPresence.json`);
+        if (!res.ok) return;
         const data = await res.json() || {};
         const now = Date.now();
         const myKey = getPresenceKey();
-
         const activeList = [];
+
         for (const [key, item] of Object.entries(data)) {
           if (!item || !item.name || (now - (item.lastSeen || 0)) > 45000) {
             if (key !== myKey) {
@@ -950,25 +847,18 @@
 
         document.getElementById('activeUsersCount').textContent = activeList.length;
         const chipsEl = document.getElementById('activeUsersChips');
-        if (!activeList.length) {
-          chipsEl.innerHTML = `<span class="text-slate-400">Немає активних користувачів</span>`;
-        } else {
-          chipsEl.innerHTML = activeList.map(u => {
-            const isMe = u._key === myKey;
-            return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-              isMe
-                ? 'bg-indigo-50 text-indigo-800 border-indigo-200 font-semibold'
-                : 'bg-emerald-50 text-emerald-800 border-emerald-200'
-            }">${escapeHtml(u.name)}${isMe ? ' • ви' : ''}</span>`;
-          }).join('');
-        }
+        chipsEl.innerHTML = activeList.length
+          ? activeList.map(u => `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+              u._key === myKey ? 'bg-indigo-50 text-indigo-800 border-indigo-200 font-semibold' : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+            }">${escapeHtml(u.name)}${u._key === myKey ? ' • ви' : ''}</span>`).join('')
+          : `<span class="text-slate-400">Немає активних користувачів</span>`;
       } catch (_) {}
     }
 
-    // ==================== СИНХРОНІЗАЦІЯ ТА ВХІДНІ ВІДМІТКИ ====================
     async function syncSubjectsFromSchedule() {
       try {
         const res = await fetch(`${SCHEDULE_DB_URL}/portalData.json`);
+        if (!res.ok) return false;
         const portalData = await res.json();
         if (!portalData || !portalData.schedule || typeof portalData.schedule !== 'object') return false;
 
@@ -977,55 +867,120 @@
 
         Object.values(portalData.schedule).forEach(dayLessons => {
           (dayLessons || []).forEach(lesson => {
-            if (lesson && lesson.name) {
-              const cleanSub = String(lesson.name).trim();
-              if (cleanSub && !scheduleSet.has(cleanSub.toLowerCase())) {
-                scheduleSet.add(cleanSub.toLowerCase());
-                scheduleSubjects.push(cleanSub);
-              }
+            if (!lesson || !lesson.name) return;
+            const cleanSub = String(lesson.name).trim();
+            if (!cleanSub || isTestLessonOrSubject(cleanSub)) return;
+            const k = cleanSub.toLowerCase();
+            if (!scheduleSet.has(k)) {
+              scheduleSet.add(k);
+              scheduleSubjects.push(cleanSub);
             }
           });
         });
 
-        let listChanged = false;
-        const nextSubjects = [];
-        const seenNext = new Set();
+        const prevSubjectsJson = JSON.stringify(appState.subjects);
+        const prevAttJson = JSON.stringify(appState.attendance);
 
-        appState.subjects.forEach(sub => {
-          const key = String(sub).toLowerCase().trim();
-          if (scheduleSet.has(key) && !seenNext.has(key)) {
-            seenNext.add(key);
-            nextSubjects.push(sub);
-          } else if (!scheduleSet.has(key)) {
-            listChanged = true;
-          }
-        });
-
-        scheduleSubjects.forEach(sub => {
-          const key = sub.toLowerCase().trim();
-          if (!seenNext.has(key)) {
-            seenNext.add(key);
-            nextSubjects.push(sub);
-            listChanged = true;
-          }
-        });
-
-        if (!nextSubjects.length) {
-          nextSubjects.push('Загальний журнал');
+        if (scheduleSubjects.length) {
+          appState.subjects = scheduleSubjects;
         }
+        pruneInvalidSubjectsAndTestLessons();
 
-        if (listChanged || JSON.stringify(nextSubjects) !== JSON.stringify(appState.subjects)) {
-          appState.subjects = nextSubjects;
+        if (JSON.stringify(appState.subjects) !== prevSubjectsJson || JSON.stringify(appState.attendance) !== prevAttJson) {
           populateSubjectSelects();
           renderJournal();
           renderManageLists();
+          renderDatabaseTab();
           return true;
         }
-
         return false;
       } catch (_) {
         return false;
       }
+    }
+
+    function normalizeForMatch(raw) {
+      return String(raw || '')
+        .toLowerCase()
+        .replace(/ё/g, 'е')
+        .replace(/['’`´]/g, '')
+        .replace(/[^a-zа-яіїєґ0-9\s]+/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function findStudentSmart(queryName, selectedStudentId = null) {
+      if (selectedStudentId) {
+        const direct = appState.students.find(s => s.id === selectedStudentId);
+        if (direct) return direct;
+      }
+      const qNorm = normalizeForMatch(queryName);
+      if (!qNorm) return null;
+      return appState.students.find(st => {
+        const sNorm = normalizeForMatch(st.name);
+        return sNorm === qNorm || sNorm.includes(qNorm) || qNorm.includes(sNorm);
+      }) || null;
+    }
+
+    async function pollScheduleAttendanceSync() {
+      const subjectsChanged = await syncSubjectsFromSchedule();
+      try {
+        const res = await fetch(`${SCHEDULE_DB_URL}/journalSync/incoming.json`);
+        if (!res.ok) return;
+        const incomingObj = await res.json();
+        if (!incomingObj || typeof incomingObj !== 'object') {
+          if (subjectsChanged && canEditJournal()) await saveData();
+          updatePendingMarksUI();
+          return;
+        }
+
+        let addedToQueue = false;
+        for (const [key, item] of Object.entries(incomingObj)) {
+          if (!item || typeof item !== 'object') continue;
+          const recordId = String(item.id || key);
+          if (processedIncomingIds.has(recordId)) continue;
+
+          if (item.token !== JOURNAL_SYNC_TOKEN || isTestLessonOrSubject(item.lessonName)) {
+            processedIncomingIds.add(recordId);
+            continue;
+          }
+
+          const rawName = item.fullNameInput || `${item.lastname || ''} ${item.firstname || ''}`.trim();
+          const student = findStudentSmart(rawName, item.selectedStudentId || null);
+          if (student) {
+            const dateStr = item.date || new Date().toISOString().split('T')[0];
+            const subject = String(item.lessonName || appState.subjects[0] || 'Загальний журнал').trim();
+            if (isTestLessonOrSubject(subject)) {
+              processedIncomingIds.add(recordId);
+              continue;
+            }
+            const pair = String((typeof item.lessonIndex === 'number' ? item.lessonIndex + 1 : item.lessonIndex) || 1);
+            const attKey = `${dateStr}|${subject}|${pair}|${student.id}`;
+
+            if (!appState.attendance[attKey] && !pendingIncomingMarks.some(p => p.attKey === attKey)) {
+              pendingIncomingMarks.push({
+                recordId,
+                attKey,
+                studentId: student.id,
+                studentName: student.name,
+                dateStr,
+                subject,
+                pair,
+                status: '✓'
+              });
+              addedToQueue = true;
+            }
+          }
+          processedIncomingIds.add(recordId);
+        }
+
+        if (subjectsChanged && canEditJournal()) {
+          await saveData();
+        }
+        if (addedToQueue) {
+          updatePendingMarksUI();
+        }
+      } catch (_) {}
     }
 
     function updatePendingMarksUI() {
@@ -1051,7 +1006,7 @@
         const first = pendingIncomingMarks[0];
         textEl.textContent = pendingIncomingMarks.length === 1
           ? `Отримано відмітку з «Розкладу»: ${first.studentName} (${first.subject}, ${first.pair}-ша пара, ${first.dateStr})`
-          : `Отримано відміток з «Розкладу»: ${pendingIncomingMarks.length} (наприклад, ${first.studentName} — ${first.subject})`;
+          : `Отримано відміток з «Розкладу»: ${pendingIncomingMarks.length}`;
         banner.classList.remove('hidden');
       }
     }
@@ -1077,7 +1032,6 @@
         container.innerHTML = `<p class="text-xs text-slate-400 py-6 text-center">Немає нових відміток для додавання.</p>`;
         return;
       }
-
       container.innerHTML = pendingIncomingMarks.map((m, idx) => `
         <div class="py-3 flex items-center justify-between gap-3">
           <div class="min-w-0">
@@ -1094,28 +1048,34 @@
 
     async function applySinglePendingMark(index) {
       const item = pendingIncomingMarks[index];
-      if (!item) return;
-      const resolvedSub = ensureSubjectExists(item.subject);
-      const attKey = `${item.dateStr}|${resolvedSub}|${item.pair}|${item.studentId}`;
+      if (!item || isTestLessonOrSubject(item.subject)) return;
+      if (!appState.subjects.includes(item.subject)) {
+        appState.subjects.push(item.subject);
+        populateSubjectSelects();
+      }
+      const attKey = `${item.dateStr}|${item.subject}|${item.pair}|${item.studentId}`;
       appState.attendance[attKey] = item.status || '✓';
+      recordLessonToHistory(item.dateStr, item.subject, item.pair, item.studentId, item.status || '✓');
       pendingIncomingMarks.splice(index, 1);
       await saveData();
-      renderJournal();
-      updatePendingMarksUI();
+      refreshAllUI();
       renderIncomingMarksModalList();
     }
 
     async function applyAllPendingMarks() {
       if (!pendingIncomingMarks.length) return;
       for (const item of pendingIncomingMarks) {
-        const resolvedSub = ensureSubjectExists(item.subject);
-        const attKey = `${item.dateStr}|${resolvedSub}|${item.pair}|${item.studentId}`;
+        if (isTestLessonOrSubject(item.subject)) continue;
+        if (!appState.subjects.includes(item.subject)) {
+          appState.subjects.push(item.subject);
+        }
+        const attKey = `${item.dateStr}|${item.subject}|${item.pair}|${item.studentId}`;
         appState.attendance[attKey] = item.status || '✓';
+        recordLessonToHistory(item.dateStr, item.subject, item.pair, item.studentId, item.status || '✓');
       }
       pendingIncomingMarks = [];
       await saveData();
-      renderJournal();
-      updatePendingMarksUI();
+      refreshAllUI();
       closeIncomingMarksModal();
     }
 
@@ -1125,162 +1085,43 @@
       renderIncomingMarksModalList();
     }
 
-    async function pollScheduleAttendanceSync() {
-      const subjectsChanged = await syncSubjectsFromSchedule();
-      try {
-        const res = await fetch(`${SCHEDULE_DB_URL}/journalSync/incoming.json`);
-        const incomingObj = await res.json();
-        if (!incomingObj || typeof incomingObj !== 'object') {
-          if (subjectsChanged) await saveData();
-          updatePendingMarksUI();
-          return;
-        }
-
-        let addedToQueue = false;
-
-        for (const [key, item] of Object.entries(incomingObj)) {
-          if (!item || typeof item !== 'object') continue;
-          const recordId = String(item.id || key);
-          if (processedIncomingIds.has(recordId)) continue;
-
-          if (item.token !== JOURNAL_SYNC_TOKEN) {
-            processedIncomingIds.add(recordId);
-            continue;
-          }
-
-          const rawName = item.fullNameInput || `${item.lastname || ''} ${item.firstname || ''}`.trim();
-          const matchResult = findStudentSmart(rawName, item.selectedStudentId || null);
-
-          if (matchResult.status === 'matched' && matchResult.student) {
-            const dateStr = item.date || new Date().toISOString().split('T')[0];
-            const subject = resolveSubjectName(item.lessonName);
-            const pair = String((typeof item.lessonIndex === 'number' ? item.lessonIndex + 1 : item.lessonIndex) || 1);
-            const attKey = `${dateStr}|${subject}|${pair}|${matchResult.student.id}`;
-
-            if (!appState.attendance[attKey] && !pendingIncomingMarks.some(p => p.attKey === attKey)) {
-              pendingIncomingMarks.push({
-                recordId,
-                attKey,
-                studentId: matchResult.student.id,
-                studentName: matchResult.student.name,
-                dateStr,
-                subject,
-                pair,
-                status: '✓'
-              });
-              addedToQueue = true;
-            }
-            processedIncomingIds.add(recordId);
-          } else if (matchResult.status === 'ambiguous') {
-            await fetch(`${SCHEDULE_DB_URL}/journalSync/ambiguous/${recordId}.json`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                status: 'ambiguous',
-                queryName: rawName,
-                candidates: matchResult.candidates
-              })
-            });
-            processedIncomingIds.add(recordId);
-          } else {
-            processedIncomingIds.add(recordId);
-          }
-        }
-
-        if (subjectsChanged) {
-          await saveData();
-        }
-        if (addedToQueue) {
-          updatePendingMarksUI();
-        }
-      } catch (_) {}
-    }
-
     async function forceFullSync() {
-      await pullFromFirebase(false);
-      await pollScheduleAttendanceSync();
-      await refreshActiveUsersPresence(true);
+      if (isSyncRunning) return;
+      isSyncRunning = true;
+      setSyncBadge('sync', 'Синхронізація...');
+      try {
+        await pullFromFirebase(false);
+        await pollScheduleAttendanceSync();
+        await refreshActiveUsersPresence(true);
+        setSyncBadge('ok', 'Синхронізовано');
+      } catch (_) {
+        setSyncBadge('ok', 'Збережено локально');
+      } finally {
+        isSyncRunning = false;
+      }
     }
 
-    window.addEventListener('beforeunload', () => {
-      removeMyPresence();
-    });
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      localStorage.removeItem('starosta_active_account');
-      localStorage.removeItem('starosta_device_owner');
-      sessionStorage.removeItem('starosta_device_session');
-
-      loadFromLocal();
-
-      const savedSessionRaw = sessionStorage.getItem(SESSION_STORAGE_KEY);
-      if (savedSessionRaw) {
-        try {
-          const parsedSession = JSON.parse(savedSessionRaw);
-          if (parsedSession && parsedSession.username) {
-            currentAccount = parsedSession;
-            if (currentAccount.groupCode) syncCode = currentAccount.groupCode;
-          }
-        } catch (e) {}
-      }
-
-      const now = new Date();
-      const yyyy = now.getFullYear();
-      const mm = String(now.getMonth() + 1).padStart(2, '0');
-      document.getElementById('monthPicker').value = `${yyyy}-${mm}`;
-
-      const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-      const tY = tomorrow.getFullYear();
-      const tM = String(tomorrow.getMonth() + 1).padStart(2, '0');
-      const tD = String(tomorrow.getDate()).padStart(2, '0');
-      document.getElementById('hwDeadline').value = `${tY}-${tM}-${tD}T23:59`;
-
-      document.addEventListener('paste', (e) => {
-        const items = e.clipboardData?.items;
-        if (!items) return;
-        for (const item of items) {
-          if (item.kind === 'file') {
-            const file = item.getAsFile();
-            if (file) {
-              const name = file.name && file.name !== 'image.png'
-                ? file.name
-                : `Скріншот_${new Date().toLocaleTimeString('uk-UA').replace(/:/g, '-')}.png`;
-              attachedFilesMeta.push({
-                name,
-                type: file.type.startsWith('image/') ? 'Фото/Скрін' : 'Файл'
-              });
-              renderAttachedFiles();
-              generateHwPreview();
-            }
-          }
-        }
-      });
-
-      refreshAllUI();
-      await pullFromFirebase(false);
-      await pollScheduleAttendanceSync();
-      await refreshActiveUsersPresence(true);
-
-      if (!currentAccount) {
-        openAuthModal();
-      }
-
-      setInterval(pollScheduleAttendanceSync, 6000);
-      setInterval(() => refreshActiveUsersPresence(false), 15000);
-      lucide.createIcons();
-    });
+    function setSyncBadge(mode, text) {
+      const dot = document.getElementById('syncDot');
+      const label = document.getElementById('syncStatusText');
+      if (!dot || !label) return;
+      label.textContent = text;
+      dot.className = 'w-2 h-2 rounded-full ' + (
+        mode === 'ok' ? 'bg-emerald-500' :
+        mode === 'sync' ? 'bg-amber-500 animate-ping' : 'bg-rose-500'
+      );
+    }
 
     function getGroupSyncUrl(code) {
-      const cleanCode = encodeURIComponent(String(code).trim().toUpperCase());
-      return `${SYNC_ENDPOINT}/groups/${cleanCode}.json`;
+      return `${SYNC_ENDPOINT}/groups/${encodeURIComponent(String(code).trim().toUpperCase())}.json`;
     }
 
     function getAccountSyncUrl(username) {
-      const cleanUser = encodeURIComponent(String(username).trim().toLowerCase());
-      return `${SYNC_ENDPOINT}/accounts/${cleanUser}.json`;
+      return `${SYNC_ENDPOINT}/accounts/${encodeURIComponent(String(username).trim().toLowerCase())}.json`;
     }
 
     function sanitizeStateForSync(rawState) {
+      pruneInvalidSubjectsAndTestLessons();
       const safeAccounts = Array.isArray(rawState.managedAccounts)
         ? rawState.managedAccounts.filter(
             a => a && a.username && a.username.toLowerCase() !== MAIN_ADMIN_ACCOUNT.username.toLowerCase()
@@ -1302,39 +1143,19 @@
         } catch (e) {}
       }
       appState.ownerName = MAIN_ADMIN_ACCOUNT.fullName;
-      if (!Array.isArray(appState.managedAccounts)) {
-        appState.managedAccounts = [];
-      }
-      appState.managedAccounts = appState.managedAccounts.filter(
-        a => a && a.username && a.username.toLowerCase() !== MAIN_ADMIN_ACCOUNT.username.toLowerCase()
-      );
-      if (Array.isArray(appState.students)) {
-        appState.students = appState.students.map(st =>
-          st.username && st.username.toLowerCase() === MAIN_ADMIN_ACCOUNT.username.toLowerCase()
-            ? { ...st, name: MAIN_ADMIN_ACCOUNT.fullName, username: MAIN_ADMIN_ACCOUNT.username, role: 'Головний адміністратор' }
-            : st
-        );
-      }
-    }
-
-    function setSyncBadge(mode, text) {
-      const dot = document.getElementById('syncDot');
-      const label = document.getElementById('syncStatusText');
-      if (!dot || !label) return;
-      label.textContent = text;
-      dot.className = 'w-2 h-2 rounded-full ' + (
-        mode === 'ok' ? 'bg-emerald-500' :
-        mode === 'sync' ? 'bg-amber-500 animate-ping' : 'bg-rose-500'
-      );
+      if (!Array.isArray(appState.managedAccounts)) appState.managedAccounts = [];
+      if (!appState.lessonHistory || typeof appState.lessonHistory !== 'object') appState.lessonHistory = {};
+      pruneInvalidSubjectsAndTestLessons();
     }
 
     async function saveData() {
-      if (!canEditJournal()) return;
+      pruneInvalidSubjectsAndTestLessons();
       appState.updatedAt = Date.now();
       appState.ownerName = MAIN_ADMIN_ACCOUNT.fullName;
       localStorage.setItem(`starosta_data_${syncCode}`, JSON.stringify(appState));
-      setSyncBadge('sync', 'Синхронізація...');
 
+      if (!canEditJournal()) return;
+      setSyncBadge('sync', 'Синхронізація...');
       try {
         const payload = sanitizeStateForSync(appState);
         const res = await fetch(getGroupSyncUrl(syncCode), {
@@ -1342,96 +1163,131 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        if (res.ok) {
-          setSyncBadge('ok', 'Синхронізовано');
-        } else {
-          setSyncBadge('err', 'Помилка синхронізації');
-        }
+        setSyncBadge(res.ok ? 'ok' : 'err', res.ok ? 'Синхронізовано' : 'Помилка синхронізації');
       } catch (e) {
-        setSyncBadge('err', 'Офлайн');
+        setSyncBadge('ok', 'Офлайн (збережено)');
       }
     }
 
     async function pullFromFirebase(forceApply) {
-      setSyncBadge('sync', 'Синхронізація...');
       try {
         const res = await fetch(getGroupSyncUrl(syncCode));
-        if (!res.ok) {
-          setSyncBadge('err', 'Помилка синхронізації');
-          return;
-        }
+        if (!res.ok) return;
         const cloudData = await res.json();
-        if (cloudData && typeof cloudData === 'object') {
-          const localUpdated = appState.updatedAt || 0;
-          const cloudUpdated = cloudData.updatedAt || 0;
+        if (!cloudData || typeof cloudData !== 'object') return;
 
-          if (forceApply || cloudUpdated >= localUpdated) {
-            const cloudAccounts = Array.isArray(cloudData.managedAccounts)
-              ? cloudData.managedAccounts.filter(
-                  a => a && a.username && a.username.toLowerCase() !== MAIN_ADMIN_ACCOUNT.username.toLowerCase()
-                )
-              : [];
+        const localUpdated = appState.updatedAt || 0;
+        const cloudUpdated = cloudData.updatedAt || 0;
 
-            const studentsList = Array.isArray(cloudData.students)
-              ? cloudData.students.map(s =>
-                  s.username && s.username.toLowerCase() === MAIN_ADMIN_ACCOUNT.username.toLowerCase()
-                    ? { ...s, name: MAIN_ADMIN_ACCOUNT.fullName, username: MAIN_ADMIN_ACCOUNT.username, role: 'Головний адміністратор' }
-                    : { ...s, role: s.role || 'Студент' }
-                )
-              : [];
+        if (forceApply || cloudUpdated >= localUpdated) {
+          const cloudAccounts = Array.isArray(cloudData.managedAccounts)
+            ? cloudData.managedAccounts.filter(
+                a => a && a.username && a.username.toLowerCase() !== MAIN_ADMIN_ACCOUNT.username.toLowerCase()
+              )
+            : [];
 
-            const baseSubjects = Array.isArray(cloudData.subjects) && cloudData.subjects.length
-              ? cloudData.subjects
-              : appState.subjects;
+          const studentsList = Array.isArray(cloudData.students)
+            ? cloudData.students.map(s =>
+                s.username && s.username.toLowerCase() === MAIN_ADMIN_ACCOUNT.username.toLowerCase()
+                  ? { ...s, name: MAIN_ADMIN_ACCOUNT.fullName, username: MAIN_ADMIN_ACCOUNT.username, role: 'Головний адміністратор' }
+                  : { ...s, role: s.role || 'Студент' }
+              )
+            : appState.students;
 
-            appState = {
-              groupName: cloudData.groupName || 'ТЛ-26008',
-              ownerName: MAIN_ADMIN_ACCOUNT.fullName,
-              students: studentsList,
-              subjects: Array.from(new Set(baseSubjects)).filter(Boolean),
-              managedAccounts: cloudAccounts,
-              attendance: {
-                ...(cloudData.attendance && typeof cloudData.attendance === 'object' ? cloudData.attendance : {}),
-                ...(appState.attendance && typeof appState.attendance === 'object' ? appState.attendance : {})
-              },
-              savedHomeworks: Array.isArray(cloudData.savedHomeworks) ? cloudData.savedHomeworks : [],
-              updatedAt: cloudUpdated
-            };
-            localStorage.setItem(`starosta_data_${syncCode}`, JSON.stringify(appState));
+          const baseSubjects = Array.isArray(cloudData.subjects) && cloudData.subjects.length
+            ? cloudData.subjects
+            : appState.subjects;
 
-            if (currentAccount && !isMainAdmin()) {
-              const matched = appState.managedAccounts.find(
-                a => a.username.toLowerCase() === currentAccount.username.toLowerCase()
-              );
-              if (matched) {
-                currentAccount = {
-                  ...currentAccount,
-                  fullName: matched.fullName,
-                  role: matched.role,
-                  groupName: appState.groupName,
-                  groupCode: syncCode
-                };
-                sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(currentAccount));
-              }
+          appState = {
+            groupName: cloudData.groupName || 'ТЛ-26008',
+            ownerName: MAIN_ADMIN_ACCOUNT.fullName,
+            students: studentsList,
+            subjects: baseSubjects,
+            managedAccounts: cloudAccounts,
+            attendance: {
+              ...(cloudData.attendance && typeof cloudData.attendance === 'object' ? cloudData.attendance : {}),
+              ...(appState.attendance && typeof appState.attendance === 'object' ? appState.attendance : {})
+            },
+            lessonHistory: {
+              ...(cloudData.lessonHistory && typeof cloudData.lessonHistory === 'object' ? cloudData.lessonHistory : {}),
+              ...(appState.lessonHistory && typeof appState.lessonHistory === 'object' ? appState.lessonHistory : {})
+            },
+            savedHomeworks: Array.isArray(cloudData.savedHomeworks) ? cloudData.savedHomeworks : [],
+            updatedAt: Math.max(localUpdated, cloudUpdated)
+          };
+
+          pruneInvalidSubjectsAndTestLessons();
+          localStorage.setItem(`starosta_data_${syncCode}`, JSON.stringify(appState));
+
+          if (currentAccount && !isMainAdmin()) {
+            const matched = appState.managedAccounts.find(
+              a => a.username.toLowerCase() === currentAccount.username.toLowerCase()
+            );
+            if (matched) {
+              currentAccount = {
+                ...currentAccount,
+                fullName: matched.fullName,
+                role: matched.role,
+                groupName: appState.groupName,
+                groupCode: syncCode
+              };
+              sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(currentAccount));
             }
-
-            refreshAllUI();
           }
-          setSyncBadge('ok', 'Синхронізовано');
-        } else {
-          setSyncBadge('ok', 'Синхронізовано');
+
+          refreshAllUI();
         }
+        setSyncBadge('ok', 'Синхронізовано');
       } catch (err) {
-        setSyncBadge('err', 'Офлайн');
+        setSyncBadge('ok', 'Збережено локально');
       }
     }
 
-    function handleAccountButtonClick() {
-      if (currentAccount) {
-        openProfileModal();
-      } else {
+    window.addEventListener('beforeunload', () => {
+      removeMyPresence();
+    });
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      loadFromLocal();
+
+      const savedSessionRaw = sessionStorage.getItem(SESSION_STORAGE_KEY);
+      if (savedSessionRaw) {
+        try {
+          const parsedSession = JSON.parse(savedSessionRaw);
+          if (parsedSession && parsedSession.username) {
+            currentAccount = parsedSession;
+            if (currentAccount.groupCode) syncCode = currentAccount.groupCode;
+          }
+        } catch (e) {}
+      }
+
+      const now = new Date();
+      document.getElementById('monthPicker').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+      const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      document.getElementById('hwDeadline').value =
+        `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}T23:59`;
+
+      refreshAllUI();
+      await forceFullSync();
+
+      if (!currentAccount) {
         openAuthModal();
       }
+
+      setInterval(() => {
+        if (!isSyncRunning) {
+          pollScheduleAttendanceSync();
+        }
+      }, 6000);
+
+      setInterval(() => refreshActiveUsersPresence(false), 15000);
+      lucide.createIcons();
+    });
+
+    // ==================== АВТОРИЗАЦІЯ ТА АКАУНТИ ====================
+    function handleAccountButtonClick() {
+      currentAccount ? openProfileModal() : openAuthModal();
     }
 
     function openAuthModal() {
@@ -1478,7 +1334,6 @@
       const managedMatch = (appState.managedAccounts || []).find(
         a => a.username.toLowerCase() === username && a.password === password
       );
-
       if (managedMatch) {
         await removeMyPresence();
         currentAccount = {
@@ -1496,7 +1351,6 @@
         return;
       }
 
-      setSyncBadge('sync', 'Синхронізація...');
       try {
         const res = await fetch(getAccountSyncUrl(username));
         if (res.ok) {
@@ -1512,16 +1366,14 @@
             };
             sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(currentAccount));
             document.getElementById('loginForm').reset();
-            setSyncBadge('ok', 'Синхронізовано');
             closeAuthModal();
             refreshAllUI();
             await refreshActiveUsersPresence(true);
             return;
           }
         }
-      } catch (err) {}
+      } catch (_) {}
 
-      setSyncBadge('ok', 'Синхронізовано');
       alert('Невірний логін або пароль.');
     }
 
@@ -1562,7 +1414,6 @@
           </div>
         </div>
       `;
-
       document.getElementById('profileModal').classList.remove('hidden');
       lucide.createIcons();
     }
@@ -1596,32 +1447,19 @@
         groupCode: syncCode
       };
 
-      if (!Array.isArray(appState.managedAccounts)) {
-        appState.managedAccounts = [];
-      }
-
       const existingIdx = appState.managedAccounts.findIndex(a => a.username.toLowerCase() === username);
-      if (existingIdx >= 0) {
-        appState.managedAccounts[existingIdx] = newAcc;
-      } else {
-        appState.managedAccounts.push(newAcc);
-      }
+      if (existingIdx >= 0) appState.managedAccounts[existingIdx] = newAcc;
+      else appState.managedAccounts.push(newAcc);
 
       const studentIdx = appState.students.findIndex(
-        s => (s.username && s.username.toLowerCase() === username) ||
-             s.name.toLowerCase() === fullName.toLowerCase()
+        s => (s.username && s.username.toLowerCase() === username) || s.name.toLowerCase() === fullName.toLowerCase()
       );
       if (studentIdx >= 0) {
         appState.students[studentIdx].name = fullName;
         appState.students[studentIdx].username = username;
         appState.students[studentIdx].role = role;
       } else {
-        appState.students.push({
-          id: 'st_' + Date.now() + '_' + Math.random().toString(36).substring(2, 5),
-          name: fullName,
-          username,
-          role
-        });
+        appState.students.push({ id: 'st_' + Date.now(), name: fullName, username, role });
       }
 
       try {
@@ -1630,37 +1468,30 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newAcc)
         });
-      } catch (err) {}
+      } catch (_) {}
 
       await saveData();
 
-      lastCreatedCredentialsText =
-        `ПІБ: ${fullName}\nРоль: ${role}\nГрупа: ${appState.groupName}\nЛогін: ${username}\nПароль: ${password}`;
-
+      lastCreatedCredentialsText = `ПІБ: ${fullName}\nРоль: ${role}\nГрупа: ${appState.groupName}\nЛогін: ${username}\nПароль: ${password}`;
       document.getElementById('createdAccSummaryText').innerHTML =
-        `<b>ПІБ:</b> ${escapeHtml(fullName)} • <b>Роль:</b> ${escapeHtml(role)} • <b>Група:</b> ${escapeHtml(appState.groupName)}<br>` +
+        `<b>ПІБ:</b> ${escapeHtml(fullName)} • <b>Роль:</b> ${escapeHtml(role)}<br>` +
         `<b>Логін:</b> ${escapeHtml(username)} • <b>Пароль:</b> ${escapeHtml(password)}`;
       document.getElementById('createdAccountCredentialsBox').classList.remove('hidden');
 
       document.getElementById('newAccFullName').value = '';
       document.getElementById('newAccUsername').value = '';
       document.getElementById('newAccPassword').value = '';
-
       refreshAllUI();
     }
 
     function copyCreatedAccountCredentials() {
-      if (!lastCreatedCredentialsText) return;
-      navigator.clipboard?.writeText(lastCreatedCredentialsText).catch(() => {});
+      if (lastCreatedCredentialsText) navigator.clipboard?.writeText(lastCreatedCredentialsText).catch(() => {});
     }
 
     async function deleteManagedAccount(username) {
-      if (!isMainAdmin()) return;
-      if (username.toLowerCase() === MAIN_ADMIN_ACCOUNT.username.toLowerCase()) return;
-      appState.managedAccounts = (appState.managedAccounts || []).filter(a => a.username !== username);
-      try {
-        await fetch(getAccountSyncUrl(username), { method: 'DELETE' });
-      } catch (e) {}
+      if (!isMainAdmin() || username.toLowerCase() === MAIN_ADMIN_ACCOUNT.username.toLowerCase()) return;
+      appState.managedAccounts = appState.managedAccounts.filter(a => a.username !== username);
+      try { await fetch(getAccountSyncUrl(username), { method: 'DELETE' }); } catch (_) {}
       await saveData();
       refreshAllUI();
     }
@@ -1671,11 +1502,10 @@
       card.classList.toggle('hidden', !showCard);
       if (!showCard) return;
 
-      const list = (appState.managedAccounts || []).filter(
+      const list = appState.managedAccounts.filter(
         a => a.username.toLowerCase() !== MAIN_ADMIN_ACCOUNT.username.toLowerCase()
       );
       document.getElementById('createdAccountsCount').textContent = list.length;
-
       document.getElementById('createdAccountsList').innerHTML = list.map(acc => `
         <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-start justify-between gap-2">
           <div class="min-w-0 space-y-0.5">
@@ -1683,21 +1513,21 @@
             <div class="text-[11px] font-mono text-slate-600">логін: <b>${escapeHtml(acc.username)}</b> • пароль: <b>${escapeHtml(acc.password)}</b></div>
             <span class="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${getRoleBadgeClass(acc.role)}">${escapeHtml(acc.role)}</span>
           </div>
-          <button onclick="deleteManagedAccount('${escapeHtml(acc.username)}')" class="p-1 text-slate-400 hover:text-rose-600 rounded-lg shrink-0" title="Видалити акаунт">
+          <button onclick="deleteManagedAccount('${escapeHtml(acc.username)}')" class="p-1 text-slate-400 hover:text-rose-600 rounded-lg shrink-0">
             <i data-lucide="trash-2" class="w-4 h-4"></i>
           </button>
         </div>
       `).join('');
     }
 
+    // ==================== РЕНДЕР ТА ВКЛАДКИ ====================
     function refreshAllUI() {
+      pruneInvalidSubjectsAndTestLessons();
       document.getElementById('headerGroupName').textContent = appState.groupName || 'ТЛ-26008';
       document.getElementById('groupNameInput').value = appState.groupName || '';
 
       const authorized = isAuthorizedUser();
-      const manageTabBtn = document.getElementById('tab-manage');
-      manageTabBtn.classList.toggle('hidden', !authorized);
-
+      document.getElementById('tab-manage').classList.toggle('hidden', !authorized);
       if (!authorized && !document.getElementById('view-manage').classList.contains('hidden')) {
         switchTab('journal');
       }
@@ -1720,6 +1550,8 @@
       renderManagedAccountsList();
       populateSubjectSelects();
       renderJournal();
+      renderLessonHistory();
+      renderDatabaseTab();
       renderManageLists();
       generateHwPreview();
       renderSavedHomeworks();
@@ -1732,8 +1564,7 @@
         openAuthModal();
         return;
       }
-
-      ['journal', 'homework', 'manage'].forEach(name => {
+      ['journal', 'database', 'homework', 'manage'].forEach(name => {
         document.getElementById(`view-${name}`).classList.toggle('hidden', name !== tabName);
         const btn = document.getElementById(`tab-${name}`);
         if (name === tabName) {
@@ -1744,10 +1575,13 @@
           btn.classList.add('border-transparent', 'text-slate-600', 'font-medium');
         }
       });
+      if (tabName === 'database') renderDatabaseTab();
+      if (tabName === 'journal') renderLessonHistory();
       lucide.createIcons();
     }
 
     function populateSubjectSelects() {
+      pruneInvalidSubjectsAndTestLessons();
       const journalSel = document.getElementById('journalSubjectSelect');
       const hwSel = document.getElementById('hwSubject');
       const prevJ = journalSel.value;
@@ -1759,11 +1593,8 @@
       journalSel.innerHTML = optionsHtml;
       hwSel.innerHTML = optionsHtml;
 
-      if (subjects.includes(prevJ)) journalSel.value = prevJ;
-      else journalSel.value = subjects[0];
-
-      if (subjects.includes(prevH)) hwSel.value = prevH;
-      else hwSel.value = subjects[0];
+      journalSel.value = subjects.includes(prevJ) ? prevJ : subjects[0];
+      hwSel.value = subjects.includes(prevH) ? prevH : subjects[0];
     }
 
     function getDaysInMonth(yearMonthStr) {
@@ -1773,10 +1604,9 @@
       for (let d = 1; d <= totalDays; d++) {
         const dateObj = new Date(year, month - 1, d);
         const dow = dateObj.getDay();
-        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         days.push({
           day: d,
-          dateStr,
+          dateStr: `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
           weekdayShort: WEEKDAYS_UA[dow],
           isWeekend: dow === 0 || dow === 6
         });
@@ -1808,7 +1638,6 @@
         tableWrapper.classList.add('hidden');
         return;
       }
-
       emptyState.classList.add('hidden');
       tableWrapper.classList.remove('hidden');
 
@@ -1817,19 +1646,11 @@
 
       let theadHtml = `
         <tr class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
-          <th class="sticky-header py-2.5 px-3 font-bold text-slate-800 min-w-[200px] sm:min-w-[240px] border-r border-slate-200">
-            № / Прізвище та Ім'я
-          </th>
+          <th class="sticky-header py-2.5 px-3 font-bold text-slate-800 min-w-[200px] sm:min-w-[240px] border-r border-slate-200">№ / Прізвище та Ім'я</th>
       `;
-
       days.forEach(d => {
         const isToday = d.dateStr === todayStr;
-        const headerBg = isToday
-          ? 'bg-indigo-600 text-white'
-          : d.isWeekend
-            ? 'bg-rose-50/80 text-rose-600'
-            : 'bg-slate-100 text-slate-700';
-
+        const headerBg = isToday ? 'bg-indigo-600 text-white' : d.isWeekend ? 'bg-rose-50/80 text-rose-600' : 'bg-slate-100 text-slate-700';
         theadHtml += `
           <th class="py-1.5 px-1 text-center min-w-[38px] border-r border-slate-200/80 ${headerBg}" title="${d.dateStr} (${d.weekdayShort})">
             <div class="text-[10px] font-semibold uppercase opacity-80">${d.weekdayShort}</div>
@@ -1837,7 +1658,6 @@
           </th>
         `;
       });
-
       theadHtml += `
           <th class="py-2 px-2.5 text-center font-bold text-slate-700 bg-slate-100 min-w-[65px] border-r border-slate-200">✓</th>
           <th class="py-2 px-2.5 text-center font-bold text-rose-700 bg-slate-100 min-w-[65px]">Н</th>
@@ -1849,24 +1669,19 @@
       appState.students.forEach((student, idx) => {
         let presentCount = 0;
         let absentNCount = 0;
-
         let cellsHtml = '';
+
         days.forEach(d => {
           const key = `${d.dateStr}|${subject}|${pair}|${student.id}`;
           const status = appState.attendance[key] || '';
-
           if (status === '✓') presentCount++;
           if (status === 'Н') absentNCount++;
 
           const badgeClass = getStatusBadgeStyle(status);
           const weekendBg = d.isWeekend && !status ? 'bg-slate-50/70' : '';
-
           cellsHtml += `
             <td class="p-1 text-center border-r border-slate-100 ${weekendBg}">
-              <button
-                onclick="openStatusModal('${student.id}', '${d.dateStr}', '${d.weekdayShort}')"
-                class="w-8 h-8 rounded-lg border text-xs flex items-center justify-center mx-auto transition active:scale-95 ${badgeClass}"
-              >
+              <button onclick="openStatusModal('${student.id}', '${d.dateStr}', '${d.weekdayShort}')" class="w-8 h-8 rounded-lg border text-xs flex items-center justify-center mx-auto transition active:scale-95 ${badgeClass}">
                 ${status || '·'}
               </button>
             </td>
@@ -1889,10 +1704,128 @@
           </tr>
         `;
       });
-
       document.getElementById('journalTbody').innerHTML = tbodyHtml;
     }
 
+    function getAllNonTestLessons() {
+      return Object.values(appState.lessonHistory || {})
+        .filter(entry => entry && entry.subject && !isTestLessonOrSubject(entry.subject))
+        .sort((a, b) => {
+          const dCmp = String(b.dateStr || '').localeCompare(String(a.dateStr || ''));
+          if (dCmp !== 0) return dCmp;
+          return Number(a.pair || 0) - Number(b.pair || 0);
+        });
+    }
+
+    function renderLessonHistory() {
+      const q = normalizeForMatch(document.getElementById('historyFilterInput')?.value || '');
+      const activeSet = new Set((appState.subjects || []).map(s => s.toLowerCase()));
+
+      const items = getAllNonTestLessons().filter(entry => {
+        if (!q) return true;
+        const hay = normalizeForMatch(`${entry.dateStr} ${entry.subject} ${entry.pair}`);
+        return hay.includes(q);
+      });
+
+      document.getElementById('lessonsHistoryCount').textContent = items.length;
+      const container = document.getElementById('lessonsHistoryList');
+
+      if (!items.length) {
+        container.innerHTML = `<p class="text-xs text-slate-400 py-6 text-center">Уроків в історії ще немає.</p>`;
+        return;
+      }
+
+      container.innerHTML = items.map(entry => {
+        const marksObj = entry.marks || {};
+        const presentNames = [];
+        const absentNames = [];
+
+        appState.students.forEach(st => {
+          const m = marksObj[st.id];
+          if (m === '✓') presentNames.push(st.name);
+          else if (m) absentNames.push(`${st.name} (${m})`);
+        });
+
+        const isDeletedSubject = !activeSet.has(String(entry.subject || '').toLowerCase());
+        const statusBadge = isDeletedSubject
+          ? `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">Курс видалено • Збережено в історії</span>`
+          : `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Активний курс</span>`;
+
+        return `
+          <div class="py-3 space-y-1.5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="text-sm font-bold text-slate-900">
+                ${escapeHtml(entry.subject)} <span class="text-xs font-semibold text-indigo-600">• ${escapeHtml(String(entry.pair))}-ша пара</span>
+              </div>
+              <div class="flex items-center gap-2">
+                ${statusBadge}
+                <span class="text-xs font-mono text-slate-500">${escapeHtml(entry.dateStr)}</span>
+              </div>
+            </div>
+            <div class="text-xs text-slate-600 flex flex-wrap gap-x-4 gap-y-1">
+              <span><b class="text-emerald-700">Були (${presentNames.length}):</b> ${presentNames.length ? escapeHtml(presentNames.join(', ')) : '—'}</span>
+              <span><b class="text-rose-700">Відмічені іншим (${absentNames.length}):</b> ${absentNames.length ? escapeHtml(absentNames.join(', ')) : '—'}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderDatabaseTab() {
+      pruneInvalidSubjectsAndTestLessons();
+      const q = normalizeForMatch(document.getElementById('dbSearchInput')?.value || '');
+      const activeSet = new Set((appState.subjects || []).map(s => s.toLowerCase()));
+      const allLessons = getAllNonTestLessons();
+
+      const deletedSubCount = new Set(
+        allLessons
+          .filter(l => !activeSet.has(String(l.subject || '').toLowerCase()))
+          .map(l => String(l.subject || '').toLowerCase())
+      ).size;
+
+      document.getElementById('dbStatLessons').textContent = allLessons.length;
+      document.getElementById('dbStatDeletedSubjects').textContent = deletedSubCount;
+      document.getElementById('dbStatMarks').textContent = Object.keys(appState.attendance || {}).length;
+      document.getElementById('dbStatStudents').textContent = appState.students.length;
+
+      const filtered = allLessons.filter(entry => {
+        if (!q) return true;
+        const markNames = Object.keys(entry.marks || {})
+          .map(sid => appState.students.find(s => s.id === sid)?.name || '')
+          .join(' ');
+        return normalizeForMatch(`${entry.dateStr} ${entry.pair} ${entry.subject} ${markNames}`).includes(q);
+      });
+
+      const tbody = document.getElementById('databaseRecordsTbody');
+      if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-xs text-slate-400">Записів у базі даних не знайдено.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(entry => {
+        const marksVals = Object.values(entry.marks || {});
+        const cPresent = marksVals.filter(v => v === '✓').length;
+        const cAbsent = marksVals.filter(v => v === 'Н').length;
+        const isDeleted = !activeSet.has(String(entry.subject || '').toLowerCase());
+
+        return `
+          <tr class="hover:bg-slate-50">
+            <td class="py-2.5 px-3 font-mono text-xs">${escapeHtml(entry.dateStr)}</td>
+            <td class="py-2.5 px-3 text-xs font-semibold">${escapeHtml(String(entry.pair))}-ша</td>
+            <td class="py-2.5 px-3 font-semibold text-slate-900">${escapeHtml(entry.subject)}</td>
+            <td class="py-2.5 px-3 text-xs">
+              ${isDeleted
+                ? `<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-semibold">Видалений курс (збережено)</span>`
+                : `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">Активний</span>`}
+            </td>
+            <td class="py-2.5 px-3 font-bold text-emerald-700">${cPresent}</td>
+            <td class="py-2.5 px-3 font-bold text-rose-700">${cAbsent}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ==================== ДІЇ З ВІДМІТКАМИ, ПРЕДИКАТАМИ ТА ЛЮДЬМИ ====================
     function openStatusModal(studentId, dateStr, weekdayShort) {
       if (!canEditJournal()) {
         openAuthModal();
@@ -1918,16 +1851,15 @@
     function setCellStatus(statusValue) {
       if (!activeCellContext || !canEditJournal()) return;
       const { studentId, dateStr, subject, pair } = activeCellContext;
+      if (isTestLessonOrSubject(subject)) return;
+
       const key = `${dateStr}|${subject}|${pair}|${studentId}`;
+      if (statusValue) appState.attendance[key] = statusValue;
+      else delete appState.attendance[key];
 
-      if (statusValue) {
-        appState.attendance[key] = statusValue;
-      } else {
-        delete appState.attendance[key];
-      }
-
+      recordLessonToHistory(dateStr, subject, pair, studentId, statusValue);
       saveData();
-      renderJournal();
+      refreshAllUI();
       closeStatusModal();
     }
 
@@ -1941,14 +1873,12 @@
       const days = getDaysInMonth(monthVal);
       const todayDay = new Date().getDate();
 
-      const daySelect = document.getElementById('rollCallDaySelect');
-      daySelect.innerHTML = days.map(d =>
+      document.getElementById('rollCallDaySelect').innerHTML = days.map(d =>
         `<option value="${d.dateStr}" ${d.day === todayDay ? 'selected' : ''}>${d.day} число (${d.weekdayShort})</option>`
       ).join('');
 
-      const subject = document.getElementById('journalSubjectSelect').value;
-      const pair = document.getElementById('journalPairSelect').value;
-      document.getElementById('rollCallSubtitle').textContent = `${subject} • ${pair}-ша пара`;
+      document.getElementById('rollCallSubtitle').textContent =
+        `${document.getElementById('journalSubjectSelect').value} • ${document.getElementById('journalPairSelect').value}-ша пара`;
 
       renderRollCallList();
       document.getElementById('rollCallModal').classList.remove('hidden');
@@ -1958,25 +1888,22 @@
     function closeRollCallModal(e) {
       if (e && e.target !== e.currentTarget) return;
       document.getElementById('rollCallModal').classList.add('hidden');
-      renderJournal();
+      refreshAllUI();
     }
 
     function renderRollCallList() {
       const dateStr = document.getElementById('rollCallDaySelect').value;
       const subject = document.getElementById('journalSubjectSelect').value;
       const pair = document.getElementById('journalPairSelect').value;
-
       const statuses = ['✓', 'Н', 'ПП', 'ХВ', 'ЗВ'];
-      const listHtml = appState.students.map((st, idx) => {
+
+      document.getElementById('rollCallList').innerHTML = appState.students.map((st, idx) => {
         const key = `${dateStr}|${subject}|${pair}|${st.id}`;
         const current = appState.attendance[key] || '';
-
         const btns = statuses.map(s => {
-          const isSelected = current === s;
-          const activeStyle = isSelected
+          const activeStyle = current === s
             ? getStatusBadgeStyle(s) + ' ring-2 ring-offset-1 ring-slate-400'
             : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-transparent';
-
           return `<button onclick="setRollCallStudent('${st.id}', '${s}')" class="w-8 h-8 rounded-lg border text-xs font-bold transition ${activeStyle}">${s}</button>`;
         }).join('');
 
@@ -1989,8 +1916,6 @@
           </div>
         `;
       }).join('');
-
-      document.getElementById('rollCallList').innerHTML = listHtml;
     }
 
     function setRollCallStudent(studentId, status) {
@@ -1998,13 +1923,15 @@
       const dateStr = document.getElementById('rollCallDaySelect').value;
       const subject = document.getElementById('journalSubjectSelect').value;
       const pair = document.getElementById('journalPairSelect').value;
-      const key = `${dateStr}|${subject}|${pair}|${studentId}`;
+      if (isTestLessonOrSubject(subject)) return;
 
-      if (appState.attendance[key] === status) {
-        delete appState.attendance[key];
-      } else {
-        appState.attendance[key] = status;
-      }
+      const key = `${dateStr}|${subject}|${pair}|${studentId}`;
+      const nextVal = appState.attendance[key] === status ? '' : status;
+
+      if (nextVal) appState.attendance[key] = nextVal;
+      else delete appState.attendance[key];
+
+      recordLessonToHistory(dateStr, subject, pair, studentId, nextVal);
       saveData();
       renderRollCallList();
     }
@@ -2014,11 +1941,13 @@
       const dateStr = document.getElementById('rollCallDaySelect').value;
       const subject = document.getElementById('journalSubjectSelect').value;
       const pair = document.getElementById('journalPairSelect').value;
+      if (isTestLessonOrSubject(subject)) return;
 
       appState.students.forEach(st => {
         const key = `${dateStr}|${subject}|${pair}|${st.id}`;
         if (!appState.attendance[key]) {
           appState.attendance[key] = '✓';
+          recordLessonToHistory(dateStr, subject, pair, st.id, '✓');
         }
       });
       saveData();
@@ -2027,96 +1956,34 @@
 
     function exportToExcel() {
       if (!appState.students.length) return;
-
       const monthVal = document.getElementById('monthPicker').value;
       const [year, month] = monthVal.split('-').map(Number);
-      const monthName = MONTHS_UA[month - 1];
       const subject = document.getElementById('journalSubjectSelect').value;
       const pair = document.getElementById('journalPairSelect').value;
       const days = getDaysInMonth(monthVal);
 
       const sheetData = [
         [`Журнал відвідування групи: ${appState.groupName}`],
-        [`Предмет: ${subject} | Пара: ${pair}-ша | Період: ${monthName} ${year}`],
+        [`Предмет: ${subject} | Пара: ${pair}-ша | Період: ${MONTHS_UA[month - 1]} ${year}`],
         [],
-        ['№', 'Прізвище та Ім\'я', 'Роль', ...days.map(d => `${d.day} (${d.weekdayShort})`), 'Присутній (✓)', 'Пропуски (Н)', 'Поважна (ПП)', 'Хвороба (ХВ)', 'Звільнений (ЗВ)']
+        ['№', 'Прізвище та Ім\'я', 'Роль', ...days.map(d => `${d.day} (${d.weekdayShort})`), '✓', 'Н']
       ];
 
       appState.students.forEach((student, idx) => {
-        let cPresent = 0, cN = 0, cPP = 0, cHV = 0, cZV = 0;
+        let cPresent = 0, cN = 0;
         const rowCells = days.map(d => {
-          const key = `${d.dateStr}|${subject}|${pair}|${student.id}`;
-          const st = appState.attendance[key] || '';
+          const st = appState.attendance[`${d.dateStr}|${subject}|${pair}|${student.id}`] || '';
           if (st === '✓') cPresent++;
           if (st === 'Н') cN++;
-          if (st === 'ПП') cPP++;
-          if (st === 'ХВ') cHV++;
-          if (st === 'ЗВ') cZV++;
           return st;
         });
-
-        sheetData.push([idx + 1, student.name, student.role || 'Студент', ...rowCells, cPresent, cN, cPP, cHV, cZV]);
+        sheetData.push([idx + 1, student.name, student.role || 'Студент', ...rowCells, cPresent, cN]);
       });
 
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(sheetData);
-      ws['!cols'] = [
-        { wch: 4 }, { wch: 28 }, { wch: 18 },
-        ...days.map(() => ({ wch: 7 })),
-        { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 15 }
-      ];
-
       XLSX.utils.book_append_sheet(wb, ws, 'Відвідування');
-      const safeFileName = `Журнал_${appState.groupName}_${subject}_${monthVal}.xlsx`.replace(/[/\\?%*:|"<>]/g, '_');
-      XLSX.writeFile(wb, safeFileName);
-    }
-
-    function handleHwFiles(event) {
-      const files = Array.from(event.target.files || []);
-      files.forEach(f => {
-        const isImage = f.type.startsWith('image/') || /\.(png|jpe?g|gif|webp)$/i.test(f.name);
-        attachedFilesMeta.push({
-          name: f.name,
-          type: isImage ? 'Фото/Скрін' : 'Файл'
-        });
-      });
-      renderAttachedFiles();
-      generateHwPreview();
-      event.target.value = '';
-    }
-
-    function addManualAttachmentPrompt() {
-      const name = prompt('Введіть назву файлу або фото:');
-      if (name && name.trim()) {
-        const clean = name.trim();
-        const isImage = /\.(png|jpe?g|gif|webp)$/i.test(clean);
-        attachedFilesMeta.push({
-          name: clean,
-          type: isImage ? 'Фото/Скрін' : 'Файл'
-        });
-        renderAttachedFiles();
-        generateHwPreview();
-      }
-    }
-
-    function removeAttachedFile(index) {
-      attachedFilesMeta.splice(index, 1);
-      renderAttachedFiles();
-      generateHwPreview();
-    }
-
-    function renderAttachedFiles() {
-      const container = document.getElementById('hwAttachedList');
-      if (!attachedFilesMeta.length) {
-        container.innerHTML = '';
-        return;
-      }
-      container.innerHTML = attachedFilesMeta.map((f, idx) => `
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs font-medium">
-          <span>${f.type === 'Фото/Скрін' ? '🖼️' : '📄'} ${escapeHtml(f.name)}</span>
-          <button type="button" onclick="removeAttachedFile(${idx})" class="text-indigo-400 hover:text-rose-600 font-bold ml-1">×</button>
-        </span>
-      `).join('');
+      XLSX.writeFile(wb, `Журнал_${appState.groupName}_${subject}_${monthVal}.xlsx`.replace(/[/\\?%*:|"<>]/g, '_'));
     }
 
     function generateHwPreview() {
@@ -2125,107 +1992,37 @@
       const desc = document.getElementById('hwDescription').value.trim();
       const deadlineVal = document.getElementById('hwDeadline').value;
       const link = document.getElementById('hwLink').value.trim();
-
-      let deadlineFormatted = 'Не вказано';
       const badge = document.getElementById('deadlineBadge');
 
+      let deadlineFormatted = 'Не вказано';
       if (deadlineVal) {
         const dObj = new Date(deadlineVal);
-        const day = String(dObj.getDate()).padStart(2, '0');
-        const month = String(dObj.getMonth() + 1).padStart(2, '0');
-        const year = dObj.getFullYear();
-        const hours = String(dObj.getHours()).padStart(2, '0');
-        const mins = String(dObj.getMinutes()).padStart(2, '0');
-        const wd = WEEKDAYS_UA[dObj.getDay()];
-
-        const diffMs = dObj - new Date();
-        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-
-        let remainingText = '';
-        if (diffMs < 0) {
-          remainingText = 'термін минув';
-          badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-rose-100 text-rose-700';
-          badge.textContent = 'Термін минув';
-        } else if (diffDays === 0) {
-          remainingText = 'здача сьогодні!';
-          badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800';
-          badge.textContent = 'Сьогодні дедлайн';
-        } else {
-          remainingText = `залишилось ${diffDays} дн.`;
-          badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800';
-          badge.textContent = `Залишилось ${diffDays} дн.`;
-        }
-
-        deadlineFormatted = `${day}.${month}.${year} (${wd}) до ${hours}:${mins} [${remainingText}]`;
+        deadlineFormatted = `${String(dObj.getDate()).padStart(2, '0')}.${String(dObj.getMonth() + 1).padStart(2, '0')}.${dObj.getFullYear()} до ${String(dObj.getHours()).padStart(2, '0')}:${String(dObj.getMinutes()).padStart(2, '0')}`;
+        badge.textContent = 'Вказано термін';
+        badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800';
       } else {
-        badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600';
         badge.textContent = 'Без терміну';
+        badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600';
       }
 
-      let template = `📚 ПРЕДМЕТ: ${subject}\n`;
-      template += `📌 ТИП: ${type}\n`;
-      template += `━━━━━━━━━━━━━━━━━━━━\n`;
-      template += `📝 ЗАВДАННЯ:\n${desc || '(Впишіть опис завдання зліва...)'}\n`;
-
-      if (attachedFilesMeta.length > 0) {
-        template += `\n📎 ПРИКРІПЛЕНІ ФАЙЛИ ТА ФОТО:\n`;
-        attachedFilesMeta.forEach((f, i) => {
-          const tag = f.type === 'Фото/Скрін' ? 'ФОТО' : 'ФАЙЛ';
-          template += `  ${i + 1}. [${tag}] ${f.name}\n`;
-        });
-      }
-
-      if (link) {
-        template += `\n🔗 ПОСИЛАННЯ:\n${link}\n`;
-      }
-
-      template += `━━━━━━━━━━━━━━━━━━━━\n`;
-      template += `⏰ КІНЕЦЬ ТЕРМІНУ:\n${deadlineFormatted}`;
-
+      let template = `📚 ПРЕДМЕТ: ${subject}\n📌 ТИП: ${type}\n━━━━━━━━━━━━━━━━━━━━\n📝 ЗАВДАННЯ:\n${desc || '(Опис завдання...)'}\n`;
+      if (link) template += `\n🔗 ПОСИЛАННЯ:\n${link}\n`;
+      template += `━━━━━━━━━━━━━━━━━━━━\n⏰ КІНЕЦЬ ТЕРМІНУ:\n${deadlineFormatted}`;
       document.getElementById('hwPreviewBox').value = template;
     }
 
     function copyHwTemplate() {
-      const box = document.getElementById('hwPreviewBox');
-      const text = box.value;
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).catch(() => fallbackCopy(box));
-      } else {
-        fallbackCopy(box);
-      }
-
-      const btn = document.getElementById('copyHwBtn');
-      const origHtml = btn.innerHTML;
-      btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i><span>Скопійовано!</span>`;
-      btn.classList.replace('bg-indigo-600', 'bg-emerald-600');
-      lucide.createIcons();
-      setTimeout(() => {
-        btn.innerHTML = origHtml;
-        btn.classList.replace('bg-emerald-600', 'bg-indigo-600');
-        lucide.createIcons();
-      }, 2000);
-    }
-
-    function fallbackCopy(textarea) {
-      textarea.focus();
-      textarea.select();
-      try { document.execCommand('copy'); } catch (e) {}
-    }
-
-    function shareHwNative() {
       const text = document.getElementById('hwPreviewBox').value;
-      if (navigator.share) {
-        navigator.share({ title: 'Домашнє завдання', text }).catch(() => {});
-      } else {
-        copyHwTemplate();
-      }
+      navigator.clipboard?.writeText(text).catch(() => {});
+      const btn = document.getElementById('copyHwBtn');
+      const orig = btn.innerHTML;
+      btn.innerHTML = `<span>Скопійовано!</span>`;
+      setTimeout(() => { btn.innerHTML = orig; }, 1800);
     }
 
     function clearHwForm() {
       document.getElementById('hwDescription').value = '';
       document.getElementById('hwLink').value = '';
-      attachedFilesMeta = [];
-      renderAttachedFiles();
       generateHwPreview();
     }
 
@@ -2234,33 +2031,15 @@
         openAuthModal();
         return;
       }
-      const subject = document.getElementById('hwSubject').value;
-      const type = document.getElementById('hwType').value;
-      const deadlineVal = document.getElementById('hwDeadline').value;
-      const text = document.getElementById('hwPreviewBox').value;
-
       appState.savedHomeworks.unshift({
         id: 'hw_' + Date.now(),
-        subject,
-        type,
-        deadlineVal,
-        files: [...attachedFilesMeta],
-        text
+        subject: document.getElementById('hwSubject').value,
+        type: document.getElementById('hwType').value,
+        deadlineVal: document.getElementById('hwDeadline').value,
+        text: document.getElementById('hwPreviewBox').value
       });
-
       saveData();
       renderSavedHomeworks();
-    }
-
-    function loadSavedHwToEditor(id) {
-      const hw = appState.savedHomeworks.find(h => h.id === id);
-      if (!hw) return;
-      document.getElementById('hwSubject').value = hw.subject;
-      document.getElementById('hwType').value = hw.type;
-      if (hw.deadlineVal) document.getElementById('hwDeadline').value = hw.deadlineVal;
-      attachedFilesMeta = Array.isArray(hw.files) ? [...hw.files] : [];
-      renderAttachedFiles();
-      document.getElementById('hwPreviewBox').value = hw.text;
     }
 
     function deleteSavedHw(id) {
@@ -2270,172 +2049,29 @@
       renderSavedHomeworks();
     }
 
-    function copySavedHwText(id) {
-      const hw = appState.savedHomeworks.find(h => h.id === id);
-      if (hw) {
-        navigator.clipboard?.writeText(hw.text).catch(() => {});
-      }
-    }
-
     function renderSavedHomeworks() {
       const container = document.getElementById('savedHwList');
       if (!appState.savedHomeworks.length) {
         container.innerHTML = `<p class="text-xs text-slate-400">Збережених завдань поки немає.</p>`;
         return;
       }
-
-      container.innerHTML = appState.savedHomeworks.map(hw => {
-        const dl = hw.deadlineVal ? hw.deadlineVal.replace('T', ' ') : 'Без дедлайну';
-        const filesCount = Array.isArray(hw.files) && hw.files.length ? ` • Файлів: ${hw.files.length}` : '';
-        return `
-          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
-            <div class="min-w-0 cursor-pointer" onclick="loadSavedHwToEditor('${hw.id}')">
-              <div class="text-xs font-bold text-slate-800 truncate">${escapeHtml(hw.subject)} — ${escapeHtml(hw.type)}</div>
-              <div class="text-[11px] text-slate-500">Дедлайн: ${dl}${filesCount}</div>
-            </div>
-            <div class="flex items-center gap-1 shrink-0">
-              <button onclick="copySavedHwText('${hw.id}')" class="p-1.5 bg-white border border-slate-200 hover:bg-indigo-50 text-indigo-600 rounded-lg" title="Скопіювати">
-                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-              </button>
-              <button onclick="deleteSavedHw('${hw.id}')" class="p-1.5 bg-white border border-slate-200 hover:bg-rose-50 text-rose-600 rounded-lg" title="Видалити">
-                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-              </button>
-            </div>
+      container.innerHTML = appState.savedHomeworks.map(hw => `
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <div class="text-xs font-bold text-slate-800 truncate">${escapeHtml(hw.subject)} — ${escapeHtml(hw.type)}</div>
+            <div class="text-[11px] text-slate-500">Дедлайн: ${escapeHtml(hw.deadlineVal ? hw.deadlineVal.replace('T', ' ') : 'Без дедлайну')}</div>
           </div>
-        `;
-      }).join('');
+          <button onclick="deleteSavedHw('${hw.id}')" class="p-1.5 bg-white border border-slate-200 hover:bg-rose-50 text-rose-600 rounded-lg">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      `).join('');
       lucide.createIcons();
-    }
-
-    function parseRoleFromString(str, fallbackRole) {
-      if (!str) return fallbackRole;
-      const lower = str.toLowerCase();
-      for (const r of ROLES_LIST) {
-        if (lower.includes(r.toLowerCase())) return r;
-      }
-      if (lower.includes('адмін')) return 'Головний адміністратор';
-      if (lower.includes('зам')) return 'Замстарости';
-      if (lower.includes('поміч')) return 'Помічник старости';
-      if (lower.includes('старост')) return 'Староста';
-      return fallbackRole;
-    }
-
-    function cleanPersonName(rawName) {
-      return String(rawName || '')
-        .replace(/^\s*\d+\s*[\.\)\-:]\s*/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-    }
-
-    function appendParsedEntries(entries, defaultRole) {
-      const existingNames = new Set(appState.students.map(s => s.name.toLowerCase().trim()));
-      let addedCount = 0;
-
-      entries.forEach((item, idx) => {
-        const cleaned = cleanPersonName(item.name);
-        if (!cleaned || cleaned.length < 2) return;
-        const key = cleaned.toLowerCase();
-        if (existingNames.has(key)) return;
-
-        existingNames.add(key);
-        appState.students.push({
-          id: 'st_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substring(2, 5),
-          name: cleaned,
-          role: item.role || defaultRole || 'Студент'
-        });
-        addedCount++;
-      });
-
-      if (addedCount > 0) {
-        saveData();
-        refreshAllUI();
-      }
-      return addedCount;
-    }
-
-    function handleRosterFileUpload(event) {
-      if (!canAddPeople()) {
-        event.target.value = '';
-        return;
-      }
-
-      const file = event.target.files?.[0];
-      if (!file) return;
-
-      const defaultRole = document.getElementById('newStudentRole')?.value || 'Студент';
-      const reader = new FileReader();
-
-      reader.onload = function(e) {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const firstSheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheetName];
-          const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-          const parsed = [];
-          rows.forEach(row => {
-            if (!Array.isArray(row) || !row.length) return;
-            let nameCell = '';
-            let roleCell = '';
-
-            for (let i = 0; i < row.length; i++) {
-              const val = String(row[i] ?? '').trim();
-              if (!val) continue;
-              if (!nameCell && !/^\d+$/.test(val)) {
-                nameCell = val;
-              } else if (nameCell && !roleCell) {
-                roleCell = val;
-              }
-            }
-
-            if (!nameCell) return;
-            const lowerName = nameCell.toLowerCase();
-            if (['прізвище', 'піб', 'студент', 'ім\'я', '№', 'номер', 'список'].includes(lowerName)) return;
-
-            const splitParts = nameCell.split(/\s+[-—|]\s+/);
-            const finalName = splitParts[0];
-            const finalRole = parseRoleFromString(roleCell || splitParts[1] || '', defaultRole);
-
-            parsed.push({ name: finalName, role: finalRole });
-          });
-
-          appendParsedEntries(parsed, defaultRole);
-        } catch (err) {
-          alert('Не вдалося прочитати файл. Перевірте формат (.xlsx, .csv або .txt).');
-        }
-      };
-
-      reader.readAsArrayBuffer(file);
-      event.target.value = '';
-    }
-
-    function processBulkAdd() {
-      const text = document.getElementById('bulkStudentsTextarea').value;
-      const defaultRole = document.getElementById('bulkRoleSelect').value || 'Студент';
-      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-
-      const parsed = lines.map(line => {
-        const parts = line.split(/\s+[-—|]\s+/);
-        return {
-          name: parts[0],
-          role: parseRoleFromString(parts[1] || '', defaultRole)
-        };
-      });
-
-      appendParsedEntries(parsed, defaultRole);
-      document.getElementById('bulkStudentsTextarea').value = '';
-      closeBulkAddModal();
     }
 
     function saveGroupName() {
       if (!canManageRolesAndDelete()) return;
-      const val = document.getElementById('groupNameInput').value.trim();
-      appState.groupName = val || 'ТЛ-26008';
-      if (currentAccount) {
-        currentAccount.groupName = appState.groupName;
-        sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(currentAccount));
-      }
+      appState.groupName = document.getElementById('groupNameInput').value.trim() || 'ТЛ-26008';
       saveData();
       refreshAllUI();
     }
@@ -2447,7 +2083,6 @@
       const roleSel = document.getElementById('newStudentRole');
       const name = input.value.trim();
       if (!name) return;
-
       appState.students.push({
         id: 'st_' + Date.now() + '_' + Math.random().toString(36).substring(2, 5),
         name,
@@ -2460,10 +2095,7 @@
     }
 
     function changeStudentRole(id, newRole) {
-      if (!canManageRolesAndDelete()) {
-        refreshAllUI();
-        return;
-      }
+      if (!canManageRolesAndDelete()) { refreshAllUI(); return; }
       const st = appState.students.find(s => s.id === id);
       if (!st) return;
       st.role = newRole;
@@ -2473,11 +2105,11 @@
 
     function editStudentName(id) {
       if (!canAddPeople()) return;
-      const student = appState.students.find(s => s.id === id);
-      if (!student) return;
-      const newName = prompt('Редагувати ПІБ:', student.name);
-      if (newName && newName.trim()) {
-        student.name = newName.trim();
+      const st = appState.students.find(s => s.id === id);
+      if (!st) return;
+      const updated = prompt('Редагувати ПІБ:', st.name);
+      if (updated && updated.trim()) {
+        st.name = updated.trim();
         saveData();
         refreshAllUI();
       }
@@ -2497,24 +2129,18 @@
       refreshAllUI();
     }
 
-    function openBulkAddModal() {
-      if (!canAddPeople()) return;
-      document.getElementById('bulkAddModal').classList.remove('hidden');
-    }
-
-    function closeBulkAddModal(e) {
-      if (e && e.target !== e.currentTarget) return;
-      document.getElementById('bulkAddModal').classList.add('hidden');
-    }
-
     function addSubject(e) {
       e.preventDefault();
       if (!canEditJournal()) return;
       const input = document.getElementById('newSubjectName');
       const name = input.value.trim();
-      if (!name || appState.subjects.includes(name)) return;
-
-      appState.subjects.push(name);
+      if (!name || isTestLessonOrSubject(name)) {
+        alert('Тестові предмети/пари зі словом «тест» не додаються.');
+        return;
+      }
+      if (!appState.subjects.includes(name)) {
+        appState.subjects.push(name);
+      }
       input.value = '';
       saveData();
       refreshAllUI();
@@ -2523,54 +2149,46 @@
     function deleteSubject(name) {
       if (!canManageRolesAndDelete()) return;
       if (appState.subjects.length <= 1) return;
+      // Видаляємо предмет із поточного списку та чистимо поточні клітинки, але історія уроків залишається
       appState.subjects = appState.subjects.filter(s => s !== name);
+      pruneInvalidSubjectsAndTestLessons();
       saveData();
       refreshAllUI();
     }
 
     function renderManageLists() {
       if (!isAuthorizedUser()) return;
-
       document.getElementById('studentsCountBadge').textContent = appState.students.length;
       document.getElementById('subjectsCountBadge').textContent = appState.subjects.length;
 
-      const stList = document.getElementById('studentsManageList');
-      if (!appState.students.length) {
-        stList.innerHTML = `<p class="text-xs text-slate-400 py-4 text-center">Список порожній</p>`;
-      } else {
-        stList.innerHTML = appState.students.map((st, idx) => {
-          const currentRole = st.role || 'Студент';
-          const roleOptions = ROLES_LIST.map(r =>
-            `<option value="${r}" ${currentRole === r ? 'selected' : ''}>${r}</option>`
-          ).join('');
-
-          return `
-            <div class="py-2.5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2">
-              <div class="text-sm font-medium text-slate-800 min-w-0">
-                <span class="text-xs text-slate-400 font-mono mr-1.5">${idx + 1}.</span>
-                <span class="truncate">${escapeHtml(st.name)}</span>
-              </div>
-              <div class="flex items-center gap-1.5 shrink-0">
-                <select onchange="changeStudentRole('${st.id}', this.value)" class="px-2 py-1 text-xs font-semibold rounded-lg border ${getRoleBadgeClass(currentRole)} focus:outline-none">
-                  ${roleOptions}
-                </select>
-                <button onclick="editStudentName('${st.id}')" class="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg" title="Редагувати ПІБ">
-                  <i data-lucide="pencil" class="w-4 h-4"></i>
-                </button>
-                <button onclick="deleteStudent('${st.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg" title="Видалити">
-                  <i data-lucide="trash-2" class="w-4 h-4"></i>
-                </button>
-              </div>
+      document.getElementById('studentsManageList').innerHTML = appState.students.map((st, idx) => {
+        const currentRole = st.role || 'Студент';
+        const roleOptions = ROLES_LIST.map(r => `<option value="${r}" ${currentRole === r ? 'selected' : ''}>${r}</option>`).join('');
+        return `
+          <div class="py-2.5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2">
+            <div class="text-sm font-medium text-slate-800 min-w-0">
+              <span class="text-xs text-slate-400 font-mono mr-1.5">${idx + 1}.</span>
+              <span class="truncate">${escapeHtml(st.name)}</span>
             </div>
-          `;
-        }).join('');
-      }
+            <div class="flex items-center gap-1.5 shrink-0">
+              <select onchange="changeStudentRole('${st.id}', this.value)" class="px-2 py-1 text-xs font-semibold rounded-lg border ${getRoleBadgeClass(currentRole)} focus:outline-none">
+                ${roleOptions}
+              </select>
+              <button onclick="editStudentName('${st.id}')" class="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg">
+                <i data-lucide="pencil" class="w-4 h-4"></i>
+              </button>
+              <button onclick="deleteStudent('${st.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
 
-      const subList = document.getElementById('subjectsManageList');
-      subList.innerHTML = appState.subjects.map(sub => `
+      document.getElementById('subjectsManageList').innerHTML = appState.subjects.map(sub => `
         <div class="py-2.5 flex items-center justify-between gap-2">
           <span class="text-sm font-medium text-slate-800">${escapeHtml(sub)}</span>
-          <button onclick="deleteSubject('${escapeHtml(sub)}')" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg" title="Видалити">
+          <button onclick="deleteSubject('${escapeHtml(sub)}')" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg">
             <i data-lucide="trash-2" class="w-4 h-4"></i>
           </button>
         </div>
