@@ -232,16 +232,16 @@
       </div>
     </section>
 
-    <!-- ВКЛАДКА 2: БАЗА ДАНИХ -->
+    <!-- ВКЛАДКА 2: БАЗА ДАНИХ (ПЕРЕГЛЯД І ВИДАЛЕННЯ ВІДМІТОК) -->
     <section id="view-database" class="hidden space-y-4">
       <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
           <div>
             <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
               <i data-lucide="database" class="w-5 h-5 text-indigo-600"></i>
-              <span>База даних уроків та відвідуваності</span>
+              <span>База даних уроків та відміток</span>
             </h2>
-            <p class="text-xs text-slate-500 mt-0.5">Містить записи з усіх реальних уроків, включно з уже видаленими парами/курсами. Тестові пари («тест») відсутні.</p>
+            <p class="text-xs text-slate-500 mt-0.5">Можна подивитися, які відмітки були в уроках (включно з видаленими курсами), та видалити зайві/непотрібні відмітки, щоб вони не зберігалися.</p>
           </div>
           <div class="flex items-center gap-2">
             <input type="text" id="dbSearchInput" oninput="renderDatabaseTab()" placeholder="Фільтр за предметом, датою або студентом..." class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
@@ -258,7 +258,7 @@
             <div id="dbStatDeletedSubjects" class="text-lg font-bold text-amber-700">0</div>
           </div>
           <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-            <div class="text-[11px] text-slate-500 font-medium">Записів відміток</div>
+            <div class="text-[11px] text-slate-500 font-medium">Активних відміток</div>
             <div id="dbStatMarks" class="text-lg font-bold text-indigo-700">0</div>
           </div>
           <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
@@ -274,9 +274,8 @@
                 <th class="py-2.5 px-3 font-bold">Дата</th>
                 <th class="py-2.5 px-3 font-bold">Пара</th>
                 <th class="py-2.5 px-3 font-bold">Предмет / Курс</th>
-                <th class="py-2.5 px-3 font-bold">Статус курсу</th>
-                <th class="py-2.5 px-3 font-bold">Присутні (✓)</th>
-                <th class="py-2.5 px-3 font-bold">Відсутні (Н)</th>
+                <th class="py-2.5 px-3 font-bold">Відмітки в уроці (можна видалити)</th>
+                <th class="py-2.5 px-3 font-bold text-right">Дії</th>
               </tr>
             </thead>
             <tbody id="databaseRecordsTbody" class="divide-y divide-slate-100"></tbody>
@@ -583,7 +582,7 @@
         </button>
       </div>
       <p class="text-xs text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-200">
-        Увійдіть у свій акаунт для редагування та керування. Без входу доступний лише перегляд.
+        Увійдіть у свій акаунт для редагування та керування. Сесія зберігається в cookies.
       </p>
       <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-3">
         <div>
@@ -639,9 +638,37 @@
       groupCode: 'TL-26008'
     };
 
-    const SESSION_STORAGE_KEY = 'tl26008_active_session';
+    const SESSION_COOKIE_NAME = 'tl26008_session_cookie';
     const TAB_ID_KEY = 'tl26008_tab_id';
     const PROCESSED_IDS_STORAGE_KEY = 'tl26008_processed_incoming_ids_v1';
+
+    // ==================== РОБОТА З COOKIES ДЛЯ СЕСІЇ ====================
+    function setSessionCookie(sessionObj, days = 30) {
+      try {
+        const json = encodeURIComponent(JSON.stringify(sessionObj));
+        const maxAge = days * 24 * 60 * 60;
+        document.cookie = `${SESSION_COOKIE_NAME}=${json}; max-age=${maxAge}; path=/; SameSite=Lax`;
+      } catch (_) {}
+    }
+
+    function getSessionCookie() {
+      try {
+        const nameEq = `${SESSION_COOKIE_NAME}=`;
+        const parts = document.cookie.split(';');
+        for (let part of parts) {
+          part = part.trim();
+          if (part.indexOf(nameEq) === 0) {
+            const raw = decodeURIComponent(part.substring(nameEq.length));
+            return JSON.parse(raw);
+          }
+        }
+      } catch (_) {}
+      return null;
+    }
+
+    function clearSessionCookie() {
+      document.cookie = `${SESSION_COOKIE_NAME}=; max-age=0; path=/; SameSite=Lax`;
+    }
 
     function getStableTabId() {
       let id = sessionStorage.getItem(TAB_ID_KEY);
@@ -775,6 +802,7 @@
         const [, subj, , studentId] = parts;
         if (!subj || isTestLessonOrSubject(subj)) continue;
         if (!allowedLower.has(String(subj).toLowerCase())) continue;
+        if (!val) continue;
         nextAttendance[key] = val;
       }
       appState.attendance = nextAttendance;
@@ -782,7 +810,11 @@
       const nextHistory = {};
       for (const [hKey, entry] of Object.entries(appState.lessonHistory || {})) {
         if (!entry || isTestLessonOrSubject(entry.subject)) continue;
-        nextHistory[hKey] = entry;
+        const cleanMarks = {};
+        for (const [sid, stVal] of Object.entries(entry.marks || {})) {
+          if (stVal) cleanMarks[sid] = stVal;
+        }
+        nextHistory[hKey] = { ...entry, marks: cleanMarks };
       }
       appState.lessonHistory = nextHistory;
     }
@@ -806,6 +838,46 @@
         delete appState.lessonHistory[lessonKey].marks[studentId];
       }
       appState.lessonHistory[lessonKey].updatedAt = Date.now();
+    }
+
+    // ==================== ВИДАЛЕННЯ ВІДМІТОК З БАЗИ ДАНИХ ====================
+    async function deleteMarkFromDatabase(lessonId, studentId) {
+      if (!canEditJournal()) {
+        openAuthModal();
+        return;
+      }
+      const entry = appState.lessonHistory[lessonId];
+      if (!entry) return;
+
+      if (entry.marks && Object.prototype.hasOwnProperty.call(entry.marks, studentId)) {
+        delete entry.marks[studentId];
+        entry.updatedAt = Date.now();
+      }
+
+      const attKey = `${entry.dateStr}|${entry.subject}|${entry.pair}|${studentId}`;
+      delete appState.attendance[attKey];
+
+      await saveData();
+      refreshAllUI();
+    }
+
+    async function deleteAllMarksInLesson(lessonId) {
+      if (!canEditJournal()) {
+        openAuthModal();
+        return;
+      }
+      const entry = appState.lessonHistory[lessonId];
+      if (!entry) return;
+
+      const studentIds = Object.keys(entry.marks || {});
+      studentIds.forEach(sid => {
+        const attKey = `${entry.dateStr}|${entry.subject}|${entry.pair}|${sid}`;
+        delete appState.attendance[attKey];
+      });
+
+      delete appState.lessonHistory[lessonId];
+      await saveData();
+      refreshAllUI();
     }
 
     function getPresenceKey() {
@@ -871,7 +943,6 @@
       } catch (_) {}
     }
 
-    // Об'єднуємо предмети з розкладу та власні створені предмети/пари
     async function syncSubjectsFromSchedule() {
       try {
         const res = await fetch(`${SCHEDULE_DB_URL}/portalData.json`);
@@ -1306,6 +1377,21 @@
           }
         });
 
+        const useCloudMarks = forceApply || cloudUpdated > localUpdated;
+        const nextAttendance = useCloudMarks
+          ? (cloudData.attendance && typeof cloudData.attendance === 'object' ? cloudData.attendance : {})
+          : {
+              ...(cloudData.attendance && typeof cloudData.attendance === 'object' ? cloudData.attendance : {}),
+              ...(appState.attendance && typeof appState.attendance === 'object' ? appState.attendance : {})
+            };
+
+        const nextHistory = useCloudMarks
+          ? (cloudData.lessonHistory && typeof cloudData.lessonHistory === 'object' ? cloudData.lessonHistory : {})
+          : {
+              ...(cloudData.lessonHistory && typeof cloudData.lessonHistory === 'object' ? cloudData.lessonHistory : {}),
+              ...(appState.lessonHistory && typeof appState.lessonHistory === 'object' ? appState.lessonHistory : {})
+            };
+
         appState = {
           groupName: (forceApply || cloudUpdated > localUpdated) ? (cloudData.groupName || appState.groupName || 'ТЛ-26008') : (appState.groupName || 'ТЛ-26008'),
           ownerName: MAIN_ADMIN_ACCOUNT.fullName,
@@ -1313,14 +1399,8 @@
           subjects: mergedSubjects.length ? mergedSubjects : appState.subjects,
           customLessons: mergedCustomLessons,
           managedAccounts: cloudAccounts.length ? cloudAccounts : appState.managedAccounts,
-          attendance: {
-            ...(cloudData.attendance && typeof cloudData.attendance === 'object' ? cloudData.attendance : {}),
-            ...(appState.attendance && typeof appState.attendance === 'object' ? appState.attendance : {})
-          },
-          lessonHistory: {
-            ...(cloudData.lessonHistory && typeof cloudData.lessonHistory === 'object' ? cloudData.lessonHistory : {}),
-            ...(appState.lessonHistory && typeof appState.lessonHistory === 'object' ? appState.lessonHistory : {})
-          },
+          attendance: nextAttendance,
+          lessonHistory: nextHistory,
           savedHomeworks: (forceApply || cloudUpdated > localUpdated) && Array.isArray(cloudData.savedHomeworks)
             ? cloudData.savedHomeworks
             : appState.savedHomeworks,
@@ -1342,7 +1422,7 @@
               groupName: appState.groupName,
               groupCode: syncCode
             };
-            sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(currentAccount));
+            setSessionCookie(currentAccount);
           }
         }
 
@@ -1360,15 +1440,10 @@
     document.addEventListener('DOMContentLoaded', async () => {
       loadFromLocal();
 
-      const savedSessionRaw = sessionStorage.getItem(SESSION_STORAGE_KEY);
-      if (savedSessionRaw) {
-        try {
-          const parsedSession = JSON.parse(savedSessionRaw);
-          if (parsedSession && parsedSession.username) {
-            currentAccount = parsedSession;
-            if (currentAccount.groupCode) syncCode = currentAccount.groupCode;
-          }
-        } catch (e) {}
+      const savedCookie = getSessionCookie();
+      if (savedCookie && savedCookie.username) {
+        currentAccount = savedCookie;
+        if (currentAccount.groupCode) syncCode = currentAccount.groupCode;
       }
 
       const now = new Date();
@@ -1430,7 +1505,7 @@
           groupName: appState.groupName || MAIN_ADMIN_ACCOUNT.groupName,
           groupCode: syncCode
         };
-        sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(currentAccount));
+        setSessionCookie(currentAccount);
         document.getElementById('loginForm').reset();
         closeAuthModal();
         refreshAllUI();
@@ -1452,7 +1527,7 @@
           groupName: appState.groupName || managedMatch.groupName || 'ТЛ-26008',
           groupCode: syncCode
         };
-        sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(currentAccount));
+        setSessionCookie(currentAccount);
         document.getElementById('loginForm').reset();
         closeAuthModal();
         refreshAllUI();
@@ -1473,7 +1548,7 @@
               groupName: appState.groupName || cloudAcc.groupName || 'ТЛ-26008',
               groupCode: syncCode
             };
-            sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(currentAccount));
+            setSessionCookie(currentAccount);
             document.getElementById('loginForm').reset();
             closeAuthModal();
             refreshAllUI();
@@ -1489,7 +1564,7 @@
     async function logoutAccount() {
       await removeMyPresence();
       currentAccount = null;
-      sessionStorage.removeItem(SESSION_STORAGE_KEY);
+      clearSessionCookie();
       closeProfileModal();
       switchTab('journal');
       refreshAllUI();
@@ -1906,28 +1981,47 @@
 
       const tbody = document.getElementById('databaseRecordsTbody');
       if (!filtered.length) {
-        tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-xs text-slate-400">Записів у базі даних не знайдено.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-xs text-slate-400">Записів у базі даних не знайдено.</td></tr>`;
         return;
       }
 
       tbody.innerHTML = filtered.map(entry => {
-        const marksVals = Object.values(entry.marks || {});
-        const cPresent = marksVals.filter(v => v === '✓').length;
-        const cAbsent = marksVals.filter(v => v === 'Н').length;
+        const marksEntries = Object.entries(entry.marks || {}).filter(([, val]) => Boolean(val));
         const isDeleted = !activeSet.has(String(entry.subject || '').toLowerCase());
 
+        const markChipsHtml = marksEntries.length
+          ? marksEntries.map(([sid, stVal]) => {
+              const stName = appState.students.find(s => s.id === sid)?.name || sid;
+              return `
+                <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-100 border border-slate-200 text-xs">
+                  <span class="font-medium text-slate-800">${escapeHtml(stName)}</span>
+                  <span class="px-1.5 py-0.2 rounded font-bold ${getStatusBadgeStyle(stVal)}">${escapeHtml(stVal)}</span>
+                  <button type="button" onclick="deleteMarkFromDatabase('${escapeHtml(entry.id)}', '${escapeHtml(sid)}')" class="text-slate-400 hover:text-rose-600 font-bold" title="Видалити відмітку назавжди">×</button>
+                </span>
+              `;
+            }).join('')
+          : `<span class="text-xs text-slate-400">Відміток немає</span>`;
+
         return `
-          <tr class="hover:bg-slate-50">
-            <td class="py-2.5 px-3 font-mono text-xs">${escapeHtml(entry.dateStr)}</td>
-            <td class="py-2.5 px-3 text-xs font-semibold">${escapeHtml(String(entry.pair))}-ша</td>
-            <td class="py-2.5 px-3 font-semibold text-slate-900">${escapeHtml(entry.subject)}</td>
-            <td class="py-2.5 px-3 text-xs">
-              ${isDeleted
-                ? `<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-semibold">Видалений курс (збережено)</span>`
-                : `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">Активний</span>`}
+          <tr class="hover:bg-slate-50 align-top">
+            <td class="py-3 px-3 font-mono text-xs whitespace-nowrap">${escapeHtml(entry.dateStr)}</td>
+            <td class="py-3 px-3 text-xs font-semibold whitespace-nowrap">${escapeHtml(String(entry.pair))}-ша</td>
+            <td class="py-3 px-3">
+              <div class="font-semibold text-slate-900">${escapeHtml(entry.subject)}</div>
+              <div class="mt-1">
+                ${isDeleted
+                  ? `<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-semibold">Видалений курс</span>`
+                  : `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-semibold">Активний</span>`}
+              </div>
             </td>
-            <td class="py-2.5 px-3 font-bold text-emerald-700">${cPresent}</td>
-            <td class="py-2.5 px-3 font-bold text-rose-700">${cAbsent}</td>
+            <td class="py-3 px-3">
+              <div class="flex flex-wrap gap-1.5">${markChipsHtml}</div>
+            </td>
+            <td class="py-3 px-3 text-right whitespace-nowrap">
+              <button type="button" onclick="deleteAllMarksInLesson('${escapeHtml(entry.id)}')" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition">
+                Видалити всі відмітки
+              </button>
+            </td>
           </tr>
         `;
       }).join('');
