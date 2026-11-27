@@ -5,16 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Кабінет Головного Адміністратора — ТЛ-26008</title>
 
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- SheetJS для читання та експорту Excel (.xlsx, .csv, .xls) -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-
-  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
@@ -130,11 +123,10 @@
           <i data-lucide="list-checks" class="w-3.5 h-3.5"></i>
           <span>Отримані відмітки (<span id="pendingMarksBadge">0</span>)</span>
         </button>
-        <span class="text-[11px] text-slate-400">Автосинхронізація з «Розкладом» (2 сек)</span>
+        <span class="text-[11px] text-slate-400">Автосинхронізація з «Розкладом»</span>
       </div>
     </div>
 
-    <!-- Сповіщення про вхідні відмітки з «Розкладу» -->
     <div id="syncAlertBanner" class="hidden bg-indigo-50 border border-indigo-200 text-indigo-950 px-4 py-2.5 rounded-xl text-xs flex flex-wrap items-center justify-between gap-2">
       <span id="syncAlertText" class="font-medium"></span>
       <div class="flex items-center gap-2">
@@ -178,7 +170,7 @@
               <i data-lucide="check-square" class="w-4 h-4"></i>
               <span>Перекличка</span>
             </button>
-            <button onclick="exportToExcel()" class="flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
+            <button onclick="exportToExcel()" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
               <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
               <span>Excel</span>
             </button>
@@ -326,10 +318,9 @@
       </div>
     </section>
 
-    <!-- ВКЛАДКА 3: ГРУПА, РОЛІ ТА АКАУНТИ (ТІЛЬКИ ДЛЯ АВТОРИЗОВАНИХ) -->
+    <!-- ВКЛАДКА 3: ГРУПА, РОЛІ ТА АКАУНТИ -->
     <section id="view-manage" class="hidden space-y-5">
 
-      <!-- НАЗВА ГРУПИ ТА РОЛЬ -->
       <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div class="space-y-1">
           <div class="flex items-center gap-2 flex-wrap">
@@ -345,7 +336,6 @@
         </div>
       </div>
 
-      <!-- ОКРЕМА ПЛАШКА: СТВОРИТИ АКАУНТ ДЛЯ ПОТРІБНОЇ ЛЮДИНИ -->
       <div id="createUserAccountCard" class="hidden bg-white p-5 rounded-2xl border-2 border-indigo-200 shadow-sm space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
           <div>
@@ -408,8 +398,6 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-
-        <!-- Список людей, автозавантаження файлу та ролі (7 колонок) -->
         <div class="lg:col-span-7 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -417,7 +405,7 @@
               <span>Список групи та ролі (<span id="studentsCountBadge">0</span>)</span>
             </h2>
             <div class="flex flex-wrap gap-1.5">
-              <label class="px-2.5 py-1.5 text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg transition cursor-pointer flex items-center gap-1" title="Завантажити список з Excel (.xlsx, .csv) або TXT">
+              <label class="px-2.5 py-1.5 text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg transition cursor-pointer flex items-center gap-1">
                 <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
                 <span>Завантажити файл</span>
                 <input type="file" id="rosterFileInput" accept=".xlsx,.xls,.csv,.txt" class="hidden" onchange="handleRosterFileUpload(event)" />
@@ -444,7 +432,6 @@
           <div id="studentsManageList" class="divide-y divide-slate-100 max-h-[440px] overflow-y-auto pr-1"></div>
         </div>
 
-        <!-- Управління предметами (5 колонок) -->
         <div class="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
             <i data-lucide="book-marked" class="w-5 h-5 text-indigo-600"></i>
@@ -461,13 +448,12 @@
 
           <div id="subjectsManageList" class="divide-y divide-slate-100 max-h-[440px] overflow-y-auto pr-1"></div>
         </div>
-
       </div>
     </section>
 
   </main>
 
-  <!-- МОДАЛЬНЕ ВІКНО: СПИСОК ВІДМІТОК З «РОЗКЛАДУ» -->
+  <!-- МОДАЛЬНІ ВІКНА -->
   <div id="incomingMarksModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-3 sm:p-4" onclick="closeIncomingMarksModal(event)">
     <div class="bg-white rounded-2xl max-w-xl w-full max-h-[85vh] flex flex-col shadow-xl modal-animate" onclick="event.stopPropagation()">
       <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between gap-2">
@@ -494,7 +480,6 @@
     </div>
   </div>
 
-  <!-- МОДАЛЬНЕ ВІКНО: СТАТУС КЛІТИНКИ -->
   <div id="statusModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" onclick="closeStatusModal(event)">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl modal-animate" onclick="event.stopPropagation()">
       <div class="flex items-center justify-between mb-1">
@@ -528,7 +513,6 @@
     </div>
   </div>
 
-  <!-- МОДАЛЬНЕ ВІКНО: ПЕРЕКЛИЧКА -->
   <div id="rollCallModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-3 sm:p-4" onclick="closeRollCallModal(event)">
     <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-xl modal-animate" onclick="event.stopPropagation()">
       <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
@@ -559,7 +543,6 @@
     </div>
   </div>
 
-  <!-- МОДАЛЬНЕ ВІКНО: ДОДАТИ СПИСКОМ -->
   <div id="bulkAddModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" onclick="closeBulkAddModal(event)">
     <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl modal-animate" onclick="event.stopPropagation()">
       <h3 class="font-bold text-base text-slate-900 mb-1">Автододавання людей зі списку</h3>
@@ -581,7 +564,6 @@
     </div>
   </div>
 
-  <!-- МОДАЛЬНЕ ВІКНО ВХОДУ В АКАУНТ -->
   <div id="authModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-3 sm:p-4" onclick="closeAuthModal(event)">
     <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl modal-animate space-y-4" onclick="event.stopPropagation()">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -614,7 +596,6 @@
     </div>
   </div>
 
-  <!-- МОДАЛЬНЕ ВІКНО ПРОФІЛЮ АКАУНТА -->
   <div id="profileModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-3 sm:p-4" onclick="closeProfileModal(event)">
     <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl modal-animate space-y-4" onclick="event.stopPropagation()">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -664,7 +645,19 @@
     };
 
     const SESSION_STORAGE_KEY = 'tl26008_active_session';
-    const PRESENCE_SESSION_ID = 'sess_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now();
+    const TAB_ID_KEY = 'tl26008_tab_id';
+
+    function getStableTabId() {
+      let id = sessionStorage.getItem(TAB_ID_KEY);
+      if (!id) {
+        id = 'tab_' + Math.random().toString(36).substring(2, 9);
+        sessionStorage.setItem(TAB_ID_KEY, id);
+      }
+      return id;
+    }
+
+    const PRESENCE_TAB_ID = getStableTabId();
+    let lastHeartbeatSentAt = 0;
 
     let currentAccount = null;
     let syncCode = 'TL-26008';
@@ -707,11 +700,6 @@
       return Boolean(currentAccount);
     }
 
-    function canSeeAdminTools() {
-      return Boolean(currentAccount) &&
-        ['Головний адміністратор', 'Староста', 'Замстарости'].includes(getActiveRole());
-    }
-
     function isMainAdmin() {
       return Boolean(currentAccount) &&
         currentAccount.username.toLowerCase() === MAIN_ADMIN_ACCOUNT.username.toLowerCase() &&
@@ -744,7 +732,6 @@
       }
     }
 
-    // ==================== НЕЧІТКИЙ («РОЗУМНИЙ») ПОШУК СТУДЕНТА ====================
     const CYR_TO_LAT_MAP = {
       'а': 'a', 'б': 'b', 'в': 'v', 'г': 'h', 'ґ': 'g', 'д': 'd', 'е': 'e', 'є': 'ye',
       'ж': 'zh', 'з': 'z', 'и': 'y', 'і': 'i', 'ї': 'yi', 'й': 'y', 'к': 'k', 'л': 'l',
@@ -901,67 +888,65 @@
       return ensureSubjectExists(incomingSubject);
     }
 
-    // ==================== АКТИВНІ УЧАСНИКИ НА САЙТІ ====================
-    function getPresenceIdentityKey() {
+    // ==================== ЧИСТИЙ PRESENCE БЕЗ НАКОПИЧЕННЯ СМІТТЯ ====================
+    function getPresenceKey() {
       if (currentAccount && currentAccount.username) {
-        return 'acc_' + currentAccount.username.toLowerCase().trim();
+        return 'user_' + encodeURIComponent(currentAccount.username.toLowerCase().trim());
       }
-      if (currentAccount && currentAccount.fullName) {
-        return 'name_' + normalizeForMatch(currentAccount.fullName);
-      }
-      return 'guest_' + PRESENCE_SESSION_ID;
+      return 'guest_' + PRESENCE_TAB_ID;
     }
 
-    async function sendPresenceHeartbeat() {
+    async function sendPresenceHeartbeat(force = false) {
+      const now = Date.now();
+      if (!force && (now - lastHeartbeatSentAt) < 14000) return;
+      lastHeartbeatSentAt = now;
+
+      const key = getPresenceKey();
       const displayName = currentAccount
         ? `${currentAccount.fullName} (${getActiveRole()})`
         : 'Гість';
-      const identityKey = getPresenceIdentityKey();
+
       try {
-        await fetch(`${SCHEDULE_DB_URL}/journalPresence/${encodeURIComponent(identityKey)}.json`, {
+        await fetch(`${SCHEDULE_DB_URL}/journalPresence/${key}.json`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            identityKey,
-            sessionId: PRESENCE_SESSION_ID,
             name: displayName,
             role: getActiveRole(),
-            lastSeen: Date.now()
+            lastSeen: now
           })
         });
       } catch (_) {}
     }
 
     async function removeMyPresence() {
-      const identityKey = getPresenceIdentityKey();
+      const key = getPresenceKey();
       try {
-        await fetch(`${SCHEDULE_DB_URL}/journalPresence/${encodeURIComponent(identityKey)}.json`, {
+        await fetch(`${SCHEDULE_DB_URL}/journalPresence/${key}.json`, {
           method: 'DELETE',
           keepalive: true
         });
       } catch (_) {}
     }
 
-    async function refreshActiveUsersPresence() {
-      await sendPresenceHeartbeat();
+    async function refreshActiveUsersPresence(forceSend = false) {
+      await sendPresenceHeartbeat(forceSend);
       try {
         const res = await fetch(`${SCHEDULE_DB_URL}/journalPresence.json`);
         const data = await res.json() || {};
         const now = Date.now();
-        const myKey = getPresenceIdentityKey();
+        const myKey = getPresenceKey();
 
-        const dedupMap = new Map();
+        const activeList = [];
         for (const [key, item] of Object.entries(data)) {
-          if (!item || !item.name || (now - (item.lastSeen || 0)) > 20000) continue;
-          const cleanNameKey = normalizeForMatch(String(item.name).replace(/\(.*?\)/g, ''));
-          const dedupKey = cleanNameKey || item.identityKey || key;
-          const prev = dedupMap.get(dedupKey);
-          if (!prev || (item.lastSeen || 0) > (prev.lastSeen || 0)) {
-            dedupMap.set(dedupKey, { ...item, _key: key, _dedupKey: dedupKey });
+          if (!item || !item.name || (now - (item.lastSeen || 0)) > 45000) {
+            if (key !== myKey) {
+              fetch(`${SCHEDULE_DB_URL}/journalPresence/${encodeURIComponent(key)}.json`, { method: 'DELETE' }).catch(() => {});
+            }
+            continue;
           }
+          activeList.push({ ...item, _key: key });
         }
-
-        const activeList = Array.from(dedupMap.values()).sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0));
 
         document.getElementById('activeUsersCount').textContent = activeList.length;
         const chipsEl = document.getElementById('activeUsersChips');
@@ -969,7 +954,7 @@
           chipsEl.innerHTML = `<span class="text-slate-400">Немає активних користувачів</span>`;
         } else {
           chipsEl.innerHTML = activeList.map(u => {
-            const isMe = u.identityKey === myKey || u.sessionId === PRESENCE_SESSION_ID;
+            const isMe = u._key === myKey;
             return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${
               isMe
                 ? 'bg-indigo-50 text-indigo-800 border-indigo-200 font-semibold'
@@ -980,7 +965,7 @@
       } catch (_) {}
     }
 
-    // ==================== СИНХРОНІЗАЦІЯ ПРЕДМЕТІВ ТА СПИСОК ВІДМІТОК З «РОЗКЛАДУ» ====================
+    // ==================== СИНХРОНІЗАЦІЯ ТА ВХІДНІ ВІДМІТКИ ====================
     async function syncSubjectsFromSchedule() {
       try {
         const res = await fetch(`${SCHEDULE_DB_URL}/portalData.json`);
@@ -1073,7 +1058,7 @@
 
     function openIncomingMarksModal() {
       if (!canEditJournal()) {
-        alert('Додавати відмітки може лише авторизований користувач з правами журналу.');
+        openAuthModal();
         return;
       }
       renderIncomingMarksModalList();
@@ -1122,21 +1107,16 @@
 
     async function applyAllPendingMarks() {
       if (!pendingIncomingMarks.length) return;
-      let applied = 0;
       for (const item of pendingIncomingMarks) {
         const resolvedSub = ensureSubjectExists(item.subject);
         const attKey = `${item.dateStr}|${resolvedSub}|${item.pair}|${item.studentId}`;
         appState.attendance[attKey] = item.status || '✓';
-        applied++;
       }
       pendingIncomingMarks = [];
       await saveData();
       renderJournal();
       updatePendingMarksUI();
       closeIncomingMarksModal();
-      if (applied > 0) {
-        alert(`Додано відміток у журнал: ${applied}`);
-      }
     }
 
     function clearPendingMarks() {
@@ -1219,7 +1199,7 @@
     async function forceFullSync() {
       await pullFromFirebase(false);
       await pollScheduleAttendanceSync();
-      await refreshActiveUsersPresence();
+      await refreshActiveUsersPresence(true);
     }
 
     window.addEventListener('beforeunload', () => {
@@ -1279,14 +1259,14 @@
       refreshAllUI();
       await pullFromFirebase(false);
       await pollScheduleAttendanceSync();
-      await refreshActiveUsersPresence();
+      await refreshActiveUsersPresence(true);
 
       if (!currentAccount) {
         openAuthModal();
       }
 
-      setInterval(pollScheduleAttendanceSync, 2000);
-      setInterval(refreshActiveUsersPresence, 8000);
+      setInterval(pollScheduleAttendanceSync, 6000);
+      setInterval(() => refreshActiveUsersPresence(false), 15000);
       lucide.createIcons();
     });
 
@@ -1477,6 +1457,7 @@
           alert('Невірний пароль для головного адміністратора.');
           return;
         }
+        await removeMyPresence();
         currentAccount = {
           username: MAIN_ADMIN_ACCOUNT.username,
           fullName: MAIN_ADMIN_ACCOUNT.fullName,
@@ -1488,7 +1469,7 @@
         document.getElementById('loginForm').reset();
         closeAuthModal();
         refreshAllUI();
-        await refreshActiveUsersPresence();
+        await refreshActiveUsersPresence(true);
         return;
       }
 
@@ -1499,6 +1480,7 @@
       );
 
       if (managedMatch) {
+        await removeMyPresence();
         currentAccount = {
           username: managedMatch.username,
           fullName: managedMatch.fullName,
@@ -1510,7 +1492,7 @@
         document.getElementById('loginForm').reset();
         closeAuthModal();
         refreshAllUI();
-        await refreshActiveUsersPresence();
+        await refreshActiveUsersPresence(true);
         return;
       }
 
@@ -1520,6 +1502,7 @@
         if (res.ok) {
           const cloudAcc = await res.json();
           if (cloudAcc && cloudAcc.password === password) {
+            await removeMyPresence();
             currentAccount = {
               username: cloudAcc.username,
               fullName: cloudAcc.fullName,
@@ -1532,7 +1515,7 @@
             setSyncBadge('ok', 'Синхронізовано');
             closeAuthModal();
             refreshAllUI();
-            await refreshActiveUsersPresence();
+            await refreshActiveUsersPresence(true);
             return;
           }
         }
@@ -1549,7 +1532,7 @@
       closeProfileModal();
       switchTab('journal');
       refreshAllUI();
-      await refreshActiveUsersPresence();
+      await refreshActiveUsersPresence(true);
       openAuthModal();
     }
 
@@ -1591,10 +1574,7 @@
 
     async function handleAdminCreateAccount(e) {
       e.preventDefault();
-      if (!isMainAdmin()) {
-        alert('Створювати акаунти може лише Головний адміністратор.');
-        return;
-      }
+      if (!isMainAdmin()) return;
 
       const fullName = document.getElementById('newAccFullName').value.trim();
       const role = document.getElementById('newAccRole').value;
@@ -1672,13 +1652,11 @@
     function copyCreatedAccountCredentials() {
       if (!lastCreatedCredentialsText) return;
       navigator.clipboard?.writeText(lastCreatedCredentialsText).catch(() => {});
-      alert('Дані акаунта скопійовано! Можна передати користувачу.');
     }
 
     async function deleteManagedAccount(username) {
       if (!isMainAdmin()) return;
       if (username.toLowerCase() === MAIN_ADMIN_ACCOUNT.username.toLowerCase()) return;
-      if (!confirm(`Видалити акаунт ${username}?`)) return;
       appState.managedAccounts = (appState.managedAccounts || []).filter(a => a.username !== username);
       try {
         await fetch(getAccountSyncUrl(username), { method: 'DELETE' });
@@ -1958,10 +1936,7 @@
         openAuthModal();
         return;
       }
-      if (!appState.students.length) {
-        alert('Спочатку додайте людей до списку.');
-        return;
-      }
+      if (!appState.students.length) return;
       const monthVal = document.getElementById('monthPicker').value;
       const days = getDaysInMonth(monthVal);
       const todayDay = new Date().getDate();
@@ -2051,10 +2026,7 @@
     }
 
     function exportToExcel() {
-      if (!appState.students.length) {
-        alert('Немає даних для експорту!');
-        return;
-      }
+      if (!appState.students.length) return;
 
       const monthVal = document.getElementById('monthPicker').value;
       const [year, month] = monthVal.split('-').map(Number);
@@ -2302,7 +2274,6 @@
       const hw = appState.savedHomeworks.find(h => h.id === id);
       if (hw) {
         navigator.clipboard?.writeText(hw.text).catch(() => {});
-        alert('Шаблон завдання скопійовано!');
       }
     }
 
@@ -2384,7 +2355,6 @@
 
     function handleRosterFileUpload(event) {
       if (!canAddPeople()) {
-        alert(`Ваша роль (${getActiveRole()}) не дозволяє додавати людей до списку.`);
         event.target.value = '';
         return;
       }
@@ -2430,8 +2400,7 @@
             parsed.push({ name: finalName, role: finalRole });
           });
 
-          const added = appendParsedEntries(parsed, defaultRole);
-          alert(`Файл оброблено! Автоматично додано учасників: ${added}.`);
+          appendParsedEntries(parsed, defaultRole);
         } catch (err) {
           alert('Не вдалося прочитати файл. Перевірте формат (.xlsx, .csv або .txt).');
         }
@@ -2454,17 +2423,13 @@
         };
       });
 
-      const added = appendParsedEntries(parsed, defaultRole);
+      appendParsedEntries(parsed, defaultRole);
       document.getElementById('bulkStudentsTextarea').value = '';
       closeBulkAddModal();
-      alert(`Додано учасників: ${added}`);
     }
 
     function saveGroupName() {
-      if (!canManageRolesAndDelete()) {
-        alert('Змінювати назву групи може лише Головний адміністратор, Староста або Замстарости.');
-        return;
-      }
+      if (!canManageRolesAndDelete()) return;
       const val = document.getElementById('groupNameInput').value.trim();
       appState.groupName = val || 'ТЛ-26008';
       if (currentAccount) {
@@ -2477,10 +2442,7 @@
 
     function addStudent(e) {
       e.preventDefault();
-      if (!canAddPeople()) {
-        alert(`Ваша роль (${getActiveRole()}) не дозволяє додавати людей до списку.`);
-        return;
-      }
+      if (!canAddPeople()) return;
       const input = document.getElementById('newStudentName');
       const roleSel = document.getElementById('newStudentRole');
       const name = input.value.trim();
@@ -2499,7 +2461,6 @@
 
     function changeStudentRole(id, newRole) {
       if (!canManageRolesAndDelete()) {
-        alert('Змінювати ролі може лише Головний адміністратор, Староста або Замстарости.');
         refreshAllUI();
         return;
       }
@@ -2523,11 +2484,7 @@
     }
 
     function deleteStudent(id) {
-      if (!canManageRolesAndDelete()) {
-        alert('Видаляти людей зі списку може лише Головний адміністратор, Староста або Замстарости.');
-        return;
-      }
-      if (!confirm('Видалити цю людину зі списку?')) return;
+      if (!canManageRolesAndDelete()) return;
       appState.students = appState.students.filter(s => s.id !== id);
       saveData();
       refreshAllUI();
@@ -2541,10 +2498,7 @@
     }
 
     function openBulkAddModal() {
-      if (!canAddPeople()) {
-        alert(`Ваша роль (${getActiveRole()}) не дозволяє додавати людей до списку.`);
-        return;
-      }
+      if (!canAddPeople()) return;
       document.getElementById('bulkAddModal').classList.remove('hidden');
     }
 
@@ -2555,10 +2509,7 @@
 
     function addSubject(e) {
       e.preventDefault();
-      if (!canEditJournal()) {
-        alert(`Ваша роль (${getActiveRole()}) не дозволяє змінювати предмети.`);
-        return;
-      }
+      if (!canEditJournal()) return;
       const input = document.getElementById('newSubjectName');
       const name = input.value.trim();
       if (!name || appState.subjects.includes(name)) return;
@@ -2570,15 +2521,8 @@
     }
 
     function deleteSubject(name) {
-      if (!canManageRolesAndDelete()) {
-        alert('Видаляти предмети може лише Головний адміністратор, Староста або Замстарости.');
-        return;
-      }
-      if (appState.subjects.length <= 1) {
-        alert('Має залишитися хоча б один предмет.');
-        return;
-      }
-      if (!confirm(`Видалити предмет "${name}"?`)) return;
+      if (!canManageRolesAndDelete()) return;
+      if (appState.subjects.length <= 1) return;
       appState.subjects = appState.subjects.filter(s => s !== name);
       saveData();
       refreshAllUI();
