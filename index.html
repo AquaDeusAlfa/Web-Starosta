@@ -232,7 +232,7 @@
       </div>
     </section>
 
-    <!-- ВКЛАДКА 2: БАЗА ДАНИХ (ПЕРЕГЛЯД І ВИДАЛЕННЯ ВІДМІТОК) -->
+    <!-- ВКЛАДКА 2: БАЗА ДАНИХ (EXCEL-ФАЙЛ ВІДМІТОК ЗА ПЕРІОД ТА ВИДАЛЕННЯ) -->
     <section id="view-database" class="hidden space-y-4">
       <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
@@ -241,7 +241,7 @@
               <i data-lucide="database" class="w-5 h-5 text-indigo-600"></i>
               <span>База даних уроків та відміток</span>
             </h2>
-            <p class="text-xs text-slate-500 mt-0.5">Можна подивитися, які відмітки були в уроках (включно з видаленими курсами), та видалити зайві/непотрібні відмітки, щоб вони не зберігалися.</p>
+            <p class="text-xs text-slate-500 mt-0.5">Натисніть «Excel відміток», щоб завантажити файл з усім часом та датами відміток пари за період, або видаліть непотрібні відмітки назавжди.</p>
           </div>
           <div class="flex items-center gap-2">
             <input type="text" id="dbSearchInput" oninput="renderDatabaseTab()" placeholder="Фільтр за предметом, датою або студентом..." class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
@@ -274,7 +274,7 @@
                 <th class="py-2.5 px-3 font-bold">Дата</th>
                 <th class="py-2.5 px-3 font-bold">Пара</th>
                 <th class="py-2.5 px-3 font-bold">Предмет / Курс</th>
-                <th class="py-2.5 px-3 font-bold">Відмітки в уроці (можна видалити)</th>
+                <th class="py-2.5 px-3 font-bold">Список відміток (Excel за період та видалення)</th>
                 <th class="py-2.5 px-3 font-bold text-right">Дії</th>
               </tr>
             </thead>
@@ -642,7 +642,6 @@
     const TAB_ID_KEY = 'tl26008_tab_id';
     const PROCESSED_IDS_STORAGE_KEY = 'tl26008_processed_incoming_ids_v1';
 
-    // ==================== РОБОТА З COOKIES ДЛЯ СЕСІЇ ====================
     function setSessionCookie(sessionObj, days = 30) {
       try {
         const json = encodeURIComponent(JSON.stringify(sessionObj));
@@ -734,6 +733,13 @@
 
     let activeCellContext = null;
 
+    function formatDateTimeUa(ts) {
+      if (!ts) return '—';
+      const d = new Date(Number(ts));
+      if (isNaN(d.getTime())) return '—';
+      return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+    }
+
     function isTestLessonOrSubject(name) {
       const s = String(name || '').trim();
       if (!s || /^\d+$/.test(s)) return false;
@@ -811,15 +817,27 @@
       for (const [hKey, entry] of Object.entries(appState.lessonHistory || {})) {
         if (!entry || isTestLessonOrSubject(entry.subject)) continue;
         const cleanMarks = {};
+        const cleanTimestamps = {};
+        const cleanLogs = Array.isArray(entry.markLogs) ? entry.markLogs : [];
         for (const [sid, stVal] of Object.entries(entry.marks || {})) {
-          if (stVal) cleanMarks[sid] = stVal;
+          if (stVal) {
+            cleanMarks[sid] = stVal;
+            if (entry.markTimestamps && entry.markTimestamps[sid]) {
+              cleanTimestamps[sid] = entry.markTimestamps[sid];
+            }
+          }
         }
-        nextHistory[hKey] = { ...entry, marks: cleanMarks };
+        nextHistory[hKey] = {
+          ...entry,
+          marks: cleanMarks,
+          markTimestamps: cleanTimestamps,
+          markLogs: cleanLogs
+        };
       }
       appState.lessonHistory = nextHistory;
     }
 
-    function recordLessonToHistory(dateStr, subject, pair, studentId, status) {
+    function recordLessonToHistory(dateStr, subject, pair, studentId, status, markedAtTs = Date.now(), sourceLabel = 'Журнал') {
       if (!subject || isTestLessonOrSubject(subject)) return;
       const lessonKey = `${dateStr}|${subject}|${pair}`;
       if (!appState.lessonHistory[lessonKey]) {
@@ -829,15 +847,119 @@
           subject,
           pair: String(pair || '1'),
           marks: {},
+          markTimestamps: {},
+          markLogs: [],
           updatedAt: Date.now()
         };
       }
+      const entry = appState.lessonHistory[lessonKey];
+      if (!entry.markTimestamps) entry.markTimestamps = {};
+      if (!Array.isArray(entry.markLogs)) entry.markLogs = [];
+
+      const ts = Number(markedAtTs) || Date.now();
+      const studentName = appState.students.find(s => s.id === studentId)?.name || studentId;
+
       if (status) {
-        appState.lessonHistory[lessonKey].marks[studentId] = status;
+        entry.marks[studentId] = status;
+        entry.markTimestamps[studentId] = ts;
       } else {
-        delete appState.lessonHistory[lessonKey].marks[studentId];
+        delete entry.marks[studentId];
+        delete entry.markTimestamps[studentId];
       }
-      appState.lessonHistory[lessonKey].updatedAt = Date.now();
+
+      entry.markLogs.push({
+        studentId,
+        studentName,
+        status: status || 'ВИДАЛЕНО',
+        timestamp: ts,
+        markedAtFormatted: formatDateTimeUa(ts),
+        source: sourceLabel
+      });
+
+      entry.updatedAt = Date.now();
+    }
+
+    // ==================== ЕКСПОРТ ВІДМІТОК ПАРИ ЗА ПЕРІОД В EXCEL ====================
+    function exportLessonMarksToExcel(lessonId) {
+      const entry = appState.lessonHistory[lessonId];
+      if (!entry) return;
+
+      const marksEntries = Object.entries(entry.marks || {}).filter(([, v]) => Boolean(v));
+      const logs = Array.isArray(entry.markLogs) ? entry.markLogs : [];
+
+      // Визначаємо період відмічання (від найранішої до найпізнішої відмітки в цьому уроці)
+      const allTimes = [
+        ...Object.values(entry.markTimestamps || {}),
+        ...logs.map(l => l.timestamp)
+      ].map(Number).filter(t => !isNaN(t) && t > 0);
+
+      const minTime = allTimes.length ? Math.min(...allTimes) : null;
+      const maxTime = allTimes.length ? Math.max(...allTimes) : null;
+      const periodText = minTime && maxTime
+        ? `${formatDateTimeUa(minTime)} — ${formatDateTimeUa(maxTime)}`
+        : 'Час не зафіксовано';
+
+      // Аркуш 1: Поточні відмітки пари
+      const marksRows = [
+        [`Група: ${appState.groupName}`],
+        [`Предмет: ${entry.subject} | Пара: ${entry.pair}-ша | Дата пари: ${entry.dateStr}`],
+        [`Період, коли відмічалась пара: ${periodText}`],
+        [],
+        ['№', 'Прізвище та Ім\'я', 'Позначка', 'Дата та час відмітки']
+      ];
+
+      marksEntries.forEach(([sid, stVal], idx) => {
+        const stName = appState.students.find(s => s.id === sid)?.name || sid;
+        const ts = entry.markTimestamps?.[sid];
+        marksRows.push([
+          idx + 1,
+          stName,
+          stVal,
+          ts ? formatDateTimeUa(ts) : '—'
+        ]);
+      });
+
+      // Аркуш 2: Повна хронологія часу відмічання пари (усі фіксації за період)
+      const logRows = [
+        [`Хронологія часу відмічання пари: ${entry.subject} (${entry.pair}-ша пара, ${entry.dateStr})`],
+        [`Період відмічання: ${periodText}`],
+        [],
+        ['№', 'Дата та час фіксації', 'Студент', 'Дія / Позначка', 'Джерело']
+      ];
+
+      if (logs.length) {
+        logs.forEach((l, idx) => {
+          logRows.push([
+            idx + 1,
+            l.markedAtFormatted || formatDateTimeUa(l.timestamp),
+            l.studentName || l.studentId,
+            l.status,
+            l.source || 'Журнал'
+          ]);
+        });
+      } else {
+        marksEntries.forEach(([sid, stVal], idx) => {
+          const stName = appState.students.find(s => s.id === sid)?.name || sid;
+          const ts = entry.markTimestamps?.[sid];
+          logRows.push([
+            idx + 1,
+            ts ? formatDateTimeUa(ts) : '—',
+            stName,
+            stVal,
+            'Журнал'
+          ]);
+        });
+      }
+
+      const wb = XLSX.utils.book_new();
+      const wsMarks = XLSX.utils.aoa_to_sheet(marksRows);
+      const wsLogs = XLSX.utils.aoa_to_sheet(logRows);
+      XLSX.utils.book_append_sheet(wb, wsMarks, 'Відмітки пари');
+      XLSX.utils.book_append_sheet(wb, wsLogs, 'Час відміток за період');
+
+      const safeName = `Відмітки_${appState.groupName}_${entry.subject}_${entry.pair}пара_${entry.dateStr}`
+        .replace(/[/\\?%*:|"<>]/g, '_');
+      XLSX.writeFile(wb, `${safeName}.xlsx`);
     }
 
     // ==================== ВИДАЛЕННЯ ВІДМІТОК З БАЗИ ДАНИХ ====================
@@ -851,8 +973,11 @@
 
       if (entry.marks && Object.prototype.hasOwnProperty.call(entry.marks, studentId)) {
         delete entry.marks[studentId];
-        entry.updatedAt = Date.now();
       }
+      if (entry.markTimestamps && Object.prototype.hasOwnProperty.call(entry.markTimestamps, studentId)) {
+        delete entry.markTimestamps[studentId];
+      }
+      entry.updatedAt = Date.now();
 
       const attKey = `${entry.dateStr}|${entry.subject}|${entry.pair}|${studentId}`;
       delete appState.attendance[attKey];
@@ -1079,6 +1204,7 @@
             }
             const pair = String((typeof item.lessonIndex === 'number' ? item.lessonIndex + 1 : item.lessonIndex) || 1);
             const attKey = `${dateStr}|${subject}|${pair}|${student.id}`;
+            const markedAtTs = Number(item.timestamp || item.createdAt || Date.now());
 
             if (!appState.attendance[attKey] && !pendingIncomingMarks.some(p => p.attKey === attKey)) {
               pendingIncomingMarks.push({
@@ -1090,7 +1216,8 @@
                 dateStr,
                 subject,
                 pair,
-                status: '✓'
+                status: '✓',
+                markedAtTs
               });
               addedToQueue = true;
             } else {
@@ -1168,7 +1295,7 @@
         <div class="py-3 flex items-center justify-between gap-3">
           <div class="min-w-0">
             <div class="text-sm font-bold text-slate-900 truncate">${escapeHtml(m.studentName)}</div>
-            <div class="text-xs text-slate-500">${escapeHtml(m.subject)} • ${escapeHtml(String(m.pair))}-ша пара • ${escapeHtml(m.dateStr)}</div>
+            <div class="text-xs text-slate-500">${escapeHtml(m.subject)} • ${escapeHtml(String(m.pair))}-ша пара • ${escapeHtml(m.dateStr)} • ${escapeHtml(formatDateTimeUa(m.markedAtTs))}</div>
           </div>
           <div class="flex items-center gap-1.5 shrink-0">
             <span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-xs font-bold">${escapeHtml(m.status)}</span>
@@ -1187,7 +1314,7 @@
       }
       const attKey = `${item.dateStr}|${item.subject}|${item.pair}|${item.studentId}`;
       appState.attendance[attKey] = item.status || '✓';
-      recordLessonToHistory(item.dateStr, item.subject, item.pair, item.studentId, item.status || '✓');
+      recordLessonToHistory(item.dateStr, item.subject, item.pair, item.studentId, item.status || '✓', item.markedAtTs || Date.now(), 'Розклад');
 
       processedIncomingIds.add(item.recordId);
       saveProcessedIdsToStorage();
@@ -1208,7 +1335,7 @@
         }
         const attKey = `${item.dateStr}|${item.subject}|${item.pair}|${item.studentId}`;
         appState.attendance[attKey] = item.status || '✓';
-        recordLessonToHistory(item.dateStr, item.subject, item.pair, item.studentId, item.status || '✓');
+        recordLessonToHistory(item.dateStr, item.subject, item.pair, item.studentId, item.status || '✓', item.markedAtTs || Date.now(), 'Розклад');
 
         processedIncomingIds.add(item.recordId);
         await deleteIncomingMarkFromFirebase(item.firebaseKey);
@@ -1920,38 +2047,31 @@
 
       container.innerHTML = items.map(entry => {
         const marksObj = entry.marks || {};
-        const presentNames = [];
-        const absentNames = [];
-
-        appState.students.forEach(st => {
-          const m = marksObj[st.id];
-          if (m === '✓') presentNames.push(st.name);
-          else if (m) absentNames.push(`${st.name} (${m})`);
-        });
-
+        const countMarks = Object.values(marksObj).filter(Boolean).length;
         const isDeletedSubject = !activeSet.has(String(entry.subject || '').toLowerCase());
         const statusBadge = isDeletedSubject
           ? `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">Курс видалено • Збережено в історії</span>`
           : `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Активний курс</span>`;
 
         return `
-          <div class="py-3 space-y-1.5">
-            <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="py-3 flex flex-wrap items-center justify-between gap-2">
+            <div>
               <div class="text-sm font-bold text-slate-900">
                 ${escapeHtml(entry.subject)} <span class="text-xs font-semibold text-indigo-600">• ${escapeHtml(String(entry.pair))}-ша пара</span>
               </div>
-              <div class="flex items-center gap-2">
-                ${statusBadge}
-                <span class="text-xs font-mono text-slate-500">${escapeHtml(entry.dateStr)}</span>
-              </div>
+              <div class="text-xs text-slate-500 mt-0.5">Дата: ${escapeHtml(entry.dateStr)} • Відміток: <b>${countMarks}</b></div>
             </div>
-            <div class="text-xs text-slate-600 flex flex-wrap gap-x-4 gap-y-1">
-              <span><b class="text-emerald-700">Були (${presentNames.length}):</b> ${presentNames.length ? escapeHtml(presentNames.join(', ')) : '—'}</span>
-              <span><b class="text-rose-700">Відмічені іншим (${absentNames.length}):</b> ${absentNames.length ? escapeHtml(absentNames.join(', ')) : '—'}</span>
+            <div class="flex items-center gap-2">
+              ${statusBadge}
+              <button type="button" onclick="exportLessonMarksToExcel('${escapeHtml(entry.id)}')" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition flex items-center gap-1.5">
+                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                <span>Excel відміток</span>
+              </button>
             </div>
           </div>
         `;
       }).join('');
+      lucide.createIcons();
     }
 
     function renderDatabaseTab() {
@@ -2014,7 +2134,13 @@
                   : `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-semibold">Активний</span>`}
               </div>
             </td>
-            <td class="py-3 px-3">
+            <td class="py-3 px-3 space-y-2">
+              <div>
+                <button type="button" onclick="exportLessonMarksToExcel('${escapeHtml(entry.id)}')" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition inline-flex items-center gap-1.5">
+                  <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                  <span>Завантажити Excel відміток за період (${marksEntries.length})</span>
+                </button>
+              </div>
               <div class="flex flex-wrap gap-1.5">${markChipsHtml}</div>
             </td>
             <td class="py-3 px-3 text-right whitespace-nowrap">
@@ -2025,6 +2151,7 @@
           </tr>
         `;
       }).join('');
+      lucide.createIcons();
     }
 
     function openStatusModal(studentId, dateStr, weekdayShort) {
@@ -2058,7 +2185,7 @@
       if (statusValue) appState.attendance[key] = statusValue;
       else delete appState.attendance[key];
 
-      recordLessonToHistory(dateStr, subject, pair, studentId, statusValue);
+      recordLessonToHistory(dateStr, subject, pair, studentId, statusValue, Date.now(), 'Журнал');
       saveData();
       refreshAllUI();
       closeStatusModal();
@@ -2132,7 +2259,7 @@
       if (nextVal) appState.attendance[key] = nextVal;
       else delete appState.attendance[key];
 
-      recordLessonToHistory(dateStr, subject, pair, studentId, nextVal);
+      recordLessonToHistory(dateStr, subject, pair, studentId, nextVal, Date.now(), 'Перекличка');
       saveData();
       renderRollCallList();
     }
@@ -2144,11 +2271,12 @@
       const pair = document.getElementById('journalPairSelect').value;
       if (isTestLessonOrSubject(subject)) return;
 
+      const nowTs = Date.now();
       appState.students.forEach(st => {
         const key = `${dateStr}|${subject}|${pair}|${st.id}`;
         if (!appState.attendance[key]) {
           appState.attendance[key] = '✓';
-          recordLessonToHistory(dateStr, subject, pair, st.id, '✓');
+          recordLessonToHistory(dateStr, subject, pair, st.id, '✓', nowTs, 'Перекличка');
         }
       });
       saveData();
