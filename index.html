@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Кабінет Головного Адміністратора — ТЛ-26008</title>
 
   <!-- Tailwind CSS -->
@@ -22,17 +22,7 @@
       font-family: 'Inter', sans-serif;
       background-color: #f8fafc;
       color: #0f172a;
-      -webkit-tap-highlight-color: rgba(79, 70, 229, 0.15);
-    }
-
-    .journal-scroll {
-      overflow-x: auto;
-      overflow-y: auto;
-      max-height: 68vh;
-      touch-action: pan-x pan-y;
-      -webkit-overflow-scrolling: touch;
-      position: relative;
-      z-index: 1;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .journal-scroll::-webkit-scrollbar {
@@ -61,19 +51,9 @@
     .sticky-header {
       position: sticky;
       left: 0;
-      top: 0;
-      z-index: 25;
+      z-index: 20;
       background-color: #f1f5f9;
       box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.08);
-    }
-    #journalThead th {
-      position: sticky;
-      top: 0;
-      z-index: 15;
-    }
-
-    .hide-names-col .name-col-cell {
-      display: none;
     }
 
     @keyframes fadeIn {
@@ -103,8 +83,8 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
-        <button onclick="pullFromFirebase(false)" id="syncIndicator" class="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition" title="Оновити синхронізацію з журналом та порталом розкладу">
+      <div class="flex items-center gap-2 flex-wrap">
+        <button onclick="pullFromFirebase(false)" id="syncIndicator" class="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition" title="Оновити синхронізацію">
           <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
           <span id="syncStatusText">Синхронізація</span>
         </button>
@@ -133,8 +113,24 @@
     </div>
   </header>
 
+  <!-- АКТИВНІ УЧАСНИКИ НА САЙТІ -->
+  <div class="max-w-7xl w-full mx-auto px-3 sm:px-6 pt-3">
+    <div id="activeUsersBar" class="bg-white px-3.5 py-2.5 rounded-xl border border-slate-200 shadow-2xs flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Зараз на сайті (<span id="activeUsersCount">0</span>):</span>
+        </span>
+        <div id="activeUsersChips" class="flex flex-wrap items-center gap-1.5 text-xs">
+          <span class="text-slate-400">Оновлення...</span>
+        </div>
+      </div>
+      <span class="text-[11px] text-slate-400">Синхронізація з «Розкладом» активна</span>
+    </div>
+  </div>
+
   <!-- ОСНОВНИЙ КОНТЕНТ -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-5">
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4">
 
     <!-- ВКЛАДКА 1: ЖУРНАЛ -->
     <section id="view-journal" class="space-y-4">
@@ -163,11 +159,11 @@
           </div>
 
           <div class="flex items-end gap-2">
-            <button type="button" onclick="openQuickRollCall()" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
+            <button onclick="openQuickRollCall()" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
               <i data-lucide="check-square" class="w-4 h-4"></i>
               <span>Перекличка</span>
             </button>
-            <button type="button" onclick="exportToExcel()" class="flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
+            <button onclick="exportToExcel()" class="flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
               <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
               <span>Excel</span>
             </button>
@@ -183,14 +179,7 @@
             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-100 text-sky-800 font-bold">ХВ <span class="font-normal">Хвороба</span></span>
             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 font-bold">ЗВ <span class="font-normal">Звільнений</span></span>
           </div>
-
-          <div class="flex items-center gap-2">
-            <button type="button" onclick="toggleJournalNamesColumn()" id="toggleJournalNamesBtn" class="px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-semibold transition flex items-center gap-1">
-              <i id="toggleJournalNamesIcon" data-lucide="eye-off" class="w-3.5 h-3.5"></i>
-              <span id="toggleJournalNamesLabel">Сховати імена</span>
-            </button>
-            <span class="text-slate-400 hidden sm:inline">Натисніть на клітинку для вибору статусу</span>
-          </div>
+          <span class="text-slate-400">Натисніть на клітинку для вибору статусу</span>
         </div>
       </div>
 
@@ -206,8 +195,8 @@
           </button>
         </div>
 
-        <div id="journalTableWrapper" class="journal-scroll">
-          <table id="journalTable" class="min-w-max w-full border-collapse text-left">
+        <div id="journalTableWrapper" class="overflow-x-auto journal-scroll">
+          <table class="w-full border-collapse text-left">
             <thead id="journalThead"></thead>
             <tbody id="journalTbody" class="divide-y divide-slate-100 text-sm"></tbody>
           </table>
@@ -413,22 +402,18 @@
               <span>Список групи та ролі (<span id="studentsCountBadge">0</span>)</span>
             </h2>
             <div class="flex flex-wrap gap-1.5">
-              <button type="button" onclick="toggleStudentsListCollapse()" id="toggleRosterCollapseBtn" class="px-2.5 py-1.5 text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg transition flex items-center gap-1" title="Згорнути або розгорнути список ПІБ">
-                <i id="toggleRosterCollapseIcon" data-lucide="chevron-up" class="w-3.5 h-3.5"></i>
-                <span id="toggleRosterCollapseLabel">Згорнути список</span>
-              </button>
               <label class="px-2.5 py-1.5 text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg transition cursor-pointer flex items-center gap-1" title="Завантажити список з Excel (.xlsx, .csv) або TXT">
                 <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
                 <span>Завантажити файл</span>
                 <input type="file" id="rosterFileInput" accept=".xlsx,.xls,.csv,.txt" class="hidden" onchange="handleRosterFileUpload(event)" />
               </label>
-              <button type="button" onclick="sortStudentsAlpha()" class="px-2.5 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition">А-Я</button>
-              <button type="button" onclick="openBulkAddModal()" class="px-2.5 py-1.5 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition">+ Вставити текстом</button>
+              <button onclick="sortStudentsAlpha()" class="px-2.5 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition">А-Я</button>
+              <button onclick="openBulkAddModal()" class="px-2.5 py-1.5 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition">+ Вставити текстом</button>
             </div>
           </div>
 
           <form onsubmit="addStudent(event)" class="flex flex-col sm:flex-row gap-2">
-            <input type="text" id="newStudentName" required placeholder="Прізвище, Ім'я, По батькові..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <input type="text" id="newStudentName" required placeholder="Прізвище та Ім'я людини..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             <select id="newStudentRole" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
               <option value="Студент">Студент</option>
               <option value="Помічник старости">Помічник старости</option>
@@ -440,13 +425,6 @@
               <span>Додати</span>
             </button>
           </form>
-
-          <div id="studentsCollapsedNotice" class="hidden py-3 px-4 rounded-xl bg-slate-50 border border-dashed border-slate-300 flex items-center justify-between gap-2 text-xs text-slate-600">
-            <span>Список ПІБ згорнуто (<b id="collapsedStudentsCount">0</b> осіб)</span>
-            <button type="button" onclick="toggleStudentsListCollapse()" class="font-semibold text-indigo-600 hover:underline shrink-0">
-              Повернути список
-            </button>
-          </div>
 
           <div id="studentsManageList" class="divide-y divide-slate-100 max-h-[440px] overflow-y-auto pr-1"></div>
         </div>
@@ -543,8 +521,8 @@
   <div id="bulkAddModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" onclick="closeBulkAddModal(event)">
     <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl modal-animate" onclick="event.stopPropagation()">
       <h3 class="font-bold text-base text-slate-900 mb-1">Автододавання людей зі списку</h3>
-      <p class="text-xs text-slate-500 mb-2">Вставте ПІБ (кожен з нового рядка). Можна також вказати роль через дефіс: <code>Іваненко Іван Іванович - Замстарости</code></p>
-      <textarea id="bulkStudentsTextarea" rows="6" placeholder="Іваненко Іван Іванович - Староста&#10;Петренко Марія Сергіївна - Замстарости&#10;Коваленко Олександр Петрович" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"></textarea>
+      <p class="text-xs text-slate-500 mb-2">Вставте ПІБ (кожен з нового рядка). Можна також вказати роль через дефіс: <code>Іваненко Іван - Замстарости</code></p>
+      <textarea id="bulkStudentsTextarea" rows="6" placeholder="Іваненко Іван - Староста&#10;Петренко Марія - Замстарости&#10;Коваленко Олександр" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"></textarea>
       <div class="mb-3">
         <label class="block text-xs font-semibold text-slate-600 mb-1">Роль за замовчуванням:</label>
         <select id="bulkRoleSelect" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium">
@@ -577,11 +555,11 @@
       <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-3">
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Логін</label>
-          <input type="text" id="loginUsername" required autocomplete="username" placeholder="Введіть логін" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input type="text" id="loginUsername" required autocomplete="off" placeholder="Введіть логін" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Пароль</label>
-          <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="Введіть пароль" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input type="password" id="loginPassword" required autocomplete="new-password" placeholder="Введіть пароль" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
           Увійти
@@ -627,7 +605,8 @@
     const ROLES_LIST = ['Головний адміністратор', 'Староста', 'Замстарости', 'Помічник старости', 'Студент'];
 
     const SYNC_ENDPOINT = 'https://saint-dla-starist-default-rtdb.europe-west1.firebasedatabase.app';
-    const PORTAL_DB_URL = 'https://tl-26008-default-rtdb.europe-west1.firebasedatabase.app';
+    const SCHEDULE_DB_URL = 'https://tl-26008-default-rtdb.europe-west1.firebasedatabase.app';
+    const JOURNAL_SYNC_TOKEN = 'TL26008B_JOURNAL_SYNC_TOKEN_2026';
 
     const MAIN_ADMIN_ACCOUNT = {
       username: 'іван',
@@ -638,13 +617,13 @@
       groupCode: 'TL-26008'
     };
 
-    const PERSISTENT_SESSION_KEY = 'tl26008_saved_account';
+    const SESSION_STORAGE_KEY = 'tl26008_active_session';
+    const PRESENCE_SESSION_ID = 'sess_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now();
 
     let currentAccount = null;
     let syncCode = 'TL-26008';
     let lastCreatedCredentialsText = '';
-    let isStudentsListCollapsed = false;
-    let isJournalNamesHidden = false;
+    let processedIncomingIds = new Set();
 
     let appState = {
       groupName: 'ТЛ-26008',
@@ -670,79 +649,6 @@
 
     let attachedFilesMeta = [];
     let activeCellContext = null;
-
-    function getCollapseStorageKey() {
-      return `tl26008_roster_collapsed_${syncCode}`;
-    }
-
-    function getJournalNamesStorageKey() {
-      return `tl26008_journal_hide_names_${syncCode}`;
-    }
-
-    function applyJournalNamesUI() {
-      const tableEl = document.getElementById('journalTable');
-      const labelEl = document.getElementById('toggleJournalNamesLabel');
-      const iconEl = document.getElementById('toggleJournalNamesIcon');
-      if (!tableEl || !labelEl) return;
-
-      if (isJournalNamesHidden) {
-        tableEl.classList.add('hide-names-col');
-        labelEl.textContent = 'Показати імена';
-        if (iconEl) iconEl.setAttribute('data-lucide', 'eye');
-      } else {
-        tableEl.classList.remove('hide-names-col');
-        labelEl.textContent = 'Сховати імена';
-        if (iconEl) iconEl.setAttribute('data-lucide', 'eye-off');
-      }
-      lucide.createIcons();
-    }
-
-    function toggleJournalNamesColumn() {
-      isJournalNamesHidden = !isJournalNamesHidden;
-      localStorage.setItem(getJournalNamesStorageKey(), isJournalNamesHidden ? '1' : '0');
-      applyJournalNamesUI();
-    }
-
-    function applyStudentsListCollapseUI() {
-      const listEl = document.getElementById('studentsManageList');
-      const noticeEl = document.getElementById('studentsCollapsedNotice');
-      const labelEl = document.getElementById('toggleRosterCollapseLabel');
-      const iconEl = document.getElementById('toggleRosterCollapseIcon');
-      const countEl = document.getElementById('collapsedStudentsCount');
-
-      if (!listEl || !noticeEl || !labelEl) return;
-
-      if (countEl) {
-        countEl.textContent = appState.students.length;
-      }
-
-      if (isStudentsListCollapsed) {
-        listEl.classList.add('hidden');
-        noticeEl.classList.remove('hidden');
-        labelEl.textContent = 'Повернути список';
-        if (iconEl) iconEl.setAttribute('data-lucide', 'chevron-down');
-      } else {
-        listEl.classList.remove('hidden');
-        noticeEl.classList.add('hidden');
-        labelEl.textContent = 'Згорнути список';
-        if (iconEl) iconEl.setAttribute('data-lucide', 'chevron-up');
-      }
-      lucide.createIcons();
-    }
-
-    function toggleStudentsListCollapse() {
-      isStudentsListCollapsed = !isStudentsListCollapsed;
-      localStorage.setItem(getCollapseStorageKey(), isStudentsListCollapsed ? '1' : '0');
-      applyStudentsListCollapseUI();
-    }
-
-    function persistCurrentSession() {
-      if (currentAccount) {
-        localStorage.setItem(PERSISTENT_SESSION_KEY, JSON.stringify(currentAccount));
-      } else {
-        localStorage.removeItem(PERSISTENT_SESSION_KEY);
-      }
-    }
 
     function getActiveRole() {
       if (!currentAccount) return 'Гість';
@@ -781,27 +687,271 @@
       }
     }
 
+    // ==================== НЕЧІТКИЙ («РОЗУМНИЙ») ПОШУК СТУДЕНТА ====================
+    const CYR_TO_LAT_MAP = {
+      'а': 'a', 'б': 'b', 'в': 'v', 'г': 'h', 'ґ': 'g', 'д': 'd', 'е': 'e', 'є': 'ye',
+      'ж': 'zh', 'з': 'z', 'и': 'y', 'і': 'i', 'ї': 'yi', 'й': 'y', 'к': 'k', 'л': 'l',
+      'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+      'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'shch', 'ь': '',
+      'ю': 'yu', 'я': 'ya', 'ы': 'y', 'э': 'e', 'ё': 'yo', 'ъ': ''
+    };
+
+    const LAYOUT_EN_TO_UA = {
+      'q': 'й', 'w': 'ц', 'e': 'у', 'r': 'к', 't': 'е', 'y': 'н', 'u': 'г', 'i': 'ш',
+      'o': 'щ', 'p': 'з', '[': 'х', ']': 'ї', 'a': 'ф', 's': 'і', 'd': 'в', 'f': 'а',
+      'g': 'п', 'h': 'р', 'j': 'о', 'k': 'л', 'l': 'д', ';': 'ж', "'": 'є', 'z': 'я',
+      'x': 'ч', 'c': 'с', 'v': 'м', 'b': 'и', 'n': 'т', 'm': 'ь', ',': 'б', '.': 'ю'
+    };
+
+    function remapLayoutIfNeeded(str) {
+      const lower = str.toLowerCase();
+      const latinChars = (lower.match(/[a-z\[\];',.]/g) || []).length;
+      const cyrChars = (lower.match(/[а-яіїєґ]/g) || []).length;
+      if (latinChars > 0 && cyrChars === 0) {
+        return lower.split('').map(ch => LAYOUT_EN_TO_UA[ch] ?? ch).join('');
+      }
+      return lower;
+    }
+
+    function transliterateToLatin(str) {
+      return str.toLowerCase().split('').map(ch => CYR_TO_LAT_MAP[ch] ?? ch).join('');
+    }
+
+    function normalizeForMatch(raw) {
+      const cleaned = String(raw || '')
+        .toLowerCase()
+        .replace(/ё/g, 'е')
+        .replace(/['’`´]/g, '')
+        .replace(/[^a-zа-яіїєґ0-9\s]+/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      const fromLayout = remapLayoutIfNeeded(cleaned);
+      return transliterateToLatin(fromLayout).replace(/\s+/g, ' ').trim();
+    }
+
+    function levenshteinDistance(a, b) {
+      if (a === b) return 0;
+      if (!a.length) return b.length;
+      if (!b.length) return a.length;
+      const prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+      for (let i = 1; i <= a.length; i++) {
+        let diag = prev[0];
+        prev[0] = i;
+        for (let j = 1; j <= b.length; j++) {
+          const temp = prev[j];
+          const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+          prev[j] = Math.min(prev[j] + 1, prev[j - 1] + 1, diag + cost);
+          diag = temp;
+        }
+      }
+      return prev[b.length];
+    }
+
+    function tokenSimilarity(t1, t2) {
+      if (!t1 || !t2) return 0;
+      if (t1 === t2) return 1;
+      if ((t1.length >= 2 && t2.startsWith(t1)) || (t2.length >= 2 && t1.startsWith(t2))) {
+        return 0.86;
+      }
+      const maxLen = Math.max(t1.length, t2.length);
+      const dist = levenshteinDistance(t1, t2);
+      return Math.max(0, 1 - dist / maxLen);
+    }
+
+    function scoreStudentMatch(queryRaw, studentNameRaw) {
+      const qNorm = normalizeForMatch(queryRaw);
+      const sNorm = normalizeForMatch(studentNameRaw);
+      if (!qNorm || !sNorm) return 0;
+      if (qNorm === sNorm) return 1;
+
+      const qTokens = qNorm.split(' ').filter(Boolean);
+      const sTokens = sNorm.split(' ').filter(Boolean);
+
+      // Перевірка незалежно від порядку слів («Іван Петренко» / «Петренко Іван») та скорочень
+      const pairScores = qTokens.map(qt => {
+        let best = 0;
+        for (const st of sTokens) {
+          const sc = tokenSimilarity(qt, st);
+          if (sc > best) best = sc;
+        }
+        return best;
+      });
+      const avgTokenScore = pairScores.reduce((a, b) => a + b, 0) / pairScores.length;
+
+      const maxLen = Math.max(qNorm.length, sNorm.length);
+      const fullSim = Math.max(0, 1 - levenshteinDistance(qNorm, sNorm) / maxLen);
+
+      const includesBonus = (sNorm.includes(qNorm) || qNorm.includes(sNorm)) ? 0.12 : 0;
+      return Math.min(1, avgTokenScore * 0.65 + fullSim * 0.35 + includesBonus);
+    }
+
+    function findStudentSmart(queryName, selectedStudentId = null) {
+      if (selectedStudentId) {
+        const direct = appState.students.find(s => s.id === selectedStudentId);
+        if (direct) return { status: 'matched', student: direct, candidates: [direct] };
+      }
+
+      const scored = appState.students
+        .map(st => ({ student: st, score: scoreStudentMatch(queryName, st.name) }))
+        .filter(item => item.score >= 0.52)
+        .sort((a, b) => b.score - a.score);
+
+      if (!scored.length) {
+        return { status: 'not_found', student: null, candidates: [] };
+      }
+
+      const top = scored[0];
+      const closeAlternatives = scored.filter(
+        item => item.student.id !== top.student.id && (top.score - item.score) <= 0.14
+      );
+
+      if (top.score >= 0.85 && closeAlternatives.length === 0) {
+        return { status: 'matched', student: top.student, candidates: scored.slice(0, 4).map(x => x.student) };
+      }
+
+      const candidates = [top, ...closeAlternatives].slice(0, 5).map(x => ({
+        id: x.student.id,
+        fullName: x.student.name,
+        score: Number(x.score.toFixed(2))
+      }));
+
+      return { status: 'ambiguous', student: null, candidates };
+    }
+
+    function resolveSubjectName(incomingSubject) {
+      if (!incomingSubject) return appState.subjects[0] || 'Загальний журнал';
+      const exact = appState.subjects.find(s => s.toLowerCase() === String(incomingSubject).trim().toLowerCase());
+      if (exact) return exact;
+      let best = null;
+      let bestScore = 0;
+      for (const sub of appState.subjects) {
+        const sc = scoreStudentMatch(incomingSubject, sub);
+        if (sc > bestScore) {
+          bestScore = sc;
+          best = sub;
+        }
+      }
+      return bestScore >= 0.55 ? best : (appState.subjects[0] || incomingSubject);
+    }
+
+    // ==================== АКТИВНІ УЧАСНИКИ НА САЙТІ ====================
+    async function sendPresenceHeartbeat() {
+      const displayName = currentAccount
+        ? `${currentAccount.fullName} (${getActiveRole()})`
+        : 'Гість';
+      try {
+        await fetch(`${SCHEDULE_DB_URL}/journalPresence/${PRESENCE_SESSION_ID}.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: PRESENCE_SESSION_ID,
+            name: displayName,
+            role: getActiveRole(),
+            lastSeen: Date.now()
+          })
+        });
+      } catch (_) {}
+    }
+
+    async function refreshActiveUsersPresence() {
+      await sendPresenceHeartbeat();
+      try {
+        const res = await fetch(`${SCHEDULE_DB_URL}/journalPresence.json`);
+        const data = await res.json() || {};
+        const now = Date.now();
+        const activeList = Object.values(data)
+          .filter(item => item && item.name && (now - (item.lastSeen || 0)) <= 45000)
+          .sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0));
+
+        document.getElementById('activeUsersCount').textContent = activeList.length;
+        const chipsEl = document.getElementById('activeUsersChips');
+        if (!activeList.length) {
+          chipsEl.innerHTML = `<span class="text-slate-400">Немає активних користувачів</span>`;
+        } else {
+          chipsEl.innerHTML = activeList.map(u => {
+            const isMe = u.sessionId === PRESENCE_SESSION_ID;
+            return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+              isMe
+                ? 'bg-indigo-50 text-indigo-800 border-indigo-200 font-semibold'
+                : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+            }">${escapeHtml(u.name)}${isMe ? ' • ви' : ''}</span>`;
+          }).join('');
+        }
+      } catch (_) {}
+    }
+
+    // ==================== ПРИЙОМ ВІДМІТОК З САЙТУ 1 («РОЗКЛАД») ====================
+    async function pollScheduleAttendanceSync() {
+      try {
+        const res = await fetch(`${SCHEDULE_DB_URL}/journalSync/incoming.json`);
+        const incomingObj = await res.json();
+        if (!incomingObj || typeof incomingObj !== 'object') return;
+
+        let changed = false;
+        for (const [key, item] of Object.entries(incomingObj)) {
+          if (!item || typeof item !== 'object') continue;
+          const recordId = item.id || key;
+          if (processedIncomingIds.has(recordId)) continue;
+
+          // Захист за ключем/токеном
+          if (item.token !== JOURNAL_SYNC_TOKEN) {
+            processedIncomingIds.add(recordId);
+            continue;
+          }
+
+          const rawName = item.fullNameInput || `${item.lastname || ''} ${item.firstname || ''}`.trim();
+          const matchResult = findStudentSmart(rawName, item.selectedStudentId || null);
+
+          if (matchResult.status === 'matched' && matchResult.student) {
+            const dateStr = item.date || new Date().toISOString().split('T')[0];
+            const subject = resolveSubjectName(item.lessonName);
+            const pair = String((typeof item.lessonIndex === 'number' ? item.lessonIndex + 1 : item.lessonIndex) || 1);
+            const attKey = `${dateStr}|${subject}|${pair}|${matchResult.student.id}`;
+
+            // Захист від дублів: не перезаписуємо існуючу відмітку і не плодимо дублікати
+            if (!appState.attendance[attKey]) {
+              appState.attendance[attKey] = '✓';
+              changed = true;
+            }
+            processedIncomingIds.add(recordId);
+          } else if (matchResult.status === 'ambiguous') {
+            // Записуємо статус для ручної перевірки/уточнення та публікуємо кандидатів
+            await fetch(`${SCHEDULE_DB_URL}/journalSync/ambiguous/${recordId}.json`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                status: 'ambiguous',
+                queryName: rawName,
+                candidates: matchResult.candidates
+              })
+            });
+            processedIncomingIds.add(recordId);
+          } else {
+            processedIncomingIds.add(recordId);
+          }
+        }
+
+        if (changed) {
+          await saveData();
+          renderJournal();
+        }
+      } catch (_) {}
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
       localStorage.removeItem('starosta_active_account');
       localStorage.removeItem('starosta_device_owner');
       sessionStorage.removeItem('starosta_device_session');
-      sessionStorage.removeItem('tl26008_active_session');
 
       loadFromLocal();
-      isStudentsListCollapsed = localStorage.getItem(getCollapseStorageKey()) === '1';
-      isJournalNamesHidden = localStorage.getItem(getJournalNamesStorageKey()) === '1';
 
-      const savedSessionRaw = localStorage.getItem(PERSISTENT_SESSION_KEY);
+      const savedSessionRaw = sessionStorage.getItem(SESSION_STORAGE_KEY);
       if (savedSessionRaw) {
         try {
           const parsedSession = JSON.parse(savedSessionRaw);
           if (parsedSession && parsedSession.username) {
             currentAccount = parsedSession;
-            if (currentAccount.groupCode) {
-              syncCode = currentAccount.groupCode;
-              isStudentsListCollapsed = localStorage.getItem(getCollapseStorageKey()) === '1';
-              isJournalNamesHidden = localStorage.getItem(getJournalNamesStorageKey()) === '1';
-            }
+            if (currentAccount.groupCode) syncCode = currentAccount.groupCode;
           }
         } catch (e) {}
       }
@@ -840,6 +990,11 @@
 
       refreshAllUI();
       await pullFromFirebase(false);
+      await pollScheduleAttendanceSync();
+      await refreshActiveUsersPresence();
+
+      setInterval(pollScheduleAttendanceSync, 5000);
+      setInterval(refreshActiveUsersPresence, 15000);
       lucide.createIcons();
     });
 
@@ -924,104 +1079,6 @@
       }
     }
 
-    // ==================== СИНХРОНІЗАЦІЯ З ПОРТАЛОМ РОЗКЛАДУ ====================
-    function getSundayOfWeekId(weekIdStr) {
-      if (weekIdStr && /^\d{4}-\d{1,2}-\d{1,2}$/.test(weekIdStr)) {
-        const [y, m, d] = weekIdStr.split('-').map(Number);
-        return new Date(y, m - 1, d);
-      }
-      const now = new Date();
-      return new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
-    }
-
-    function findStudentByPortalRecord(lastname, firstname) {
-      const ln = String(lastname || '').trim().toLowerCase();
-      const fn = String(firstname || '').trim().toLowerCase();
-      if (!ln && !fn) return null;
-      const full = `${ln} ${fn}`.trim();
-
-      return appState.students.find(st => {
-        const sName = String(st.name || '').trim().toLowerCase();
-        if (!sName) return false;
-        if (sName === full || sName.startsWith(full + ' ') || full.startsWith(sName + ' ')) return true;
-        const parts = sName.split(/\s+/);
-        return ln && fn && parts[0] === ln && parts[1] === fn;
-      }) || null;
-    }
-
-    async function syncWithSchedulePortal() {
-      try {
-        const res = await fetch(`${PORTAL_DB_URL}/portalData.json`);
-        if (!res.ok) return false;
-        const portal = await res.json();
-        if (!portal || typeof portal !== 'object') return false;
-
-        let changed = false;
-
-        // 1. Підтягуємо всі предмети з розкладу порталу
-        if (portal.schedule && typeof portal.schedule === 'object') {
-          const portalSubjects = [];
-          Object.values(portal.schedule).forEach(dayLessons => {
-            if (!Array.isArray(dayLessons)) return;
-            dayLessons.forEach(lesson => {
-              const name = String(lesson?.name || '').trim();
-              if (name && !portalSubjects.includes(name)) {
-                portalSubjects.push(name);
-              }
-            });
-          });
-
-          if (portalSubjects.length > 0) {
-            const mergedSubjects = Array.from(new Set([...portalSubjects, ...appState.subjects]));
-            if (mergedSubjects.length !== appState.subjects.length ||
-                mergedSubjects.some((s, idx) => appState.subjects[idx] !== s)) {
-              appState.subjects = mergedSubjects;
-              changed = true;
-            }
-          }
-        }
-
-        // 2. Підтягуємо відмітки з порталу розкладу (ключ: dayIndex_lessonIndex_lessonName)
-        if (portal.attendance && typeof portal.attendance === 'object') {
-          const sunday = getSundayOfWeekId(portal.attendanceWeekId);
-
-          Object.entries(portal.attendance).forEach(([lessonKey, records]) => {
-            if (!Array.isArray(records) || !records.length) return;
-            const parts = lessonKey.split('_');
-            if (parts.length < 3) return;
-
-            const dayIdx = parseInt(parts[0], 10);
-            const lessonIdx = parseInt(parts[1], 10);
-            const lessonName = parts.slice(2).join('_').trim();
-
-            if (isNaN(dayIdx) || dayIdx < 1 || dayIdx > 5 || isNaN(lessonIdx)) return;
-
-            const targetDate = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate() + dayIdx);
-            const dateStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`;
-            const pairNum = String(lessonIdx + 1);
-
-            records.forEach(rec => {
-              const matchedStudent = findStudentByPortalRecord(rec.lastname, rec.firstname);
-              if (!matchedStudent) return;
-
-              const jKey = `${dateStr}|${lessonName}|${pairNum}|${matchedStudent.id}`;
-              if (!appState.attendance[jKey]) {
-                appState.attendance[jKey] = '✓';
-                changed = true;
-              }
-            });
-          });
-        }
-
-        if (changed) {
-          localStorage.setItem(`starosta_data_${syncCode}`, JSON.stringify(appState));
-        }
-        return changed;
-      } catch (e) {
-        return false;
-      }
-    }
-
     async function pullFromFirebase(forceApply) {
       setSyncBadge('sync', 'Синхронізація...');
       try {
@@ -1076,24 +1133,13 @@
                   groupName: appState.groupName,
                   groupCode: syncCode
                 };
-                persistCurrentSession();
+                sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(currentAccount));
               }
-            } else if (isMainAdmin() && currentAccount) {
-              currentAccount = {
-                ...currentAccount,
-                groupName: appState.groupName,
-                groupCode: syncCode
-              };
-              persistCurrentSession();
             }
+
+            refreshAllUI();
           }
-        }
-
-        const portalChanged = await syncWithSchedulePortal();
-        refreshAllUI();
-
-        if (portalChanged) {
-          await saveData();
+          setSyncBadge('ok', 'Синхронізовано');
         } else {
           setSyncBadge('ok', 'Синхронізовано');
         }
@@ -1102,7 +1148,6 @@
       }
     }
 
-    // ==================== ВХІД ТА ПРОФІЛЬ АКАУНТА ====================
     function handleAccountButtonClick() {
       if (currentAccount) {
         openProfileModal();
@@ -1141,10 +1186,11 @@
           groupName: appState.groupName || MAIN_ADMIN_ACCOUNT.groupName,
           groupCode: syncCode
         };
-        persistCurrentSession();
+        sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(currentAccount));
         document.getElementById('loginForm').reset();
         closeAuthModal();
         refreshAllUI();
+        await refreshActiveUsersPresence();
         return;
       }
 
@@ -1162,10 +1208,11 @@
           groupName: appState.groupName || managedMatch.groupName || 'ТЛ-26008',
           groupCode: syncCode
         };
-        persistCurrentSession();
+        sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(currentAccount));
         document.getElementById('loginForm').reset();
         closeAuthModal();
         refreshAllUI();
+        await refreshActiveUsersPresence();
         return;
       }
 
@@ -1182,11 +1229,12 @@
               groupName: appState.groupName || cloudAcc.groupName || 'ТЛ-26008',
               groupCode: syncCode
             };
-            persistCurrentSession();
+            sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(currentAccount));
             document.getElementById('loginForm').reset();
             setSyncBadge('ok', 'Синхронізовано');
             closeAuthModal();
             refreshAllUI();
+            await refreshActiveUsersPresence();
             return;
           }
         }
@@ -1196,11 +1244,12 @@
       alert('Невірний логін або пароль.');
     }
 
-    function logoutAccount() {
+    async function logoutAccount() {
       currentAccount = null;
-      persistCurrentSession();
+      sessionStorage.removeItem(SESSION_STORAGE_KEY);
       closeProfileModal();
       refreshAllUI();
+      await refreshActiveUsersPresence();
     }
 
     function openProfileModal() {
@@ -1239,7 +1288,6 @@
       document.getElementById('profileModal').classList.add('hidden');
     }
 
-    // ==================== СТВОРЕННЯ АКАУНТА ДЛЯ ІНШИХ ЛЮДЕЙ ====================
     async function handleAdminCreateAccount(e) {
       e.preventDefault();
       if (!isMainAdmin()) {
@@ -1363,7 +1411,6 @@
       `).join('');
     }
 
-    // ==================== ОНОВЛЕННЯ ІНТЕРФЕЙСУ ====================
     function refreshAllUI() {
       document.getElementById('headerGroupName').textContent = appState.groupName || 'ТЛ-26008';
       document.getElementById('headerGroupCode').textContent = syncCode;
@@ -1449,7 +1496,7 @@
         case 'ПП': return 'bg-amber-100 text-amber-800 border-amber-200 font-bold';
         case 'ХВ': return 'bg-sky-100 text-sky-800 border-sky-200 font-bold';
         case 'ЗВ': return 'bg-purple-100 text-purple-800 border-purple-200 font-bold';
-        default: return 'bg-white hover:bg-slate-50 text-slate-400 border-slate-200';
+        default: return 'bg-white hover:bg-slate-50 text-slate-300 border-slate-200';
       }
     }
 
@@ -1475,7 +1522,7 @@
 
       let theadHtml = `
         <tr class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
-          <th class="sticky-header name-col-cell py-2.5 px-3 font-bold text-slate-800 min-w-[170px] sm:min-w-[230px] border-r border-slate-200">
+          <th class="sticky-header py-2.5 px-3 font-bold text-slate-800 min-w-[200px] sm:min-w-[240px] border-r border-slate-200">
             № / Прізвище та Ім'я
           </th>
       `;
@@ -1489,7 +1536,7 @@
             : 'bg-slate-100 text-slate-700';
 
         theadHtml += `
-          <th class="py-1.5 px-1 text-center min-w-[42px] border-r border-slate-200/80 ${headerBg}" title="${d.dateStr} (${d.weekdayShort})">
+          <th class="py-1.5 px-1 text-center min-w-[38px] border-r border-slate-200/80 ${headerBg}" title="${d.dateStr} (${d.weekdayShort})">
             <div class="text-[10px] font-semibold uppercase opacity-80">${d.weekdayShort}</div>
             <div class="text-xs font-bold">${d.day}</div>
           </th>
@@ -1497,8 +1544,8 @@
       });
 
       theadHtml += `
-          <th class="py-2 px-2.5 text-center font-bold text-slate-700 bg-slate-100 min-w-[52px] border-r border-slate-200">✓</th>
-          <th class="py-2 px-2.5 text-center font-bold text-rose-700 bg-slate-100 min-w-[52px]">Н</th>
+          <th class="py-2 px-2.5 text-center font-bold text-slate-700 bg-slate-100 min-w-[65px] border-r border-slate-200">✓</th>
+          <th class="py-2 px-2.5 text-center font-bold text-rose-700 bg-slate-100 min-w-[65px]">Н</th>
         </tr>
       `;
       document.getElementById('journalThead').innerHTML = theadHtml;
@@ -1522,9 +1569,8 @@
           cellsHtml += `
             <td class="p-1 text-center border-r border-slate-100 ${weekendBg}">
               <button
-                type="button"
                 onclick="openStatusModal('${student.id}', '${d.dateStr}', '${d.weekdayShort}')"
-                class="w-9 h-9 rounded-lg border text-xs flex items-center justify-center mx-auto transition active:scale-95 ${badgeClass}"
+                class="w-8 h-8 rounded-lg border text-xs flex items-center justify-center mx-auto transition active:scale-95 ${badgeClass}"
               >
                 ${status || '·'}
               </button>
@@ -1538,7 +1584,7 @@
 
         tbodyHtml += `
           <tr class="hover:bg-slate-50/80 transition">
-            <td class="sticky-col name-col-cell py-2 px-3 font-medium text-slate-800 border-r border-slate-200 whitespace-nowrap">
+            <td class="sticky-col py-2 px-3 font-medium text-slate-800 border-r border-slate-200 whitespace-nowrap">
               <span class="text-xs text-slate-400 mr-1.5 font-mono">${idx + 1}.</span>
               <span>${escapeHtml(student.name)}</span>${roleTag}
             </td>
@@ -1550,7 +1596,6 @@
       });
 
       document.getElementById('journalTbody').innerHTML = tbodyHtml;
-      applyJournalNamesUI();
     }
 
     function openStatusModal(studentId, dateStr, weekdayShort) {
@@ -1703,7 +1748,7 @@
         [`Журнал відвідування групи: ${appState.groupName} (${syncCode})`],
         [`Предмет: ${subject} | Пара: ${pair}-ша | Період: ${monthName} ${year}`],
         [],
-        ['№', 'Прізвище, Ім\'я, По батькові', 'Роль', ...days.map(d => `${d.day} (${d.weekdayShort})`), 'Присутній (✓)', 'Пропуски (Н)', 'Поважна (ПП)', 'Хвороба (ХВ)', 'Звільнений (ЗВ)']
+        ['№', 'Прізвище та Ім\'я', 'Роль', ...days.map(d => `${d.day} (${d.weekdayShort})`), 'Присутній (✓)', 'Пропуски (Н)', 'Поважна (ПП)', 'Хвороба (ХВ)', 'Звільнений (ЗВ)']
       ];
 
       appState.students.forEach((student, idx) => {
@@ -1725,7 +1770,7 @@
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(sheetData);
       ws['!cols'] = [
-        { wch: 4 }, { wch: 32 }, { wch: 18 },
+        { wch: 4 }, { wch: 28 }, { wch: 18 },
         ...days.map(() => ({ wch: 7 })),
         { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 15 }
       ];
@@ -1972,7 +2017,6 @@
       lucide.createIcons();
     }
 
-    // ==================== АВТОДОДАВАННЯ З ФАЙЛУ ТА ТЕКСТУ ====================
     function parseRoleFromString(str, fallbackRole) {
       if (!str) return fallbackRole;
       const lower = str.toLowerCase();
@@ -2097,7 +2141,6 @@
       alert(`Додано учасників: ${added}`);
     }
 
-    // ==================== ГРУПА, РОЛІ ТА ПРЕДМЕТИ ====================
     function saveGroupName() {
       if (!canManageRolesAndDelete()) {
         alert('Змінювати назву групи може лише Головний адміністратор, Староста або Замстарости.');
@@ -2107,7 +2150,7 @@
       appState.groupName = val || 'ТЛ-26008';
       if (currentAccount) {
         currentAccount.groupName = appState.groupName;
-        persistCurrentSession();
+        sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(currentAccount));
       }
       saveData();
       refreshAllUI();
@@ -2267,7 +2310,6 @@
         </div>
       `).join('');
 
-      applyStudentsListCollapseUI();
       lucide.createIcons();
     }
 
@@ -2293,61 +2335,3 @@
   </script>
 </body>
 </html>
-function normalizePersonTokens(str) {
-  return String(str || '')
-    .toLowerCase()
-    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()'"’]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .split(' ')
-    .filter(w => w.length > 1);
-}
-
-function findStudentByPortalRecord(lastname, firstname, fullText = '') {
-  const rawCombined = `${lastname || ''} ${firstname || ''} ${fullText || ''}`.trim();
-  const inputTokens = normalizePersonTokens(rawCombined);
-  if (!inputTokens.length) return null;
-
-  const ln = String(lastname || '').trim().toLowerCase();
-  const fn = String(firstname || '').trim().toLowerCase();
-
-  let bestMatch = null;
-  let bestScore = 0;
-
-  for (const st of appState.students || []) {
-    const stTokens = normalizePersonTokens(st.name || '');
-    if (!stTokens.length) continue;
-
-    let score = 0;
-    const stLower = String(st.name || '').toLowerCase();
-
-    // Збіг прізвища (зазвичай перше слово)
-    if (ln && stTokens[0] === ln) score += 3;
-    if (fn && stTokens[1] === fn) score += 2;
-    if (fn && stTokens[2] === fn) score += 2;
-
-    // Кількість спільних слів (наприклад: прізвище + по батькові, або прізвище + ім'я)
-    const matchedTokens = inputTokens.filter(tok =>
-      stTokens.includes(tok) || stTokens.some(stTok => stTok.startsWith(tok) || tok.startsWith(stTok))
-    );
-    score += matchedTokens.length * 2;
-
-    // Якщо введено 2 слова (наприклад "Килинич Володимирович") і обидва є в ПІБ студента
-    if (inputTokens.length >= 2 && matchedTokens.length >= 2) {
-      score += 4;
-    }
-
-    // Пряме входження рядка
-    if (rawCombined.length >= 4 && (stLower.includes(rawCombined.toLowerCase()) || rawCombined.toLowerCase().includes(stLower))) {
-      score += 3;
-    }
-
-    if (score > bestScore) {
-      bestScore = score;
-      bestMatch = st;
-    }
-  }
-
-  // Поріг довіри: мінімум 4 бали (наприклад прізвище + по батькові або прізвище + ім'я)
-  return bestScore >= 4 ? bestMatch : null;
-}
