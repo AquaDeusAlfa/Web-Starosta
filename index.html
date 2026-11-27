@@ -447,7 +447,7 @@
 
           <form onsubmit="addSubject(event)" class="flex gap-2">
             <input type="text" id="newSubjectName" required placeholder="Назва предмета..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition flex items-center justify-center gap-1 shrink-0">
+            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition flex items-center gap-1 shrink-0">
               <i data-lucide="plus" class="w-4 h-4"></i>
               <span>Додати</span>
             </button>
@@ -826,23 +826,34 @@
       return { status: 'ambiguous', student: null, candidates };
     }
 
-    function resolveSubjectName(incomingSubject) {
-      if (!incomingSubject) return appState.subjects[0] || 'Загальний журнал';
-      const exact = appState.subjects.find(s => s.toLowerCase() === String(incomingSubject).trim().toLowerCase());
+    function ensureSubjectExists(subjectName) {
+      const clean = String(subjectName || '').trim();
+      if (!clean) return appState.subjects[0] || 'Загальний журнал';
+      const exact = appState.subjects.find(s => s.toLowerCase() === clean.toLowerCase());
       if (exact) return exact;
+
       let best = null;
       let bestScore = 0;
       for (const sub of appState.subjects) {
-        const sc = scoreStudentMatch(incomingSubject, sub);
+        const sc = scoreStudentMatch(clean, sub);
         if (sc > bestScore) {
           bestScore = sc;
           best = sub;
         }
       }
-      return bestScore >= 0.55 ? best : (appState.subjects[0] || incomingSubject);
+      if (bestScore >= 0.85 && best) return best;
+
+      appState.subjects.push(clean);
+      populateSubjectSelects();
+      return clean;
     }
 
-    // ==================== АКТИВНІ УЧАСНИКИ НА САЙТІ (БЕЗ ДУБЛІВ ПРИ ОНОВЛЕННІ) ====================
+    function resolveSubjectName(incomingSubject) {
+      if (!incomingSubject) return appState.subjects[0] || 'Загальний журнал';
+      return ensureSubjectExists(incomingSubject);
+    }
+
+    // ==================== АКТИВНІ УЧАСНИКИ НА САЙТІ ====================
     function getPresenceIdentityKey() {
       if (currentAccount && currentAccount.username) {
         return 'acc_' + currentAccount.username.toLowerCase().trim();
@@ -891,7 +902,6 @@
         const now = Date.now();
         const myKey = getPresenceIdentityKey();
 
-        // Дедуплікація по нормалізованому імені та ключу користувача (лишаємо найсвіжіший запис)
         const dedupMap = new Map();
         for (const [key, item] of Object.entries(data)) {
           if (!item || !item.name || (now - (item.lastSeen || 0)) > 20000) continue;
@@ -947,7 +957,7 @@
 
         if (subjectsAdded) {
           populateSubjectSelects();
-          await saveData();
+          renderManageLists();
         }
         return subjectsAdded;
       } catch (_) {
@@ -964,10 +974,9 @@
       jumpBtn.onclick = () => {
         if (targetMonth) document.getElementById('monthPicker').value = targetMonth.slice(0, 7);
         if (targetSubject) {
+          const resolvedSub = ensureSubjectExists(targetSubject);
           const sel = document.getElementById('journalSubjectSelect');
-          if (Array.from(sel.options).some(o => o.value === targetSubject)) {
-            sel.value = targetSubject;
-          }
+          sel.value = resolvedSub;
         }
         if (targetPair) document.getElementById('journalPairSelect').value = String(targetPair);
         switchTab('journal');
@@ -978,14 +987,17 @@
     }
 
     async function pollScheduleAttendanceSync() {
-      await syncSubjectsFromSchedule();
+      const subjectsChanged = await syncSubjectsFromSchedule();
       try {
         const res = await fetch(`${SCHEDULE_DB_URL}/journalSync/incoming.json`);
         const incomingObj = await res.json();
-        if (!incomingObj || typeof incomingObj !== 'object') return;
+        if (!incomingObj || typeof incomingObj !== 'object') {
+          if (subjectsChanged) await saveData();
+          return;
+        }
 
-        let changed = false;
-        let lastMatchedInfo = null;
+        let changed = subjectsChanged;
+        let newlyAppliedInfo = null;
 
         for (const [key, item] of Object.entries(incomingObj)) {
           if (!item || typeof item !== 'object') continue;
@@ -1009,13 +1021,13 @@
             if (!appState.attendance[attKey]) {
               appState.attendance[attKey] = '✓';
               changed = true;
+              newlyAppliedInfo = {
+                studentName: matchResult.student.name,
+                dateStr,
+                subject,
+                pair
+              };
             }
-            lastMatchedInfo = {
-              studentName: matchResult.student.name,
-              dateStr,
-              subject,
-              pair
-            };
             processedIncomingIds.add(recordId);
           } else if (matchResult.status === 'ambiguous') {
             await fetch(`${SCHEDULE_DB_URL}/journalSync/ambiguous/${recordId}.json`, {
@@ -1038,21 +1050,21 @@
           renderJournal();
         }
 
-        if (lastMatchedInfo) {
+        if (newlyAppliedInfo) {
           const curSubject = document.getElementById('journalSubjectSelect')?.value;
           const curPair = document.getElementById('journalPairSelect')?.value;
           const curMonth = document.getElementById('monthPicker')?.value;
 
           if (
-            curSubject !== lastMatchedInfo.subject ||
-            curPair !== String(lastMatchedInfo.pair) ||
-            curMonth !== lastMatchedInfo.dateStr.slice(0, 7)
+            curSubject !== newlyAppliedInfo.subject ||
+            curPair !== String(newlyAppliedInfo.pair) ||
+            curMonth !== newlyAppliedInfo.dateStr.slice(0, 7)
           ) {
             showSyncAlert(
-              `Отримано відмітку з «Розкладу»: ${lastMatchedInfo.studentName} (${lastMatchedInfo.subject}, ${lastMatchedInfo.pair}-ша пара, ${lastMatchedInfo.dateStr})`,
-              lastMatchedInfo.dateStr,
-              lastMatchedInfo.subject,
-              lastMatchedInfo.pair
+              `Отримано відмітку з «Розкладу»: ${newlyAppliedInfo.studentName} (${newlyAppliedInfo.subject}, ${newlyAppliedInfo.pair}-ша пара, ${newlyAppliedInfo.dateStr})`,
+              newlyAppliedInfo.dateStr,
+              newlyAppliedInfo.subject,
+              newlyAppliedInfo.pair
             );
           }
         }
@@ -1238,15 +1250,21 @@
                 )
               : [];
 
+            const mergedSubjects = Array.from(new Set([
+              ...(Array.isArray(cloudData.subjects) ? cloudData.subjects : []),
+              ...(Array.isArray(appState.subjects) ? appState.subjects : [])
+            ])).filter(Boolean);
+
             appState = {
               groupName: cloudData.groupName || 'ТЛ-26008',
               ownerName: MAIN_ADMIN_ACCOUNT.fullName,
               students: studentsList,
-              subjects: Array.isArray(cloudData.subjects) && cloudData.subjects.length
-                ? cloudData.subjects
-                : ['Загальний предмет'],
+              subjects: mergedSubjects.length ? mergedSubjects : ['Загальний предмет'],
               managedAccounts: cloudAccounts,
-              attendance: cloudData.attendance && typeof cloudData.attendance === 'object' ? cloudData.attendance : {},
+              attendance: {
+                ...(cloudData.attendance && typeof cloudData.attendance === 'object' ? cloudData.attendance : {}),
+                ...(appState.attendance && typeof appState.attendance === 'object' ? appState.attendance : {})
+              },
               savedHomeworks: Array.isArray(cloudData.savedHomeworks) ? cloudData.savedHomeworks : [],
               updatedAt: cloudUpdated
             };
