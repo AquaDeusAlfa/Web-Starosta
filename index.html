@@ -937,29 +937,60 @@
       try {
         const res = await fetch(`${SCHEDULE_DB_URL}/portalData.json`);
         const portalData = await res.json();
-        if (!portalData || !portalData.schedule) return false;
+        if (!portalData || !portalData.schedule || typeof portalData.schedule !== 'object') return false;
 
-        let subjectsAdded = false;
-        const existingSet = new Set(appState.subjects.map(s => s.toLowerCase().trim()));
+        const scheduleSubjects = [];
+        const scheduleSet = new Set();
 
         Object.values(portalData.schedule).forEach(dayLessons => {
           (dayLessons || []).forEach(lesson => {
             if (lesson && lesson.name) {
               const cleanSub = String(lesson.name).trim();
-              if (cleanSub && !existingSet.has(cleanSub.toLowerCase())) {
-                existingSet.add(cleanSub.toLowerCase());
-                appState.subjects.push(cleanSub);
-                subjectsAdded = true;
+              if (cleanSub && !scheduleSet.has(cleanSub.toLowerCase())) {
+                scheduleSet.add(cleanSub.toLowerCase());
+                scheduleSubjects.push(cleanSub);
               }
             }
           });
         });
 
-        if (subjectsAdded) {
-          populateSubjectSelects();
-          renderManageLists();
+        let listChanged = false;
+        const nextSubjects = [];
+        const seenNext = new Set();
+
+        // Зберігаємо лише ті предмети, які є в розкладі (а якщо розклад порожній — лишаємо базовий)
+        appState.subjects.forEach(sub => {
+          const key = String(sub).toLowerCase().trim();
+          if (scheduleSet.has(key) && !seenNext.has(key)) {
+            seenNext.add(key);
+            nextSubjects.push(sub);
+          } else if (!scheduleSet.has(key)) {
+            listChanged = true;
+          }
+        });
+
+        scheduleSubjects.forEach(sub => {
+          const key = sub.toLowerCase().trim();
+          if (!seenNext.has(key)) {
+            seenNext.add(key);
+            nextSubjects.push(sub);
+            listChanged = true;
+          }
+        });
+
+        if (!nextSubjects.length) {
+          nextSubjects.push('Загальний журнал');
         }
-        return subjectsAdded;
+
+        if (listChanged || JSON.stringify(nextSubjects) !== JSON.stringify(appState.subjects)) {
+          appState.subjects = nextSubjects;
+          populateSubjectSelects();
+          renderJournal();
+          renderManageLists();
+          return true;
+        }
+
+        return false;
       } catch (_) {
         return false;
       }
@@ -1250,16 +1281,15 @@
                 )
               : [];
 
-            const mergedSubjects = Array.from(new Set([
-              ...(Array.isArray(cloudData.subjects) ? cloudData.subjects : []),
-              ...(Array.isArray(appState.subjects) ? appState.subjects : [])
-            ])).filter(Boolean);
+            const baseSubjects = Array.isArray(cloudData.subjects) && cloudData.subjects.length
+              ? cloudData.subjects
+              : appState.subjects;
 
             appState = {
               groupName: cloudData.groupName || 'ТЛ-26008',
               ownerName: MAIN_ADMIN_ACCOUNT.fullName,
               students: studentsList,
-              subjects: mergedSubjects.length ? mergedSubjects : ['Загальний предмет'],
+              subjects: Array.from(new Set(baseSubjects)).filter(Boolean),
               managedAccounts: cloudAccounts,
               attendance: {
                 ...(cloudData.attendance && typeof cloudData.attendance === 'object' ? cloudData.attendance : {}),
@@ -1618,7 +1648,10 @@
       hwSel.innerHTML = optionsHtml;
 
       if (subjects.includes(prevJ)) journalSel.value = prevJ;
+      else journalSel.value = subjects[0];
+
       if (subjects.includes(prevH)) hwSel.value = prevH;
+      else hwSel.value = subjects[0];
     }
 
     function getDaysInMonth(yearMonthStr) {
