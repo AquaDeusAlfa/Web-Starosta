@@ -152,7 +152,7 @@
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Предмет</label>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Предмет / Пара</label>
             <select id="journalSubjectSelect" onchange="renderJournal()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
           </div>
 
@@ -232,7 +232,7 @@
       </div>
     </section>
 
-    <!-- ВКЛАДКА 2: БАЗА ДАНИХ (ВКЛЮЧАЮЧИ ВИДАЛЕНІ ПАРИ/КУРСИ, КРІМ ТЕСТОВИХ) -->
+    <!-- ВКЛАДКА 2: БАЗА ДАНИХ -->
     <section id="view-database" class="hidden space-y-4">
       <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
@@ -473,11 +473,11 @@
         <div class="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
             <i data-lucide="book-marked" class="w-5 h-5 text-indigo-600"></i>
-            <span>Предмети (<span id="subjectsCountBadge">0</span>)</span>
+            <span>Предмети / Пари (<span id="subjectsCountBadge">0</span>)</span>
           </h2>
 
           <form onsubmit="addSubject(event)" class="flex gap-2">
-            <input type="text" id="newSubjectName" required placeholder="Назва предмета (без «тест»)..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <input type="text" id="newSubjectName" required placeholder="Назва предмета або пари (без «тест»)..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition flex items-center gap-1 shrink-0">
               <i data-lucide="plus" class="w-4 h-4"></i>
               <span>Додати</span>
@@ -641,6 +641,7 @@
 
     const SESSION_STORAGE_KEY = 'tl26008_active_session';
     const TAB_ID_KEY = 'tl26008_tab_id';
+    const PROCESSED_IDS_STORAGE_KEY = 'tl26008_processed_incoming_ids_v1';
 
     function getStableTabId() {
       let id = sessionStorage.getItem(TAB_ID_KEY);
@@ -651,6 +652,24 @@
       return id;
     }
 
+    function loadProcessedIdsFromStorage() {
+      try {
+        const raw = localStorage.getItem(PROCESSED_IDS_STORAGE_KEY);
+        const arr = raw ? JSON.parse(raw) : [];
+        return new Set(Array.isArray(arr) ? arr.slice(-500) : []);
+      } catch (_) {
+        return new Set();
+      }
+    }
+
+    function saveProcessedIdsToStorage() {
+      try {
+        const arr = Array.from(processedIncomingIds).slice(-500);
+        processedIncomingIds = new Set(arr);
+        localStorage.setItem(PROCESSED_IDS_STORAGE_KEY, JSON.stringify(arr));
+      } catch (_) {}
+    }
+
     const PRESENCE_TAB_ID = getStableTabId();
     let lastHeartbeatSentAt = 0;
     let isSyncRunning = false;
@@ -658,7 +677,7 @@
     let currentAccount = null;
     let syncCode = 'TL-26008';
     let lastCreatedCredentialsText = '';
-    let processedIncomingIds = new Set();
+    let processedIncomingIds = loadProcessedIdsFromStorage();
     let pendingIncomingMarks = [];
     let lastAlertedSignature = '';
 
@@ -678,9 +697,9 @@
         'Основи логістики',
         'Інформаційні технології'
       ],
+      customLessons: [],
       managedAccounts: [],
       attendance: {},
-      // База історії уроків: зберігає кожен реальний урок (навіть після видалення предмета/курсу, крім тестових)
       lessonHistory: {},
       savedHomeworks: [],
       updatedAt: 0
@@ -689,8 +708,9 @@
     let activeCellContext = null;
 
     function isTestLessonOrSubject(name) {
-      return /(?:^|[\s_\-/.,:])тест(?:$|[\s_\-/.,:])/i.test(String(name || '').trim()) ||
-        String(name || '').trim().toLowerCase() === 'тест';
+      const s = String(name || '').trim();
+      if (!s || /^\d+$/.test(s)) return false;
+      return /(?:^|[\s_\-/.,:])тест(?:$|[\s_\-/.,:])/i.test(s) || s.toLowerCase() === 'тест';
     }
 
     function getActiveRole() {
@@ -732,7 +752,6 @@
       }
     }
 
-    // ==================== ОЧИЩЕННЯ ТЕСТОВИХ ПАР ТА НЕІСНУЮЧИХ ПРЕДМЕТІВ ====================
     function pruneInvalidSubjectsAndTestLessons() {
       const validSubjects = [];
       const seen = new Set();
@@ -749,7 +768,6 @@
 
       const allowedLower = new Set(appState.subjects.map(s => s.toLowerCase()));
 
-      // Чистимо поточні відмітки: прибираємо тестові та ті, чий предмет вже видалений з актуального списку
       const nextAttendance = {};
       for (const [key, val] of Object.entries(appState.attendance || {})) {
         const parts = key.split('|');
@@ -761,7 +779,6 @@
       }
       appState.attendance = nextAttendance;
 
-      // Чистимо історію уроків: тестові видаляємо повністю, а звичайні лишаємо (навіть якщо курс пізніше видалили)
       const nextHistory = {};
       for (const [hKey, entry] of Object.entries(appState.lessonHistory || {})) {
         if (!entry || isTestLessonOrSubject(entry.subject)) continue;
@@ -791,7 +808,6 @@
       appState.lessonHistory[lessonKey].updatedAt = Date.now();
     }
 
-    // ==================== PRESENCE ТА СИНХРОНІЗАЦІЯ ====================
     function getPresenceKey() {
       if (currentAccount && currentAccount.username) {
         return 'user_' + encodeURIComponent(currentAccount.username.toLowerCase().trim());
@@ -855,38 +871,55 @@
       } catch (_) {}
     }
 
+    // Об'єднуємо предмети з розкладу та власні створені предмети/пари
     async function syncSubjectsFromSchedule() {
       try {
         const res = await fetch(`${SCHEDULE_DB_URL}/portalData.json`);
         if (!res.ok) return false;
         const portalData = await res.json();
-        if (!portalData || !portalData.schedule || typeof portalData.schedule !== 'object') return false;
-
         const scheduleSubjects = [];
         const scheduleSet = new Set();
 
-        Object.values(portalData.schedule).forEach(dayLessons => {
-          (dayLessons || []).forEach(lesson => {
-            if (!lesson || !lesson.name) return;
-            const cleanSub = String(lesson.name).trim();
-            if (!cleanSub || isTestLessonOrSubject(cleanSub)) return;
-            const k = cleanSub.toLowerCase();
-            if (!scheduleSet.has(k)) {
-              scheduleSet.add(k);
-              scheduleSubjects.push(cleanSub);
-            }
+        if (portalData && portalData.schedule && typeof portalData.schedule === 'object') {
+          Object.values(portalData.schedule).forEach(dayLessons => {
+            (dayLessons || []).forEach(lesson => {
+              if (!lesson || !lesson.name) return;
+              const cleanSub = String(lesson.name).trim();
+              if (!cleanSub || isTestLessonOrSubject(cleanSub)) return;
+              const k = cleanSub.toLowerCase();
+              if (!scheduleSet.has(k)) {
+                scheduleSet.add(k);
+                scheduleSubjects.push(cleanSub);
+              }
+            });
           });
-        });
+        }
 
         const prevSubjectsJson = JSON.stringify(appState.subjects);
-        const prevAttJson = JSON.stringify(appState.attendance);
+        const merged = [];
+        const seen = new Set();
 
-        if (scheduleSubjects.length) {
-          appState.subjects = scheduleSubjects;
+        (appState.subjects || []).forEach(s => {
+          const clean = String(s || '').trim();
+          if (clean && !isTestLessonOrSubject(clean) && !seen.has(clean.toLowerCase())) {
+            seen.add(clean.toLowerCase());
+            merged.push(clean);
+          }
+        });
+
+        scheduleSubjects.forEach(s => {
+          if (!seen.has(s.toLowerCase())) {
+            seen.add(s.toLowerCase());
+            merged.push(s);
+          }
+        });
+
+        if (merged.length) {
+          appState.subjects = merged;
         }
         pruneInvalidSubjectsAndTestLessons();
 
-        if (JSON.stringify(appState.subjects) !== prevSubjectsJson || JSON.stringify(appState.attendance) !== prevAttJson) {
+        if (JSON.stringify(appState.subjects) !== prevSubjectsJson) {
           populateSubjectSelects();
           renderJournal();
           renderManageLists();
@@ -897,6 +930,15 @@
       } catch (_) {
         return false;
       }
+    }
+
+    async function deleteIncomingMarkFromFirebase(firebaseKey) {
+      if (!firebaseKey) return;
+      try {
+        await fetch(`${SCHEDULE_DB_URL}/journalSync/incoming/${encodeURIComponent(firebaseKey)}.json`, {
+          method: 'DELETE'
+        });
+      } catch (_) {}
     }
 
     function normalizeForMatch(raw) {
@@ -935,13 +977,21 @@
         }
 
         let addedToQueue = false;
-        for (const [key, item] of Object.entries(incomingObj)) {
+        let idsUpdated = false;
+
+        for (const [firebaseKey, item] of Object.entries(incomingObj)) {
           if (!item || typeof item !== 'object') continue;
-          const recordId = String(item.id || key);
-          if (processedIncomingIds.has(recordId)) continue;
+          const recordId = String(item.id || firebaseKey);
+
+          if (processedIncomingIds.has(recordId)) {
+            await deleteIncomingMarkFromFirebase(firebaseKey);
+            continue;
+          }
 
           if (item.token !== JOURNAL_SYNC_TOKEN || isTestLessonOrSubject(item.lessonName)) {
             processedIncomingIds.add(recordId);
+            idsUpdated = true;
+            await deleteIncomingMarkFromFirebase(firebaseKey);
             continue;
           }
 
@@ -952,6 +1002,8 @@
             const subject = String(item.lessonName || appState.subjects[0] || 'Загальний журнал').trim();
             if (isTestLessonOrSubject(subject)) {
               processedIncomingIds.add(recordId);
+              idsUpdated = true;
+              await deleteIncomingMarkFromFirebase(firebaseKey);
               continue;
             }
             const pair = String((typeof item.lessonIndex === 'number' ? item.lessonIndex + 1 : item.lessonIndex) || 1);
@@ -960,6 +1012,7 @@
             if (!appState.attendance[attKey] && !pendingIncomingMarks.some(p => p.attKey === attKey)) {
               pendingIncomingMarks.push({
                 recordId,
+                firebaseKey,
                 attKey,
                 studentId: student.id,
                 studentName: student.name,
@@ -969,11 +1022,19 @@
                 status: '✓'
               });
               addedToQueue = true;
+            } else {
+              processedIncomingIds.add(recordId);
+              idsUpdated = true;
+              await deleteIncomingMarkFromFirebase(firebaseKey);
             }
+          } else {
+            processedIncomingIds.add(recordId);
+            idsUpdated = true;
+            await deleteIncomingMarkFromFirebase(firebaseKey);
           }
-          processedIncomingIds.add(recordId);
         }
 
+        if (idsUpdated) saveProcessedIdsToStorage();
         if (subjectsChanged && canEditJournal()) {
           await saveData();
         }
@@ -1056,6 +1117,11 @@
       const attKey = `${item.dateStr}|${item.subject}|${item.pair}|${item.studentId}`;
       appState.attendance[attKey] = item.status || '✓';
       recordLessonToHistory(item.dateStr, item.subject, item.pair, item.studentId, item.status || '✓');
+
+      processedIncomingIds.add(item.recordId);
+      saveProcessedIdsToStorage();
+      await deleteIncomingMarkFromFirebase(item.firebaseKey);
+
       pendingIncomingMarks.splice(index, 1);
       await saveData();
       refreshAllUI();
@@ -1072,14 +1138,23 @@
         const attKey = `${item.dateStr}|${item.subject}|${item.pair}|${item.studentId}`;
         appState.attendance[attKey] = item.status || '✓';
         recordLessonToHistory(item.dateStr, item.subject, item.pair, item.studentId, item.status || '✓');
+
+        processedIncomingIds.add(item.recordId);
+        await deleteIncomingMarkFromFirebase(item.firebaseKey);
       }
+      saveProcessedIdsToStorage();
       pendingIncomingMarks = [];
       await saveData();
       refreshAllUI();
       closeIncomingMarksModal();
     }
 
-    function clearPendingMarks() {
+    async function clearPendingMarks() {
+      for (const item of pendingIncomingMarks) {
+        processedIncomingIds.add(item.recordId);
+        await deleteIncomingMarkFromFirebase(item.firebaseKey);
+      }
+      saveProcessedIdsToStorage();
       pendingIncomingMarks = [];
       updatePendingMarksUI();
       renderIncomingMarksModalList();
@@ -1144,8 +1219,24 @@
       }
       appState.ownerName = MAIN_ADMIN_ACCOUNT.fullName;
       if (!Array.isArray(appState.managedAccounts)) appState.managedAccounts = [];
+      if (!Array.isArray(appState.customLessons)) appState.customLessons = [];
       if (!appState.lessonHistory || typeof appState.lessonHistory !== 'object') appState.lessonHistory = {};
       pruneInvalidSubjectsAndTestLessons();
+    }
+
+    async function pushCustomLessonsToScheduleDb() {
+      try {
+        const payload = (appState.customLessons || []).filter(l => l && l.name && !isTestLessonOrSubject(l.name));
+        await fetch(`${SCHEDULE_DB_URL}/journalSync/customLessons.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: JOURNAL_SYNC_TOKEN,
+            updatedAt: Date.now(),
+            lessons: payload
+          })
+        });
+      } catch (_) {}
     }
 
     async function saveData() {
@@ -1163,6 +1254,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
+        await pushCustomLessonsToScheduleDb();
         setSyncBadge(res.ok ? 'ok' : 'err', res.ok ? 'Синхронізовано' : 'Помилка синхронізації');
       } catch (e) {
         setSyncBadge('ok', 'Офлайн (збережено)');
@@ -1179,64 +1271,82 @@
         const localUpdated = appState.updatedAt || 0;
         const cloudUpdated = cloudData.updatedAt || 0;
 
-        if (forceApply || cloudUpdated >= localUpdated) {
-          const cloudAccounts = Array.isArray(cloudData.managedAccounts)
-            ? cloudData.managedAccounts.filter(
-                a => a && a.username && a.username.toLowerCase() !== MAIN_ADMIN_ACCOUNT.username.toLowerCase()
-              )
-            : [];
+        const cloudAccounts = Array.isArray(cloudData.managedAccounts)
+          ? cloudData.managedAccounts.filter(
+              a => a && a.username && a.username.toLowerCase() !== MAIN_ADMIN_ACCOUNT.username.toLowerCase()
+            )
+          : [];
 
-          const studentsList = Array.isArray(cloudData.students)
-            ? cloudData.students.map(s =>
-                s.username && s.username.toLowerCase() === MAIN_ADMIN_ACCOUNT.username.toLowerCase()
-                  ? { ...s, name: MAIN_ADMIN_ACCOUNT.fullName, username: MAIN_ADMIN_ACCOUNT.username, role: 'Головний адміністратор' }
-                  : { ...s, role: s.role || 'Студент' }
-              )
-            : appState.students;
+        const studentsList = (forceApply || cloudUpdated > localUpdated) && Array.isArray(cloudData.students)
+          ? cloudData.students.map(s =>
+              s.username && s.username.toLowerCase() === MAIN_ADMIN_ACCOUNT.username.toLowerCase()
+                ? { ...s, name: MAIN_ADMIN_ACCOUNT.fullName, username: MAIN_ADMIN_ACCOUNT.username, role: 'Головний адміністратор' }
+                : { ...s, role: s.role || 'Студент' }
+            )
+          : appState.students;
 
-          const baseSubjects = Array.isArray(cloudData.subjects) && cloudData.subjects.length
-            ? cloudData.subjects
-            : appState.subjects;
-
-          appState = {
-            groupName: cloudData.groupName || 'ТЛ-26008',
-            ownerName: MAIN_ADMIN_ACCOUNT.fullName,
-            students: studentsList,
-            subjects: baseSubjects,
-            managedAccounts: cloudAccounts,
-            attendance: {
-              ...(cloudData.attendance && typeof cloudData.attendance === 'object' ? cloudData.attendance : {}),
-              ...(appState.attendance && typeof appState.attendance === 'object' ? appState.attendance : {})
-            },
-            lessonHistory: {
-              ...(cloudData.lessonHistory && typeof cloudData.lessonHistory === 'object' ? cloudData.lessonHistory : {}),
-              ...(appState.lessonHistory && typeof appState.lessonHistory === 'object' ? appState.lessonHistory : {})
-            },
-            savedHomeworks: Array.isArray(cloudData.savedHomeworks) ? cloudData.savedHomeworks : [],
-            updatedAt: Math.max(localUpdated, cloudUpdated)
-          };
-
-          pruneInvalidSubjectsAndTestLessons();
-          localStorage.setItem(`starosta_data_${syncCode}`, JSON.stringify(appState));
-
-          if (currentAccount && !isMainAdmin()) {
-            const matched = appState.managedAccounts.find(
-              a => a.username.toLowerCase() === currentAccount.username.toLowerCase()
-            );
-            if (matched) {
-              currentAccount = {
-                ...currentAccount,
-                fullName: matched.fullName,
-                role: matched.role,
-                groupName: appState.groupName,
-                groupCode: syncCode
-              };
-              sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(currentAccount));
-            }
+        const mergedSubjects = [];
+        const seenSub = new Set();
+        [...(appState.subjects || []), ...(Array.isArray(cloudData.subjects) ? cloudData.subjects : [])].forEach(s => {
+          const clean = String(s || '').trim();
+          if (clean && !isTestLessonOrSubject(clean) && !seenSub.has(clean.toLowerCase())) {
+            seenSub.add(clean.toLowerCase());
+            mergedSubjects.push(clean);
           }
+        });
 
-          refreshAllUI();
+        const mergedCustomLessons = [];
+        const seenCustom = new Set();
+        [...(appState.customLessons || []), ...(Array.isArray(cloudData.customLessons) ? cloudData.customLessons : [])].forEach(l => {
+          const name = String(l?.name || '').trim();
+          const key = `${name.toLowerCase()}|${l?.pair || ''}`;
+          if (name && !isTestLessonOrSubject(name) && !seenCustom.has(key)) {
+            seenCustom.add(key);
+            mergedCustomLessons.push({ ...l, name });
+          }
+        });
+
+        appState = {
+          groupName: (forceApply || cloudUpdated > localUpdated) ? (cloudData.groupName || appState.groupName || 'ТЛ-26008') : (appState.groupName || 'ТЛ-26008'),
+          ownerName: MAIN_ADMIN_ACCOUNT.fullName,
+          students: studentsList,
+          subjects: mergedSubjects.length ? mergedSubjects : appState.subjects,
+          customLessons: mergedCustomLessons,
+          managedAccounts: cloudAccounts.length ? cloudAccounts : appState.managedAccounts,
+          attendance: {
+            ...(cloudData.attendance && typeof cloudData.attendance === 'object' ? cloudData.attendance : {}),
+            ...(appState.attendance && typeof appState.attendance === 'object' ? appState.attendance : {})
+          },
+          lessonHistory: {
+            ...(cloudData.lessonHistory && typeof cloudData.lessonHistory === 'object' ? cloudData.lessonHistory : {}),
+            ...(appState.lessonHistory && typeof appState.lessonHistory === 'object' ? appState.lessonHistory : {})
+          },
+          savedHomeworks: (forceApply || cloudUpdated > localUpdated) && Array.isArray(cloudData.savedHomeworks)
+            ? cloudData.savedHomeworks
+            : appState.savedHomeworks,
+          updatedAt: Math.max(localUpdated, cloudUpdated)
+        };
+
+        pruneInvalidSubjectsAndTestLessons();
+        localStorage.setItem(`starosta_data_${syncCode}`, JSON.stringify(appState));
+
+        if (currentAccount && !isMainAdmin()) {
+          const matched = appState.managedAccounts.find(
+            a => a.username.toLowerCase() === currentAccount.username.toLowerCase()
+          );
+          if (matched) {
+            currentAccount = {
+              ...currentAccount,
+              fullName: matched.fullName,
+              role: matched.role,
+              groupName: appState.groupName,
+              groupCode: syncCode
+            };
+            sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(currentAccount));
+          }
         }
+
+        refreshAllUI();
         setSyncBadge('ok', 'Синхронізовано');
       } catch (err) {
         setSyncBadge('ok', 'Збережено локально');
@@ -1285,7 +1395,6 @@
       lucide.createIcons();
     });
 
-    // ==================== АВТОРИЗАЦІЯ ТА АКАУНТИ ====================
     function handleAccountButtonClick() {
       currentAccount ? openProfileModal() : openAuthModal();
     }
@@ -1520,7 +1629,6 @@
       `).join('');
     }
 
-    // ==================== РЕНДЕР ТА ВКЛАДКИ ====================
     function refreshAllUI() {
       pruneInvalidSubjectsAndTestLessons();
       document.getElementById('headerGroupName').textContent = appState.groupName || 'ТЛ-26008';
@@ -1825,7 +1933,6 @@
       }).join('');
     }
 
-    // ==================== ДІЇ З ВІДМІТКАМИ, ПРЕДИКАТАМИ ТА ЛЮДЬМИ ====================
     function openStatusModal(studentId, dateStr, weekdayShort) {
       if (!canEditJournal()) {
         openAuthModal();
@@ -2141,16 +2248,30 @@
       if (!appState.subjects.includes(name)) {
         appState.subjects.push(name);
       }
+      const pair = document.getElementById('journalPairSelect')?.value || '1';
+      if (!appState.customLessons.some(l => l.name.toLowerCase() === name.toLowerCase() && String(l.pair) === String(pair))) {
+        appState.customLessons.push({
+          id: 'les_' + Date.now(),
+          name,
+          pair: String(pair),
+          createdAt: Date.now()
+        });
+      }
       input.value = '';
       saveData();
       refreshAllUI();
+      const sel = document.getElementById('journalSubjectSelect');
+      if (sel && appState.subjects.includes(name)) {
+        sel.value = name;
+        renderJournal();
+      }
     }
 
     function deleteSubject(name) {
       if (!canManageRolesAndDelete()) return;
       if (appState.subjects.length <= 1) return;
-      // Видаляємо предмет із поточного списку та чистимо поточні клітинки, але історія уроків залишається
       appState.subjects = appState.subjects.filter(s => s !== name);
+      appState.customLessons = (appState.customLessons || []).filter(l => l.name !== name);
       pruneInvalidSubjectsAndTestLessons();
       saveData();
       refreshAllUI();
