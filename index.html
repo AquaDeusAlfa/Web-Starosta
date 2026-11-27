@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Кабінет Головного Адміністратора — ТЛ-26008</title>
 
   <!-- Tailwind CSS -->
@@ -22,7 +22,17 @@
       font-family: 'Inter', sans-serif;
       background-color: #f8fafc;
       color: #0f172a;
-      -webkit-tap-highlight-color: transparent;
+      -webkit-tap-highlight-color: rgba(79, 70, 229, 0.15);
+    }
+
+    .journal-scroll {
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: 68vh;
+      touch-action: pan-x pan-y;
+      -webkit-overflow-scrolling: touch;
+      position: relative;
+      z-index: 1;
     }
 
     .journal-scroll::-webkit-scrollbar {
@@ -51,9 +61,19 @@
     .sticky-header {
       position: sticky;
       left: 0;
-      z-index: 20;
+      top: 0;
+      z-index: 25;
       background-color: #f1f5f9;
       box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.08);
+    }
+    #journalThead th {
+      position: sticky;
+      top: 0;
+      z-index: 15;
+    }
+
+    .hide-names-col .name-col-cell {
+      display: none;
     }
 
     @keyframes fadeIn {
@@ -84,7 +104,7 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <button onclick="pullFromFirebase(false)" id="syncIndicator" class="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition" title="Оновити синхронізацію">
+        <button onclick="pullFromFirebase(false)" id="syncIndicator" class="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition" title="Оновити синхронізацію з журналом та порталом розкладу">
           <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
           <span id="syncStatusText">Синхронізація</span>
         </button>
@@ -143,11 +163,11 @@
           </div>
 
           <div class="flex items-end gap-2">
-            <button onclick="openQuickRollCall()" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
+            <button type="button" onclick="openQuickRollCall()" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
               <i data-lucide="check-square" class="w-4 h-4"></i>
               <span>Перекличка</span>
             </button>
-            <button onclick="exportToExcel()" class="flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
+            <button type="button" onclick="exportToExcel()" class="flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
               <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
               <span>Excel</span>
             </button>
@@ -163,7 +183,14 @@
             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-100 text-sky-800 font-bold">ХВ <span class="font-normal">Хвороба</span></span>
             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 font-bold">ЗВ <span class="font-normal">Звільнений</span></span>
           </div>
-          <span class="text-slate-400">Натисніть на клітинку для вибору статусу</span>
+
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="toggleJournalNamesColumn()" id="toggleJournalNamesBtn" class="px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-semibold transition flex items-center gap-1">
+              <i id="toggleJournalNamesIcon" data-lucide="eye-off" class="w-3.5 h-3.5"></i>
+              <span id="toggleJournalNamesLabel">Сховати імена</span>
+            </button>
+            <span class="text-slate-400 hidden sm:inline">Натисніть на клітинку для вибору статусу</span>
+          </div>
         </div>
       </div>
 
@@ -179,8 +206,8 @@
           </button>
         </div>
 
-        <div id="journalTableWrapper" class="overflow-x-auto journal-scroll">
-          <table class="w-full border-collapse text-left">
+        <div id="journalTableWrapper" class="journal-scroll">
+          <table id="journalTable" class="min-w-max w-full border-collapse text-left">
             <thead id="journalThead"></thead>
             <tbody id="journalTbody" class="divide-y divide-slate-100 text-sm"></tbody>
           </table>
@@ -359,7 +386,6 @@
           </button>
         </form>
 
-        <!-- КАРТКА З ДАННИМИ СТВОРЕНОГО АКАУНТА ДЛЯ ПЕРЕДАЧІ -->
         <div id="createdAccountCredentialsBox" class="hidden p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="space-y-1 text-xs text-emerald-950">
             <div class="font-bold text-sm text-emerald-900">Акаунт створено — передайте ці дані користувачу:</div>
@@ -371,7 +397,6 @@
           </button>
         </div>
 
-        <!-- СПИСОК СТВОРЕНИХ АКАУНТІВ -->
         <div class="pt-2">
           <div class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Створені акаунти (<span id="createdAccountsCount">0</span>)</div>
           <div id="createdAccountsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5"></div>
@@ -602,6 +627,7 @@
     const ROLES_LIST = ['Головний адміністратор', 'Староста', 'Замстарости', 'Помічник старости', 'Студент'];
 
     const SYNC_ENDPOINT = 'https://saint-dla-starist-default-rtdb.europe-west1.firebasedatabase.app';
+    const PORTAL_DB_URL = 'https://tl-26008-default-rtdb.europe-west1.firebasedatabase.app';
 
     const MAIN_ADMIN_ACCOUNT = {
       username: 'іван',
@@ -618,6 +644,7 @@
     let syncCode = 'TL-26008';
     let lastCreatedCredentialsText = '';
     let isStudentsListCollapsed = false;
+    let isJournalNamesHidden = false;
 
     let appState = {
       groupName: 'ТЛ-26008',
@@ -646,6 +673,34 @@
 
     function getCollapseStorageKey() {
       return `tl26008_roster_collapsed_${syncCode}`;
+    }
+
+    function getJournalNamesStorageKey() {
+      return `tl26008_journal_hide_names_${syncCode}`;
+    }
+
+    function applyJournalNamesUI() {
+      const tableEl = document.getElementById('journalTable');
+      const labelEl = document.getElementById('toggleJournalNamesLabel');
+      const iconEl = document.getElementById('toggleJournalNamesIcon');
+      if (!tableEl || !labelEl) return;
+
+      if (isJournalNamesHidden) {
+        tableEl.classList.add('hide-names-col');
+        labelEl.textContent = 'Показати імена';
+        if (iconEl) iconEl.setAttribute('data-lucide', 'eye');
+      } else {
+        tableEl.classList.remove('hide-names-col');
+        labelEl.textContent = 'Сховати імена';
+        if (iconEl) iconEl.setAttribute('data-lucide', 'eye-off');
+      }
+      lucide.createIcons();
+    }
+
+    function toggleJournalNamesColumn() {
+      isJournalNamesHidden = !isJournalNamesHidden;
+      localStorage.setItem(getJournalNamesStorageKey(), isJournalNamesHidden ? '1' : '0');
+      applyJournalNamesUI();
     }
 
     function applyStudentsListCollapseUI() {
@@ -734,6 +789,7 @@
 
       loadFromLocal();
       isStudentsListCollapsed = localStorage.getItem(getCollapseStorageKey()) === '1';
+      isJournalNamesHidden = localStorage.getItem(getJournalNamesStorageKey()) === '1';
 
       const savedSessionRaw = localStorage.getItem(PERSISTENT_SESSION_KEY);
       if (savedSessionRaw) {
@@ -744,6 +800,7 @@
             if (currentAccount.groupCode) {
               syncCode = currentAccount.groupCode;
               isStudentsListCollapsed = localStorage.getItem(getCollapseStorageKey()) === '1';
+              isJournalNamesHidden = localStorage.getItem(getJournalNamesStorageKey()) === '1';
             }
           }
         } catch (e) {}
@@ -867,6 +924,104 @@
       }
     }
 
+    // ==================== СИНХРОНІЗАЦІЯ З ПОРТАЛОМ РОЗКЛАДУ ====================
+    function getSundayOfWeekId(weekIdStr) {
+      if (weekIdStr && /^\d{4}-\d{1,2}-\d{1,2}$/.test(weekIdStr)) {
+        const [y, m, d] = weekIdStr.split('-').map(Number);
+        return new Date(y, m - 1, d);
+      }
+      const now = new Date();
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+    }
+
+    function findStudentByPortalRecord(lastname, firstname) {
+      const ln = String(lastname || '').trim().toLowerCase();
+      const fn = String(firstname || '').trim().toLowerCase();
+      if (!ln && !fn) return null;
+      const full = `${ln} ${fn}`.trim();
+
+      return appState.students.find(st => {
+        const sName = String(st.name || '').trim().toLowerCase();
+        if (!sName) return false;
+        if (sName === full || sName.startsWith(full + ' ') || full.startsWith(sName + ' ')) return true;
+        const parts = sName.split(/\s+/);
+        return ln && fn && parts[0] === ln && parts[1] === fn;
+      }) || null;
+    }
+
+    async function syncWithSchedulePortal() {
+      try {
+        const res = await fetch(`${PORTAL_DB_URL}/portalData.json`);
+        if (!res.ok) return false;
+        const portal = await res.json();
+        if (!portal || typeof portal !== 'object') return false;
+
+        let changed = false;
+
+        // 1. Підтягуємо всі предмети з розкладу порталу
+        if (portal.schedule && typeof portal.schedule === 'object') {
+          const portalSubjects = [];
+          Object.values(portal.schedule).forEach(dayLessons => {
+            if (!Array.isArray(dayLessons)) return;
+            dayLessons.forEach(lesson => {
+              const name = String(lesson?.name || '').trim();
+              if (name && !portalSubjects.includes(name)) {
+                portalSubjects.push(name);
+              }
+            });
+          });
+
+          if (portalSubjects.length > 0) {
+            const mergedSubjects = Array.from(new Set([...portalSubjects, ...appState.subjects]));
+            if (mergedSubjects.length !== appState.subjects.length ||
+                mergedSubjects.some((s, idx) => appState.subjects[idx] !== s)) {
+              appState.subjects = mergedSubjects;
+              changed = true;
+            }
+          }
+        }
+
+        // 2. Підтягуємо відмітки з порталу розкладу (ключ: dayIndex_lessonIndex_lessonName)
+        if (portal.attendance && typeof portal.attendance === 'object') {
+          const sunday = getSundayOfWeekId(portal.attendanceWeekId);
+
+          Object.entries(portal.attendance).forEach(([lessonKey, records]) => {
+            if (!Array.isArray(records) || !records.length) return;
+            const parts = lessonKey.split('_');
+            if (parts.length < 3) return;
+
+            const dayIdx = parseInt(parts[0], 10);
+            const lessonIdx = parseInt(parts[1], 10);
+            const lessonName = parts.slice(2).join('_').trim();
+
+            if (isNaN(dayIdx) || dayIdx < 1 || dayIdx > 5 || isNaN(lessonIdx)) return;
+
+            const targetDate = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate() + dayIdx);
+            const dateStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`;
+            const pairNum = String(lessonIdx + 1);
+
+            records.forEach(rec => {
+              const matchedStudent = findStudentByPortalRecord(rec.lastname, rec.firstname);
+              if (!matchedStudent) return;
+
+              const jKey = `${dateStr}|${lessonName}|${pairNum}|${matchedStudent.id}`;
+              if (!appState.attendance[jKey]) {
+                appState.attendance[jKey] = '✓';
+                changed = true;
+              }
+            });
+          });
+        }
+
+        if (changed) {
+          localStorage.setItem(`starosta_data_${syncCode}`, JSON.stringify(appState));
+        }
+        return changed;
+      } catch (e) {
+        return false;
+      }
+    }
+
     async function pullFromFirebase(forceApply) {
       setSyncBadge('sync', 'Синхронізація...');
       try {
@@ -931,10 +1086,14 @@
               };
               persistCurrentSession();
             }
-
-            refreshAllUI();
           }
-          setSyncBadge('ok', 'Синхронізовано');
+        }
+
+        const portalChanged = await syncWithSchedulePortal();
+        refreshAllUI();
+
+        if (portalChanged) {
+          await saveData();
         } else {
           setSyncBadge('ok', 'Синхронізовано');
         }
@@ -1290,7 +1449,7 @@
         case 'ПП': return 'bg-amber-100 text-amber-800 border-amber-200 font-bold';
         case 'ХВ': return 'bg-sky-100 text-sky-800 border-sky-200 font-bold';
         case 'ЗВ': return 'bg-purple-100 text-purple-800 border-purple-200 font-bold';
-        default: return 'bg-white hover:bg-slate-50 text-slate-300 border-slate-200';
+        default: return 'bg-white hover:bg-slate-50 text-slate-400 border-slate-200';
       }
     }
 
@@ -1316,8 +1475,8 @@
 
       let theadHtml = `
         <tr class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
-          <th class="sticky-header py-2.5 px-3 font-bold text-slate-800 min-w-[200px] sm:min-w-[240px] border-r border-slate-200">
-            № / Прізвище, Ім'я, По батькові
+          <th class="sticky-header name-col-cell py-2.5 px-3 font-bold text-slate-800 min-w-[170px] sm:min-w-[230px] border-r border-slate-200">
+            № / Прізвище та Ім'я
           </th>
       `;
 
@@ -1330,7 +1489,7 @@
             : 'bg-slate-100 text-slate-700';
 
         theadHtml += `
-          <th class="py-1.5 px-1 text-center min-w-[38px] border-r border-slate-200/80 ${headerBg}" title="${d.dateStr} (${d.weekdayShort})">
+          <th class="py-1.5 px-1 text-center min-w-[42px] border-r border-slate-200/80 ${headerBg}" title="${d.dateStr} (${d.weekdayShort})">
             <div class="text-[10px] font-semibold uppercase opacity-80">${d.weekdayShort}</div>
             <div class="text-xs font-bold">${d.day}</div>
           </th>
@@ -1338,8 +1497,8 @@
       });
 
       theadHtml += `
-          <th class="py-2 px-2.5 text-center font-bold text-slate-700 bg-slate-100 min-w-[65px] border-r border-slate-200">✓</th>
-          <th class="py-2 px-2.5 text-center font-bold text-rose-700 bg-slate-100 min-w-[65px]">Н</th>
+          <th class="py-2 px-2.5 text-center font-bold text-slate-700 bg-slate-100 min-w-[52px] border-r border-slate-200">✓</th>
+          <th class="py-2 px-2.5 text-center font-bold text-rose-700 bg-slate-100 min-w-[52px]">Н</th>
         </tr>
       `;
       document.getElementById('journalThead').innerHTML = theadHtml;
@@ -1363,8 +1522,9 @@
           cellsHtml += `
             <td class="p-1 text-center border-r border-slate-100 ${weekendBg}">
               <button
+                type="button"
                 onclick="openStatusModal('${student.id}', '${d.dateStr}', '${d.weekdayShort}')"
-                class="w-8 h-8 rounded-lg border text-xs flex items-center justify-center mx-auto transition active:scale-95 ${badgeClass}"
+                class="w-9 h-9 rounded-lg border text-xs flex items-center justify-center mx-auto transition active:scale-95 ${badgeClass}"
               >
                 ${status || '·'}
               </button>
@@ -1378,7 +1538,7 @@
 
         tbodyHtml += `
           <tr class="hover:bg-slate-50/80 transition">
-            <td class="sticky-col py-2 px-3 font-medium text-slate-800 border-r border-slate-200 whitespace-nowrap">
+            <td class="sticky-col name-col-cell py-2 px-3 font-medium text-slate-800 border-r border-slate-200 whitespace-nowrap">
               <span class="text-xs text-slate-400 mr-1.5 font-mono">${idx + 1}.</span>
               <span>${escapeHtml(student.name)}</span>${roleTag}
             </td>
@@ -1390,6 +1550,7 @@
       });
 
       document.getElementById('journalTbody').innerHTML = tbodyHtml;
+      applyJournalNamesUI();
     }
 
     function openStatusModal(studentId, dateStr, weekdayShort) {
