@@ -2293,3 +2293,61 @@
   </script>
 </body>
 </html>
+function normalizePersonTokens(str) {
+  return String(str || '')
+    .toLowerCase()
+    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()'"’]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(' ')
+    .filter(w => w.length > 1);
+}
+
+function findStudentByPortalRecord(lastname, firstname, fullText = '') {
+  const rawCombined = `${lastname || ''} ${firstname || ''} ${fullText || ''}`.trim();
+  const inputTokens = normalizePersonTokens(rawCombined);
+  if (!inputTokens.length) return null;
+
+  const ln = String(lastname || '').trim().toLowerCase();
+  const fn = String(firstname || '').trim().toLowerCase();
+
+  let bestMatch = null;
+  let bestScore = 0;
+
+  for (const st of appState.students || []) {
+    const stTokens = normalizePersonTokens(st.name || '');
+    if (!stTokens.length) continue;
+
+    let score = 0;
+    const stLower = String(st.name || '').toLowerCase();
+
+    // Збіг прізвища (зазвичай перше слово)
+    if (ln && stTokens[0] === ln) score += 3;
+    if (fn && stTokens[1] === fn) score += 2;
+    if (fn && stTokens[2] === fn) score += 2;
+
+    // Кількість спільних слів (наприклад: прізвище + по батькові, або прізвище + ім'я)
+    const matchedTokens = inputTokens.filter(tok =>
+      stTokens.includes(tok) || stTokens.some(stTok => stTok.startsWith(tok) || tok.startsWith(stTok))
+    );
+    score += matchedTokens.length * 2;
+
+    // Якщо введено 2 слова (наприклад "Килинич Володимирович") і обидва є в ПІБ студента
+    if (inputTokens.length >= 2 && matchedTokens.length >= 2) {
+      score += 4;
+    }
+
+    // Пряме входження рядка
+    if (rawCombined.length >= 4 && (stLower.includes(rawCombined.toLowerCase()) || rawCombined.toLowerCase().includes(stLower))) {
+      score += 3;
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = st;
+    }
+  }
+
+  // Поріг довіри: мінімум 4 бали (наприклад прізвище + по батькові або прізвище + ім'я)
+  return bestScore >= 4 ? bestMatch : null;
+}
